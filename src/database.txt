@@ -1,0 +1,84 @@
+-- Database Schema and Queries for KALL ME Application
+
+-- Table: merchants
+CREATE TABLE merchants (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(100),
+    image_url TEXT,
+    rating DECIMAL(2, 1) DEFAULT 0.0,
+    reviews INTEGER DEFAULT 0,
+    address TEXT,
+    commission_rate DECIMAL(5, 2) DEFAULT 15.00,
+    status VARCHAR(20) DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: menu_items (Global Catalog)
+CREATE TABLE menu_items (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    category VARCHAR(100),
+    image_url TEXT,
+    is_veg BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table: merchant_menu_items (Link between Merchant and Menu Item with price override)
+CREATE TABLE merchant_menu_items (
+    id SERIAL PRIMARY KEY,
+    merchant_id INTEGER REFERENCES merchants(id),
+    menu_item_id INTEGER REFERENCES menu_items(id),
+    price DECIMAL(10, 2), -- Merchant specific price
+    is_available BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(merchant_id, menu_item_id)
+);
+
+-- QUERIES
+
+-- 1. Get All Merchants
+SELECT * FROM merchants ORDER BY name;
+
+-- 2. Add New Merchant
+INSERT INTO merchants (name, category, image_url, address, commission_rate)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING *;
+
+-- 3. Get Global Menu Catalog
+SELECT * FROM menu_items ORDER BY category, name;
+
+-- 4. Add New Menu Item to Global Catalog
+INSERT INTO menu_items (name, description, price, category, image_url, is_veg)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING *;
+
+-- 5. Get Merchant Specific Menu
+SELECT 
+    mi.id,
+    mi.name,
+    mi.description,
+    mi.category,
+    mi.image_url,
+    COALESCE(mmi.price, mi.price) as selling_price,
+    mmi.is_available
+FROM menu_items mi
+JOIN merchant_menu_items mmi ON mi.id = mmi.menu_item_id
+WHERE mmi.merchant_id = $1;
+
+-- 6. Link Item to Merchant (Add to Merchant Menu)
+INSERT INTO merchant_menu_items (merchant_id, menu_item_id, price)
+VALUES ($1, $2, $3)
+ON CONFLICT (merchant_id, menu_item_id) 
+DO UPDATE SET price = EXCLUDED.price, is_available = true;
+
+-- 7. Update Merchant Price
+UPDATE merchant_menu_items 
+SET price = $3
+WHERE merchant_id = $1 AND menu_item_id = $2;
+
+-- 8. Remove Item from Merchant Menu (Soft Delete or Hard Delete)
+DELETE FROM merchant_menu_items 
+WHERE merchant_id = $1 AND menu_item_id = $2;

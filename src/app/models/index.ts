@@ -5,8 +5,10 @@ export interface Hotel {
   address: string;
   category: string;
   rating: number;
+  reviews?: number;
   commission_rate: number;
   image_url: string;
+  images?: string[];
   status: 'active' | 'inactive';
 }
 
@@ -18,6 +20,8 @@ export interface MenuItem {
   price: number;
   category: string;
   image_url: string;
+  images?: string[];
+  is_available?: boolean;
   quantity?: number;
 }
 

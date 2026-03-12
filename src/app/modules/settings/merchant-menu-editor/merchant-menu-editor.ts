@@ -66,7 +66,7 @@ import { ToastService } from '../../../services/toast.service';
                 class="bg-white dark:bg-[#1E293B] p-3 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing flex items-center gap-3 group"
               >
                 <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-white/5 overflow-hidden shrink-0">
-                  <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                  <img [src]="item.image_url" [alt]="item.name" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="font-bold text-sm text-[#1A1A1A] dark:text-white truncate">{{ item.name }}</p>
@@ -106,7 +106,7 @@ import { ToastService } from '../../../services/toast.service';
               >
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-lg bg-white dark:bg-white/5 overflow-hidden shrink-0 relative">
-                    <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover">
+                    <img [src]="item.image_url" [alt]="item.name" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
                   </div>
                   <div class="flex-1 min-w-0">
@@ -124,7 +124,8 @@ import { ToastService } from '../../../services/toast.service';
                       <input 
                         [id]="'price-' + item.id"
                         type="number" 
-                        [(ngModel)]="item.merchantPrice"
+                        [ngModel]="item.merchantPrice"
+                        (ngModelChange)="updatePrice(item, $event)"
                         class="w-full bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-lg pl-5 pr-2 py-1 text-sm font-bold text-right outline-none focus:ring-1 focus:ring-[#FFC107] focus:border-[#FFC107] transition-all"
                       >
                     </div>
@@ -154,32 +155,40 @@ export class MerchantMenuEditor {
   catalog = inject(CatalogService);
   toast = inject(ToastService);
   
-  selectedMerchantId = signal<string>('m1'); // Default to first merchant
+  selectedMerchantId = signal<number | null>(null);
 
-  // Local state for drag and drop to work with
-  // We will sync this with the service on drop
-  
+  constructor() {
+    // Set initial merchant if available
+    const merchants = this.catalog.merchants();
+    if (merchants.length > 0) {
+      this.selectedMerchantId.set(merchants[0].id);
+    }
+  }
+
   merchantItems = computed(() => {
-    return this.catalog.merchantMenus()[this.selectedMerchantId()] || [];
+    const id = this.selectedMerchantId();
+    if (id === null) return [];
+    return this.catalog.merchantMenus()[id] || [];
   });
 
   availableItems = computed(() => {
-    const merchantItemIds = new Set((this.catalog.merchantMenus()[this.selectedMerchantId()] || []).map(i => i.id));
+    const id = this.selectedMerchantId();
+    if (id === null) return this.catalog.globalMenu();
+    const merchantItemIds = new Set((this.catalog.merchantMenus()[id] || []).map(i => i.id));
     return this.catalog.globalMenu().filter(i => !merchantItemIds.has(i.id));
   });
 
   drop(event: CdkDragDrop<MerchantMenuItem[]>) {
+    const id = this.selectedMerchantId();
+    if (id === null) return;
+
     if (event.previousContainer === event.container) {
-      // Reordering within the same list (Merchant Menu)
       const currentItems = [...this.merchantItems()];
       moveItemInArray(currentItems, event.previousIndex, event.currentIndex);
-      this.catalog.updateMerchantMenu(this.selectedMerchantId(), currentItems);
+      this.catalog.updateMerchantMenu(id, currentItems);
     } else {
-      // Transferring from Global (Available) to Merchant
-      // We don't remove from global, we just add to merchant (link)
       const itemToLink = event.previousContainer.data[event.previousIndex];
       
-      // Create new linked item
       const newItem: MerchantMenuItem = {
         ...itemToLink,
         merchantPrice: itemToLink.price,
@@ -187,18 +196,30 @@ export class MerchantMenuEditor {
       };
 
       const currentMerchantItems = [...this.merchantItems()];
-      // Insert at the specific index
       currentMerchantItems.splice(event.currentIndex, 0, newItem);
       
-      this.catalog.updateMerchantMenu(this.selectedMerchantId(), currentMerchantItems);
+      this.catalog.updateMerchantMenu(id, currentMerchantItems);
       this.toast.success(`Added ${itemToLink.name} to merchant menu`);
     }
   }
 
   removeItem(item: MerchantMenuItem) {
+    const id = this.selectedMerchantId();
+    if (id === null) return;
+
     const currentItems = this.merchantItems().filter(i => i.id !== item.id);
-    this.catalog.updateMerchantMenu(this.selectedMerchantId(), currentItems);
+    this.catalog.updateMerchantMenu(id, currentItems);
     this.toast.info(`Removed ${item.name} from merchant menu`);
+  }
+
+  updatePrice(item: MerchantMenuItem, newPrice: number) {
+    const id = this.selectedMerchantId();
+    if (id === null) return;
+
+    const currentItems = this.merchantItems().map(i => 
+      i.id === item.id ? { ...i, merchantPrice: newPrice } : i
+    );
+    this.catalog.updateMerchantMenu(id, currentItems);
   }
 
   saveChanges() {

@@ -18,6 +18,10 @@ export const routes: Routes = [
         loadComponent: () => import('./modules/orders/create-order').then(m => m.CreateOrder)
       },
       {
+        path: 'invoice',
+        loadComponent: () => import('./modules/invoice/invoice-generation').then(m => m.InvoiceGeneration)
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./modules/orders/orders-list').then(m => m.OrdersList)
       },

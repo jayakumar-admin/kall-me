@@ -8,53 +8,59 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [CommonModule, MatIconModule, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
-    <div class="h-full flex flex-col">
-      <!-- Settings Header & Tabs -->
-      <div class="bg-white dark:bg-[#1E293B] border-b border-slate-200 dark:border-white/5 px-6 pt-6 sticky top-0 z-10 overflow-x-auto custom-scrollbar">
-        <div class="flex items-center gap-3 mb-6">
-          <div class="w-10 h-10 bg-[#FFC107]/20 rounded-xl flex items-center justify-center text-[#FFC107]">
-            <mat-icon>settings</mat-icon>
-          </div>
-          <div>
-            <h1 class="text-2xl font-display font-black text-[#1A1A1A] dark:text-white">Settings</h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Configure system parameters and catalogs</p>
+    <div class="h-full flex flex-col md:flex-row bg-slate-50 dark:bg-[#0F172A]">
+      <!-- Settings Sidebar -->
+      <div class="w-full md:w-64 bg-white dark:bg-[#1E293B] border-r border-slate-200 dark:border-white/5 flex flex-col shrink-0">
+        <div class="p-6 border-b border-slate-200 dark:border-white/5">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-[#FFC107]/20 rounded-xl flex items-center justify-center text-[#FFC107]">
+              <mat-icon>settings</mat-icon>
+            </div>
+            <div>
+              <h1 class="text-xl font-display font-black text-[#1A1A1A] dark:text-white">Settings</h1>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">Configuration</p>
+            </div>
           </div>
         </div>
 
-        <nav class="flex gap-6 min-w-max">
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
           <a 
             routerLink="general" 
-            routerLinkActive="text-[#FFC107] border-b-2 border-[#FFC107]" 
-            class="pb-3 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[#1A1A1A] dark:hover:text-white transition-colors border-b-2 border-transparent"
+            routerLinkActive="bg-[#FFC107]/10 text-[#FFC107] font-bold" 
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#1A1A1A] dark:hover:text-white transition-all"
           >
+            <mat-icon class="text-[20px] w-5 h-5">tune</mat-icon>
             General
           </a>
           <a 
             routerLink="hotel-management" 
-            routerLinkActive="text-[#FFC107] border-b-2 border-[#FFC107]" 
-            class="pb-3 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[#1A1A1A] dark:hover:text-white transition-colors border-b-2 border-transparent"
+            routerLinkActive="bg-[#FFC107]/10 text-[#FFC107] font-bold" 
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#1A1A1A] dark:hover:text-white transition-all"
           >
+            <mat-icon class="text-[20px] w-5 h-5">storefront</mat-icon>
             Hotel Management
           </a>
           <a 
             routerLink="menu-bulk-add" 
-            routerLinkActive="text-[#FFC107] border-b-2 border-[#FFC107]" 
-            class="pb-3 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[#1A1A1A] dark:hover:text-white transition-colors border-b-2 border-transparent"
+            routerLinkActive="bg-[#FFC107]/10 text-[#FFC107] font-bold" 
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#1A1A1A] dark:hover:text-white transition-all"
           >
+            <mat-icon class="text-[20px] w-5 h-5">library_add</mat-icon>
             Bulk Menu Import
           </a>
           <a 
             routerLink="merchant-menu-editor" 
-            routerLinkActive="text-[#FFC107] border-b-2 border-[#FFC107]" 
-            class="pb-3 text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-[#1A1A1A] dark:hover:text-white transition-colors border-b-2 border-transparent"
+            routerLinkActive="bg-[#FFC107]/10 text-[#FFC107] font-bold" 
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#1A1A1A] dark:hover:text-white transition-all"
           >
+            <mat-icon class="text-[20px] w-5 h-5">price_change</mat-icon>
             Merchant Pricing
           </a>
         </nav>
       </div>
 
-      <!-- Content -->
-      <div class="flex-1 overflow-hidden">
+      <!-- Content Area -->
+      <div class="flex-1 overflow-hidden bg-white dark:bg-[#0F172A] relative">
         <router-outlet></router-outlet>
       </div>
     </div>

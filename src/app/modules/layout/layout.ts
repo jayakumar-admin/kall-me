@@ -27,7 +27,7 @@ import { SearchService } from '../../services/search.service';
 
       <!-- Sidebar -->
       <aside 
-        class="fixed md:relative inset-y-0 left-0 z-30 flex flex-col bg-white dark:bg-[#1E293B] border-r border-slate-200 dark:border-white/5 transition-all duration-300"
+        class="fixed md:relative inset-y-0 left-0 z-30 flex flex-col bg-white dark:bg-[#1E293B] border-r border-slate-200 dark:border-white/5 transition-all duration-300 print:hidden"
         [class.translate-x-0]="isMobileMenuOpen()"
         [class.-translate-x-full]="!isMobileMenuOpen()"
         [class.md:translate-x-0]="true"
@@ -53,21 +53,32 @@ import { SearchService } from '../../services/search.service';
           <ng-container *ngTemplateOutlet="navLink; context: { label: 'Dashboard', link: '/dashboard', icon: 'dashboard' }"></ng-container>
           <ng-container *ngTemplateOutlet="navLink; context: { label: 'Live Orders', link: '/orders', icon: 'list_alt' }"></ng-container>
           <ng-container *ngTemplateOutlet="navLink; context: { label: 'Create Order', link: '/create-order', icon: 'add_circle_outline' }"></ng-container>
+          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Invoice Generation', link: '/invoice', icon: 'receipt_long' }"></ng-container>
           <ng-container *ngTemplateOutlet="navLink; context: { label: 'Reports', link: '/reports', icon: 'bar_chart' }"></ng-container>
           <ng-container *ngTemplateOutlet="navLink; context: { label: 'Settings', link: '/settings', icon: 'settings' }"></ng-container>
         </nav>
 
         <!-- User Profile (Bottom Sidebar) -->
-        <div class="p-4 border-t border-slate-100 dark:border-white/5">
+        <div class="p-4 border-t border-slate-100 dark:border-white/5 space-y-2">
           <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer group">
             <div class="w-10 h-10 rounded-full bg-[#FFC107]/20 flex items-center justify-center text-[#FFC107] group-hover:bg-[#FFC107] group-hover:text-black transition-colors shrink-0">
               <mat-icon>person</mat-icon>
             </div>
             <div class="overflow-hidden" [class.md:hidden]="isDesktopCollapsed()">
-              <p class="text-sm font-bold text-[#1A1A1A] dark:text-white truncate">Admin User</p>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-widest truncate">Super Admin</p>
+              <p class="text-sm font-bold text-[#1A1A1A] dark:text-white truncate">{{ auth.user()?.name || 'Admin User' }}</p>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-widest truncate">{{ auth.user()?.role || 'Super Admin' }}</p>
             </div>
           </div>
+          
+          <button 
+            (click)="auth.logout()" 
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all group overflow-hidden whitespace-nowrap"
+            [class.justify-center]="isDesktopCollapsed()"
+            [class.px-2]="isDesktopCollapsed()"
+          >
+            <mat-icon class="shrink-0">logout</mat-icon>
+            <span [class.md:hidden]="isDesktopCollapsed()">Logout</span>
+          </button>
         </div>
 
         <!-- Desktop Collapse Toggle -->
@@ -84,7 +95,7 @@ import { SearchService } from '../../services/search.service';
       <!-- Main Content Wrapper -->
       <div class="flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300">
         <!-- Top Header -->
-        <header class="h-16 bg-white/80 dark:bg-[#0F172A]/80 backdrop-blur border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-4 md:px-6 z-10 transition-colors">
+        <header class="h-16 bg-white/80 dark:bg-[#0F172A]/80 backdrop-blur border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-4 md:px-6 z-10 transition-colors print:hidden">
           
           <!-- Mobile Menu Toggle -->
           <button (click)="isMobileMenuOpen.set(true)" class="md:hidden p-2 -ml-2 mr-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg">

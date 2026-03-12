@@ -1,12 +1,12 @@
 const express = require('express');
-const authRoutes = require('./auth');
-const hotelRoutes = require('./hotels');
-const menuRoutes = require('./menus');
-const orderRoutes = require('./orders');
-const deliveryRoutes = require('./delivery');
-const reportRoutes = require('./reports');
-const uploadRoutes = require('./upload');
-const invoiceRoutes = require('./invoices');
+const authRoutes = require('./auth.js');
+const hotelRoutes = require('./hotels.js');
+const menuRoutes = require('./menus.js');
+const orderRoutes = require('./orders.js');
+const deliveryRoutes = require('./delivery.js');
+const reportRoutes = require('./reports.js');
+const uploadRoutes = require('./upload.js');
+const invoiceRoutes = require('./invoices.js');
 
 const router = express.Router();
 

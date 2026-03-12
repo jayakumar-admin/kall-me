@@ -1,8 +1,11 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { MenuItem, Merchant, MERCHANTS, MENU_ITEMS } from '../data/static-data';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { MenuItem } from '../data/static-data';
+import { ApiService } from './api.service';
+import { Hotel } from '../models';
+import { ToastService } from './toast.service';
 
 export interface MerchantMenuItem extends MenuItem {
-  merchantPrice?: number; // Override price for specific merchant
+  merchantPrice?: number;
   isLinked?: boolean;
 }
 
@@ -10,72 +13,150 @@ export interface MerchantMenuItem extends MenuItem {
   providedIn: 'root'
 })
 export class CatalogService {
+  private api = inject(ApiService);
+  private toast = inject(ToastService);
+
   // Global repository of all available menu items
-  globalMenu = signal<MenuItem[]>(MENU_ITEMS);
+  globalMenu = signal<MenuItem[]>([]);
   
   // List of merchants
-  merchants = signal<Merchant[]>(MERCHANTS);
+  merchants = signal<Hotel[]>([]);
+  loading = signal(true);
 
-  // Map of merchant ID to their specific menu items (with custom prices)
-  // In a real app, this would be fetched from backend
+  // Map of merchant ID to their specific menu items
   merchantMenus = signal<Record<string, MerchantMenuItem[]>>({});
 
   constructor() {
-    // Initialize some dummy data for existing merchants
-    const initialMenus: Record<string, MerchantMenuItem[]> = {};
-    this.merchants().forEach(m => {
-      // Assign some random items to each merchant initially
-      initialMenus[m.id] = this.globalMenu().slice(0, 5).map(item => ({
-        ...item,
-        merchantPrice: item.price, // Default to base price
-        isLinked: true
-      }));
+    this.loadInitialData();
+  }
+
+  loadInitialData() {
+    this.loading.set(true);
+    this.api.getHotels().subscribe({
+      next: (hotels) => {
+        this.merchants.set(hotels);
+        // Load menus for each hotel
+        hotels.forEach(hotel => this.loadMerchantMenu(hotel.id));
+        this.loading.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to load hotels');
+        this.loading.set(false);
+      }
     });
-    this.merchantMenus.set(initialMenus);
+
+    this.api.getMenus().subscribe({
+      next: (items: MenuItem[]) => this.globalMenu.set(items),
+      error: () => this.toast.error('Failed to load menu items')
+    });
   }
 
-  // Add multiple items to global catalog
-  addGlobalItems(items: Omit<MenuItem, 'id' | 'rating' | 'reviews'>[]) {
-    const newItems: MenuItem[] = items.map(item => ({
-      ...item,
-      id: 'mi-' + Math.random().toString(36).substr(2, 9),
-      image: item.image || 'https://picsum.photos/seed/' + item.name + '/200/200',
-      rating: 0,
-      reviews: '0'
-    }));
-
-    this.globalMenu.update(current => [...current, ...newItems]);
-  }
-
-  // Get menu for a specific merchant
-  getMerchantMenu(merchantId: string) {
-    return computed(() => this.merchantMenus()[merchantId] || []);
-  }
-
-  // Update merchant menu (add/remove/update price)
-  updateMerchantMenu(merchantId: string, items: MerchantMenuItem[]) {
-    this.merchantMenus.update(current => ({
-      ...current,
-      [merchantId]: items
-    }));
+  loadMerchantMenu(hotelId: number) {
+    this.api.getMenus(hotelId).subscribe({
+      next: (items) => {
+        this.merchantMenus.update(current => ({
+          ...current,
+          [hotelId]: items.map(item => ({ ...item, isLinked: true }))
+        }));
+      }
+    });
   }
 
   // Add a new merchant
-  addMerchant(merchant: Omit<Merchant, 'id' | 'rating' | 'reviews' | 'image'>) {
-    const newMerchant: Merchant = {
-      ...merchant,
-      id: 'm-' + Math.random().toString(36).substr(2, 9),
-      rating: 0,
-      reviews: '0',
-      image: 'https://picsum.photos/seed/' + merchant.name + '/300/200'
-    };
+  addMerchant(merchant: Partial<Hotel>) {
+    this.api.createHotel(merchant).subscribe({
+      next: (newHotel) => {
+        this.merchants.update(current => [...current, newHotel]);
+        this.toast.success(`${newHotel.name} added successfully`);
+      },
+      error: () => this.toast.error('Failed to add restaurant')
+    });
+  }
+
+  // Update merchant
+  updateMerchant(id: number, merchant: Partial<Hotel>) {
+    this.api.updateHotel(id, merchant).subscribe({
+      next: (updated) => {
+        this.merchants.update(current => current.map(m => m.id === id ? updated : m));
+        this.toast.success(`${updated.name} updated successfully`);
+      },
+      error: () => this.toast.error('Failed to update restaurant')
+    });
+  }
+
+  // Delete merchant
+  deleteMerchant(id: number) {
+    this.api.deleteHotel(id).subscribe({
+      next: () => {
+        this.merchants.update(current => current.filter(m => m.id !== id));
+        this.toast.success('Restaurant removed successfully');
+      },
+      error: () => this.toast.error('Failed to remove restaurant')
+    });
+  }
+
+  getMerchantMenu(merchantId: number) {
+    return computed(() => this.merchantMenus()[merchantId] || []);
+  }
+
+  addMenuItem(item: Partial<MenuItem>) {
+    this.api.createMenuItem(item).subscribe({
+      next: (newItem) => {
+        if (newItem.hotel_id) {
+          this.loadMerchantMenu(newItem.hotel_id);
+        }
+        this.toast.success(`${newItem.name} added to menu`);
+      },
+      error: () => this.toast.error('Failed to add menu item')
+    });
+  }
+
+  updateMenuItem(id: number, item: Partial<MenuItem>) {
+    this.api.updateMenuItem(id, item).subscribe({
+      next: (updated) => {
+        if (updated.hotel_id) {
+          this.loadMerchantMenu(updated.hotel_id);
+        }
+        this.toast.success(`${updated.name} updated`);
+      },
+      error: () => this.toast.error('Failed to update menu item')
+    });
+  }
+
+  deleteMenuItem(id: number, hotelId: number) {
+    this.api.deleteMenuItem(id).subscribe({
+      next: () => {
+        this.loadMerchantMenu(hotelId);
+        this.toast.success('Menu item removed');
+      },
+      error: () => this.toast.error('Failed to remove menu item')
+    });
+  }
+
+  addGlobalItems(items: Partial<MenuItem>[]) {
+    // In a real app, we might have a bulk API. 
+    // Here we'll just loop for simplicity or assume the API handles it if we had one.
+    // Since we don't have a bulk API, we'll just call createMenuItem for each.
+    items.forEach(item => {
+      this.api.createMenuItem(item).subscribe({
+        next: (newItem: MenuItem) => {
+          this.globalMenu.update(current => [...current, newItem]);
+          if (newItem.hotel_id) {
+            this.loadMerchantMenu(newItem.hotel_id);
+          }
+        }
+      });
+    });
+  }
+
+  updateMerchantMenu(merchantId: string | number, items: MerchantMenuItem[]) {
+    const id = typeof merchantId === 'string' ? parseInt(merchantId) : merchantId;
     
-    this.merchants.update(current => [...current, newMerchant]);
-    
-    // Initialize empty menu for new merchant
+    // In a real app, we would send this to the backend to sync the links.
+    // For now, we'll just update the local state.
     this.merchantMenus.update(current => ({
       ...current,
-      [newMerchant.id]: []
+      [id]: items
     }));
   }
 }

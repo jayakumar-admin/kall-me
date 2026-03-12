@@ -43,23 +43,38 @@ import { ToastService } from '../../../services/toast.service';
                 <tr class="group hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                   <td class="px-4 py-3 text-xs text-slate-400">{{ $index + 1 }}</td>
                   <td class="px-4 py-3">
-                    <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-white/5 overflow-hidden relative group/img cursor-pointer">
-                      @if (item.image) {
-                        <img [src]="item.image" [alt]="item.name || 'Menu item image'" class="w-full h-full object-cover">
-                      } @else {
-                        <div class="w-full h-full flex items-center justify-center text-slate-300">
-                          <mat-icon class="text-xs">image</mat-icon>
+                    <div class="flex flex-col gap-2">
+                      <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-white/5 overflow-hidden relative group/img cursor-pointer border border-dashed border-slate-300 dark:border-white/20">
+                        @if (item.image_url) {
+                          <img [src]="item.image_url" [alt]="item.name || 'Menu item image'" class="w-full h-full object-cover">
+                        } @else {
+                          <div class="w-full h-full flex items-center justify-center text-slate-300">
+                            <mat-icon class="text-xs">add_photo_alternate</mat-icon>
+                          </div>
+                        }
+                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                          <mat-icon class="text-white text-xs">upload</mat-icon>
+                        </div>
+                        <input 
+                          type="file" 
+                          multiple
+                          (change)="onFileSelected($event, $index)"
+                          accept="image/*"
+                          class="absolute inset-0 opacity-0 cursor-pointer"
+                        >
+                      </div>
+                      @if (item.images && item.images.length > 1) {
+                        <div class="flex gap-1 overflow-x-auto max-w-[80px] custom-scrollbar pb-1">
+                          @for (img of item.images; track img; let imgIdx = $index) {
+                            <div class="relative w-6 h-6 rounded overflow-hidden shrink-0 group/thumb">
+                              <img [src]="img" alt="Menu item thumbnail" class="w-full h-full object-cover">
+                              <button (click)="removeImage($index, imgIdx)" class="absolute inset-0 bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                                <mat-icon class="text-[10px] w-2.5 h-2.5">close</mat-icon>
+                              </button>
+                            </div>
+                          }
                         </div>
                       }
-                      <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
-                        <mat-icon class="text-white text-xs">upload</mat-icon>
-                      </div>
-                      <input 
-                        type="file" 
-                        (change)="onFileSelected($event, $index)"
-                        accept="image/*"
-                        class="absolute inset-0 opacity-0 cursor-pointer"
-                      >
                     </div>
                   </td>
                   <td class="px-4 py-3">
@@ -124,12 +139,12 @@ export class MenuBulkAdd {
   imageUpload = inject(ImageUploadService);
   toast = inject(ToastService);
   
-  newItems = signal<{ name: string; category: MenuItem['category']; description: string; price: number; image: string }[]>([
-    { name: '', category: 'Main Course', description: '', price: 0, image: '' }
+  newItems = signal<{ name: string; category: MenuItem['category']; description: string; price: number; image_url: string; images: string[] }[]>([
+    { name: '', category: 'Main Course', description: '', price: 0, image_url: '', images: [] }
   ]);
 
   addNewRow() {
-    this.newItems.update(items => [...items, { name: '', category: 'Main Course', description: '', price: 0, image: '' }]);
+    this.newItems.update(items => [...items, { name: '', category: 'Main Course', description: '', price: 0, image_url: '', images: [] }]);
   }
 
   removeItem(index: number) {
@@ -138,21 +153,37 @@ export class MenuBulkAdd {
 
   onFileSelected(event: Event, index: number) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      this.imageUpload.uploadImage(file).subscribe(url => {
-        if (url) {
-          this.newItems.update(items => {
-            const updated = [...items];
-            updated[index] = { ...updated[index], image: url };
-            return updated;
-          });
-          this.toast.success('Image uploaded successfully');
-        } else {
-          this.toast.error('Image upload failed');
-        }
+    if (input.files && input.files.length > 0) {
+      Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            this.newItems.update(items => {
+              const updated = [...items];
+              const item = { ...updated[index] };
+              item.images = [...(item.images || []), e.target!.result as string];
+              if (item.images.length === 1) {
+                item.image_url = item.images[0];
+              }
+              updated[index] = item;
+              return updated;
+            });
+          }
+        };
+        reader.readAsDataURL(file);
       });
     }
+  }
+
+  removeImage(itemIndex: number, imageIndex: number) {
+    this.newItems.update(items => {
+      const updated = [...items];
+      const item = { ...updated[itemIndex] };
+      item.images = item.images.filter((_, i) => i !== imageIndex);
+      item.image_url = item.images.length > 0 ? item.images[0] : '';
+      updated[itemIndex] = item;
+      return updated;
+    });
   }
 
   saveItems() {
@@ -165,7 +196,7 @@ export class MenuBulkAdd {
     this.catalog.addGlobalItems(validItems);
     
     // Reset form
-    this.newItems.set([{ name: '', category: 'Main Course', description: '', price: 0, image: '' }]);
+    this.newItems.set([{ name: '', category: 'Main Course', description: '', price: 0, image_url: '', images: [] }]);
     this.toast.success(`Successfully added ${validItems.length} items to the catalog!`);
   }
 }

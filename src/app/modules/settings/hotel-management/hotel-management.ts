@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -27,7 +27,7 @@ import { Merchant } from '../../../data/static-data';
         @for (hotel of hotels(); track hotel.id) {
           <div class="card p-0 overflow-hidden flex flex-col group border-none ring-1 ring-slate-100 dark:ring-white/5">
             <div class="h-32 bg-slate-100 dark:bg-white/5 relative">
-              <img [src]="hotel.image" [alt]="hotel.name" class="w-full h-full object-cover">
+              <img [src]="hotel.image_url" [alt]="hotel.name" class="w-full h-full object-cover">
               <div class="absolute top-3 right-3 flex gap-2">
                 <span class="bg-white/90 dark:bg-black/50 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest flex items-center gap-1"
                   [ngClass]="(hotel.status || 'active') === 'active' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'">
@@ -109,6 +109,28 @@ import { Merchant } from '../../../data/static-data';
               </div>
               
               <div>
+                <label for="imagesInput" class="text-xs font-bold text-slate-500 mb-2 block">Images</label>
+                <div class="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-4 text-center hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer relative">
+                  <input id="imagesInput" type="file" multiple accept="image/*" (change)="onFileSelected($event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                  <mat-icon class="text-slate-400 mb-2">cloud_upload</mat-icon>
+                  <p class="text-xs text-slate-500 font-medium">Click or drag images to upload</p>
+                </div>
+                
+                @if (formData.images && formData.images.length > 0) {
+                  <div class="flex gap-2 mt-3 overflow-x-auto pb-2 custom-scrollbar">
+                    @for (img of formData.images; track img; let i = $index) {
+                      <div class="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-slate-200 dark:border-white/10 group">
+                        <img [src]="img" alt="Hotel image preview" class="w-full h-full object-cover">
+                        <button (click)="removeImage(i)" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <mat-icon class="text-[12px] w-3 h-3 flex items-center justify-center">close</mat-icon>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              
+              <div>
                 <label for="hotelStatus" class="text-xs font-bold text-slate-500 mb-2 block">Status</label>
                 <select id="hotelStatus" [(ngModel)]="formData.status" class="input-field py-2 text-sm appearance-none cursor-pointer">
                   <option value="active">Active</option>
@@ -131,6 +153,7 @@ import { Merchant } from '../../../data/static-data';
 export class HotelManagement {
   catalog = inject(CatalogService);
   toast = inject(ToastService);
+  cdr = inject(ChangeDetectorRef);
   
   hotels = computed(() => this.catalog.merchants());
   
@@ -143,7 +166,8 @@ export class HotelManagement {
     commission_rate: 15,
     address: '',
     status: 'active' as 'active' | 'inactive',
-    image: 'https://picsum.photos/seed/hotel/400/300'
+    image_url: 'https://picsum.photos/seed/hotel/400/300',
+    images: [] as string[]
   };
 
   openAddModal() {
@@ -160,7 +184,8 @@ export class HotelManagement {
       commission_rate: hotel.commission_rate || 15,
       address: hotel.address || '',
       status: hotel.status || 'active',
-      image: hotel.image
+      image_url: hotel.image_url,
+      images: hotel.images ? [...hotel.images] : (hotel.image_url ? [hotel.image_url] : [])
     };
     this.isModalOpen.set(true);
   }
@@ -177,8 +202,38 @@ export class HotelManagement {
       commission_rate: 15,
       address: '',
       status: 'active',
-      image: 'https://picsum.photos/seed/hotel/400/300'
+      image_url: 'https://picsum.photos/seed/hotel/400/300',
+      images: []
     };
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            this.formData.images.push(e.target.result as string);
+            if (this.formData.images.length === 1) {
+              this.formData.image_url = e.target.result as string;
+            }
+            this.cdr.markForCheck();
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  }
+
+  removeImage(index: number) {
+    this.formData.images.splice(index, 1);
+    if (this.formData.images.length > 0) {
+      this.formData.image_url = this.formData.images[0];
+    } else {
+      this.formData.image_url = 'https://picsum.photos/seed/hotel/400/300';
+    }
+    this.cdr.markForCheck();
   }
 
   saveHotel() {
@@ -187,13 +242,16 @@ export class HotelManagement {
       return;
     }
 
-    // In a real app, we would call an API service here.
-    // For now, we'll simulate saving and show a toast.
+    const hotelData = {
+      ...this.formData,
+      rating: this.editingHotel()?.rating || 4.5,
+      reviews: this.editingHotel()?.reviews || 0
+    };
     
     if (this.editingHotel()) {
-      this.toast.success(`Hotel "${this.formData.name}" updated successfully`);
+      this.catalog.updateMerchant(this.editingHotel()!.id, hotelData as Partial<Merchant>);
     } else {
-      this.toast.success(`New hotel "${this.formData.name}" added successfully`);
+      this.catalog.addMerchant(hotelData as Partial<Merchant>);
     }
     
     this.closeModal();
@@ -201,8 +259,7 @@ export class HotelManagement {
 
   deleteHotel(hotel: Merchant) {
     if (confirm(`Are you sure you want to delete ${hotel.name}?`)) {
-      // Simulate deletion
-      this.toast.success(`Hotel "${hotel.name}" deleted successfully`);
+      this.catalog.deleteMerchant(hotel.id);
     }
   }
 }

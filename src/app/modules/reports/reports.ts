@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { Order } from '../../models';
+import { CatalogService } from '../../services/catalog.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -33,22 +34,28 @@ import autoTable from 'jspdf-autotable';
 
       <!-- Filters -->
       <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
-        <div class="flex items-center gap-2 mb-4">
-          <mat-icon class="text-[#FFC107]">filter_list</mat-icon>
-          <h3 class="font-bold text-[#1A1A1A] dark:text-white">Customized Filters</h3>
+        <div class="flex items-center justify-between gap-2 mb-4">
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-[#FFC107]">filter_list</mat-icon>
+            <h3 class="font-bold text-[#1A1A1A] dark:text-white">Customized Filters</h3>
+          </div>
+          <button (click)="resetFilters()" class="text-xs font-bold text-[#FFC107] hover:text-[#E6AE06] transition-colors flex items-center gap-1">
+            <mat-icon class="text-sm">restart_alt</mat-icon>
+            Reset Filters
+          </button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label for="startDate" class="text-xs font-bold text-slate-500 mb-2 block">Start Date</label>
-            <input id="startDate" type="date" [(ngModel)]="startDate" class="input-field py-2 text-sm">
+            <input id="startDate" type="date" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" class="input-field py-2 text-sm">
           </div>
           <div>
             <label for="endDate" class="text-xs font-bold text-slate-500 mb-2 block">End Date</label>
-            <input id="endDate" type="date" [(ngModel)]="endDate" class="input-field py-2 text-sm">
+            <input id="endDate" type="date" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)" class="input-field py-2 text-sm">
           </div>
           <div>
             <label for="statusFilter" class="text-xs font-bold text-slate-500 mb-2 block">Order Status</label>
-            <select id="statusFilter" [(ngModel)]="statusFilter" class="input-field py-2 text-sm appearance-none">
+            <select id="statusFilter" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" class="input-field py-2 text-sm appearance-none">
               <option value="all">All Statuses</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
@@ -58,10 +65,10 @@ import autoTable from 'jspdf-autotable';
           </div>
           <div>
             <label for="merchantFilter" class="text-xs font-bold text-slate-500 mb-2 block">Merchant</label>
-            <select id="merchantFilter" [(ngModel)]="merchantFilter" class="input-field py-2 text-sm appearance-none">
+            <select id="merchantFilter" [ngModel]="merchantFilter()" (ngModelChange)="merchantFilter.set($event)" class="input-field py-2 text-sm appearance-none">
               <option value="all">All Merchants</option>
-              @for (merchant of uniqueMerchants(); track merchant) {
-                <option [value]="merchant">{{ merchant }}</option>
+              @for (merchant of uniqueMerchants(); track merchant.id) {
+                <option [value]="merchant.id">{{ merchant.name }}</option>
               }
             </select>
           </div>
@@ -139,6 +146,7 @@ import autoTable from 'jspdf-autotable';
 export class Reports implements OnInit {
   private api = inject(ApiService);
   private toast = inject(ToastService);
+  private catalog = inject(CatalogService);
   
   orders = signal<Order[]>([]);
   
@@ -149,8 +157,7 @@ export class Reports implements OnInit {
   merchantFilter = signal<string>('all');
 
   uniqueMerchants = computed(() => {
-    const merchants = new Set(this.orders().map(o => o.hotel_name).filter(Boolean) as string[]);
-    return Array.from(merchants).sort();
+    return this.catalog.merchants().sort((a, b) => a.name.localeCompare(b.name));
   });
 
   filteredOrders = computed(() => {
@@ -159,7 +166,7 @@ export class Reports implements OnInit {
     const start = this.startDate();
     const end = this.endDate();
     const status = this.statusFilter();
-    const merchant = this.merchantFilter();
+    const merchantId = this.merchantFilter();
 
     if (start) {
       const startDate = new Date(start).getTime();
@@ -176,8 +183,9 @@ export class Reports implements OnInit {
       result = result.filter(o => o.status === status);
     }
 
-    if (merchant !== 'all') {
-      result = result.filter(o => o.hotel_name === merchant);
+    if (merchantId !== 'all') {
+      const id = parseInt(merchantId);
+      result = result.filter(o => o.hotel_id === id);
     }
 
     return result;
@@ -185,20 +193,42 @@ export class Reports implements OnInit {
 
   metrics = computed(() => {
     const data = this.filteredOrders();
-    // Simple mock calculation based on filtered orders
-    let totalRevenue = 0;
-    data.forEach(o => totalRevenue += o.grand_total);
+    const hotels = this.catalog.merchants();
     
-    // Assuming 15% admin commission, 10% delivery, rest to hotel
+    let totalHotelEarnings = 0;
+    let totalDeliverySalary = 0;
+    let totalAdminCommission = 0;
+    
+    data.forEach(o => {
+      const hotel = hotels.find(h => h.id === o.hotel_id);
+      const commissionRate = hotel?.commission_rate || 15; // Default to 15% if not found
+      
+      const adminComm = Math.round(o.subtotal * (commissionRate / 100));
+      const deliveryFee = o.shipping_fee;
+      const hotelEarn = o.subtotal - adminComm;
+      
+      totalHotelEarnings += hotelEarn;
+      totalDeliverySalary += deliveryFee;
+      totalAdminCommission += adminComm;
+    });
+    
     return {
-      hotelEarnings: Math.round(totalRevenue * 0.75),
-      deliverySalary: Math.round(totalRevenue * 0.10),
-      adminCommission: Math.round(totalRevenue * 0.15)
+      hotelEarnings: totalHotelEarnings,
+      deliverySalary: totalDeliverySalary,
+      adminCommission: totalAdminCommission
     };
   });
 
   ngOnInit() {
     this.api.getOrders().subscribe(d => this.orders.set(d));
+  }
+
+  resetFilters() {
+    this.startDate.set('');
+    this.endDate.set('');
+    this.statusFilter.set('all');
+    this.merchantFilter.set('all');
+    this.toast.info('Filters reset');
   }
 
   exportCSV() {

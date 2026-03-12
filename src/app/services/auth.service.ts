@@ -1,10 +1,14 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { finalize, tap, of, delay } from 'rxjs';
+import { LoaderService } from './loader.service';
 
 export interface User {
   name: string;
   email: string;
   role: string;
+  token?: string;
 }
 
 @Injectable({
@@ -12,7 +16,11 @@ export interface User {
 })
 export class AuthService {
   private router = inject(Router);
+  private http = inject(HttpClient);
+  private loader = inject(LoaderService);
   private userSignal = signal<User | null>(null);
+  private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+
   user = computed(() => this.userSignal());
   isLoggedIn = computed(() => !!this.userSignal());
 
@@ -24,15 +32,21 @@ export class AuthService {
   }
 
   login(credentials: { email?: string | null; password?: string | null }) {
-    // Mock login
-    if (credentials.email === 'admin@kallme.com' && credentials.password === 'password123') {
-      const userData: User = { name: 'Alex Morgan', email: credentials.email, role: 'admin' };
-      this.userSignal.set(userData);
-      localStorage.setItem('kallme_user', JSON.stringify(userData));
-      this.router.navigate(['/dashboard']);
-      return true;
-    }
-    return false;
+    this.loader.show('Authenticating...');
+    return of({
+      name: 'Admin User',
+      email: credentials.email || 'admin@kallme.com',
+      role: 'admin',
+      token: 'mock-jwt-token-12345'
+    }).pipe(
+      delay(500),
+      tap(user => {
+        this.userSignal.set(user);
+        localStorage.setItem('kallme_user', JSON.stringify(user));
+        this.router.navigate(['/dashboard']);
+      }),
+      finalize(() => this.loader.hide())
+    );
   }
 
   logout() {

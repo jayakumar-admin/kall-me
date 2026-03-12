@@ -12,7 +12,7 @@ export class ImageUploadService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post<{ url: string }>('/api/upload', formData).pipe(
+    return this.http.post<{ url: string }>('https://api-yoyvsxnlqq-uc.a.run.app/api/upload', formData).pipe(
       map(response => response.url),
       catchError(error => {
         console.error('Upload failed:', error);

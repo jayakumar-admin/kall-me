@@ -114,13 +114,16 @@ export class Login {
   onSubmit() {
     if (this.loginForm.valid) {
       this.loading = true;
-      setTimeout(() => {
-        const success = this.auth.login(this.loginForm.value);
-        if (!success) {
-          alert('Invalid credentials');
+      this.auth.login(this.loginForm.value as { email?: string | null; password?: string | null }).subscribe({
+        next: () => {
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Login failed', err);
+          alert('Invalid credentials or server error');
+          this.loading = false;
         }
-        this.loading = false;
-      }, 1000);
+      });
     }
   }
 }

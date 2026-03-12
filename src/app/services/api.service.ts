@@ -9,7 +9,8 @@ import { Hotel, MenuItem, DeliveryPerson, Order } from '../models';
 })
 export class ApiService {
   private http = inject(HttpClient);
-  private baseUrl = '/api';
+  private baseUrl = 'http://localhost:3000/api';
+  
 
   getHotels(): Observable<Hotel[]> {
     return this.http.get<Hotel[]>(`${this.baseUrl}/hotels`);

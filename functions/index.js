@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const functions = require('firebase-functions');
 const apiRoutes = require('./api/index');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
@@ -23,7 +24,7 @@ if (hasBrowserBuild) {
   app.use(express.static(browserDistFolder));
 } else {
   console.warn(
-    `WARNING: Angular build not found at ${browserIndexHtml}. Run \'npm run build\' from the repo root to generate it.`
+    `WARNING: Angular build not found at ${browserIndexHtml}. Run 'npm run build' from the repo root to generate it.`
   );
 }
 
@@ -42,6 +43,8 @@ app.get(/.*/, (req, res) => {
   );
 });
 
-app.listen(port, () => {
-  console.log(`Node Express server listening on http://0.0.0.0:${port}`);
-});
+// Export as a Cloud Function
+exports.api = functions.https.onRequest(app);
+
+// Export the Express app for local development / testing
+exports.app = app;

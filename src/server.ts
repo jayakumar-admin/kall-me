@@ -7,6 +7,7 @@ import {
 import express from 'express';
 import {join} from 'node:path';
 import cors from 'cors';
+// @ts-expect-error: Importing JS API routes into TS SSR server
 import apiRoutes from '../server/api/index.js';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');

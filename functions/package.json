@@ -1,0 +1,33 @@
+{
+  "name": "ai-studio-backend",
+  "version": "1.0.0",
+  "description": "Backend for AI Studio App",
+  "main": "index.js",
+  "scripts": {
+      "lint": "eslint .",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "dev": "nodemon local-server.js"
+  },
+    "engines": {
+    "node": "24"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "busboy": "^1.6.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.7.0",
+    "firebase-functions": "^7.1.1",
+    "jsonwebtoken": "^9.0.3",
+    "pdfkit": "^0.17.2",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

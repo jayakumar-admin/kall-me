@@ -1,0 +1,19 @@
+﻿[2026-03-12T15:34:53.345Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[2026-03-12T15:34:53.369Z] > authorizing via signed-in user (ajrgroupconnect@gmail.com)
+[2026-03-12T15:34:53.371Z] [iam] checking project kallmee for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[2026-03-12T15:34:53.398Z] Checked if tokens are valid: false, expires at: 1773330488349
+[2026-03-12T15:34:53.403Z] Checked if tokens are valid: false, expires at: 1773330488349
+[2026-03-12T15:34:53.410Z] > refreshing access token with scopes: []
+[2026-03-12T15:34:53.442Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[2026-03-12T15:34:53.443Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[2026-03-12T15:34:54.135Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[2026-03-12T15:34:54.137Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[2026-03-12T15:34:54.178Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions [none]
+[2026-03-12T15:34:54.179Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions x-goog-quota-user=projects/kallmee
+[2026-03-12T15:34:54.184Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[2026-03-12T15:34:57.765Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions 200
+[2026-03-12T15:34:57.765Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[2026-03-12T15:34:57.766Z] Checked if tokens are valid: true, expires at: 1773333293138
+[2026-03-12T15:34:57.767Z] Checked if tokens are valid: true, expires at: 1773333293138
+[2026-03-12T15:34:57.768Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/kallmee/serviceAccounts/kallmee@appspot.gserviceaccount.com:testIamPermissions [none]
+[2026-03-12T15:34:57.768Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/kallmee/serviceAccounts/kallmee@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}

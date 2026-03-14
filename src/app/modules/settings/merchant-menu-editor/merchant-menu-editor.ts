@@ -185,7 +185,10 @@ export class MerchantMenuEditor {
     if (event.previousContainer === event.container) {
       const currentItems = [...this.merchantItems()];
       moveItemInArray(currentItems, event.previousIndex, event.currentIndex);
-      this.catalog.updateMerchantMenu(id, currentItems);
+      this.catalog.merchantMenus.update(current => ({
+        ...current,
+        [id]: currentItems
+      }));
     } else {
       const itemToLink = event.previousContainer.data[event.previousIndex];
       
@@ -198,7 +201,10 @@ export class MerchantMenuEditor {
       const currentMerchantItems = [...this.merchantItems()];
       currentMerchantItems.splice(event.currentIndex, 0, newItem);
       
-      this.catalog.updateMerchantMenu(id, currentMerchantItems);
+      this.catalog.merchantMenus.update(current => ({
+        ...current,
+        [id]: currentMerchantItems
+      }));
       this.toast.success(`Added ${itemToLink.name} to merchant menu`);
     }
   }
@@ -208,23 +214,23 @@ export class MerchantMenuEditor {
     if (id === null) return;
 
     const currentItems = this.merchantItems().filter(i => i.id !== item.id);
-    this.catalog.updateMerchantMenu(id, currentItems);
+    this.catalog.merchantMenus.update(current => ({
+      ...current,
+      [id]: currentItems
+    }));
     this.toast.info(`Removed ${item.name} from merchant menu`);
   }
 
   updatePrice(item: MerchantMenuItem, newPrice: number) {
-    const id = this.selectedMerchantId();
-    if (id === null) return;
-
-    const currentItems = this.merchantItems().map(i => 
-      i.id === item.id ? { ...i, merchantPrice: newPrice } : i
-    );
-    this.catalog.updateMerchantMenu(id, currentItems);
+    item.merchantPrice = newPrice;
   }
 
   saveChanges() {
-    // The changes are actually saved automatically to the service state,
-    // but we can show a toast to give user feedback.
-    this.toast.success('Merchant menu and pricing saved successfully');
+    const id = this.selectedMerchantId();
+    if (id === null) return;
+    this.catalog.saveMerchantMenu(id, this.merchantItems()).subscribe({
+      next: () => this.toast.success('Merchant menu and pricing saved successfully'),
+      error: () => this.toast.error('Failed to save merchant menu')
+    });
   }
 }

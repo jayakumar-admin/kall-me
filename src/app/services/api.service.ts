@@ -11,8 +11,8 @@ import { LoaderService } from './loader.service';
 export class ApiService {
   private http = inject(HttpClient);
   private loader = inject(LoaderService);
-  // private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
-  private baseUrl = 'http://localhost:3000/api';
+  private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  // private baseUrl = 'http://localhost:3000/api';
 
 
   private withLoader<T>(request: Observable<T>, message: string): Observable<T> {
@@ -120,6 +120,13 @@ export class ApiService {
     );
   }
 
+  getOrder(id: string | number): Observable<Order> {
+    return this.withLoader(
+      this.http.get<Order>(`${this.baseUrl}/orders/${id}`),
+      'Fetching Order Details...'
+    );
+  }
+
   createOrder(order: Partial<Order>): Observable<Order> {
     return this.withLoader(
       this.http.post<Order>(`${this.baseUrl}/orders`, order),
@@ -131,6 +138,27 @@ export class ApiService {
     return this.withLoader(
       this.http.patch<Order>(`${this.baseUrl}/orders/${id}`, { status }),
       'Updating Order Status...'
+    );
+  }
+
+  updateMerchantPricing(hotel_id: number, items: { menu_id: number, price: number }[]): Observable<void> {
+    return this.withLoader(
+      this.http.post<void>(`${this.baseUrl}/pricing/update`, { hotel_id, items }),
+      'Updating Pricing...'
+    );
+  }
+
+  sendWhatsApp(to: string, templateName: string, parameters: Record<string, string | number>): Observable<void> {
+    return this.withLoader(
+      this.http.post<void>(`${this.baseUrl}/whatsapp/send`, { to, templateName, parameters }),
+      'Sending WhatsApp...'
+    );
+  }
+
+  getWhatsAppLogs(): Observable<any[]> {
+    return this.withLoader(
+      this.http.get<any[]>(`${this.baseUrl}/whatsapp/logs`),
+      'Fetching WhatsApp Logs...'
     );
   }
 

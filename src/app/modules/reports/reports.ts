@@ -260,9 +260,9 @@ export class Reports implements OnInit {
       o.hotel_name || '',
       o.customer_name || '',
       o.status || '',
-      o.subtotal.toString(),
-      o.shipping_fee.toString(),
-      o.grand_total.toString()
+      (o.subtotal || 0).toString(),
+      (o.shipping_fee || 0).toString(),
+      (o.grand_total || 0).toString()
     ]);
 
     const csvContent = [

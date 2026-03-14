@@ -20,6 +20,12 @@ export interface AppSettings {
     liveTracking: boolean;
     promoCodes: boolean;
   };
+  whatsapp: {
+    apiKey: string;
+    phoneNumberId: string;
+    businessAccountId: string;
+    enabled: boolean;
+  };
 }
 
 @Injectable({
@@ -45,6 +51,12 @@ export class SettingsService {
       ratings: true,
       liveTracking: true,
       promoCodes: true
+    },
+    whatsapp: {
+      apiKey: '',
+      phoneNumberId: '',
+      businessAccountId: '',
+      enabled: false
     }
   };
 

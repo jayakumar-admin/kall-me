@@ -151,6 +151,40 @@ import { SettingsService } from '../../../services/settings.service';
               </div>
             </div>
           </div>
+
+          <!-- WhatsApp Configuration -->
+          <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <mat-icon class="text-[#25D366]">message</mat-icon>
+                <h3 class="font-bold text-[#1A1A1A] dark:text-white">WhatsApp Configuration</h3>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="whatsapp.enabled" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-[#25D366]"></div>
+              </label>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" [class.opacity-50]="!whatsapp.enabled">
+              <div>
+                <label for="whatsappApiKey" class="text-xs font-bold text-slate-500 mb-2 block">WhatsApp API Key</label>
+                <input id="whatsappApiKey" type="password" [(ngModel)]="whatsapp.apiKey" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="EAABw...">
+              </div>
+              <div>
+                <label for="phoneNumberId" class="text-xs font-bold text-slate-500 mb-2 block">Phone Number ID</label>
+                <input id="phoneNumberId" type="text" [(ngModel)]="whatsapp.phoneNumberId" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="105...">
+              </div>
+              <div class="md:col-span-2">
+                <label for="businessAccountId" class="text-xs font-bold text-slate-500 mb-2 block">WhatsApp Business Account ID</label>
+                <input id="businessAccountId" type="text" [(ngModel)]="whatsapp.businessAccountId" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="102...">
+              </div>
+            </div>
+            
+            <div class="p-4 bg-emerald-50 dark:bg-emerald-500/5 rounded-xl border border-emerald-100 dark:border-emerald-500/10" *ngIf="whatsapp.enabled">
+              <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest mb-1">Status: Active</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">WhatsApp notifications will be sent for order confirmations and delivery assignments.</p>
+            </div>
+          </div>
         </div>
 
         <!-- Sidebar Settings -->
@@ -193,12 +227,20 @@ export class GeneralSettings implements OnInit {
     promoCodes: false
   };
 
+  whatsapp = {
+    apiKey: '',
+    phoneNumberId: '',
+    businessAccountId: '',
+    enabled: false
+  };
+
   ngOnInit() {
     const settings = this.settingsService.settings();
     this.taxes = { ...settings.taxes };
     this.financial = { ...settings.financial };
     this.logistics = { ...settings.logistics };
     this.features = { ...settings.features };
+    this.whatsapp = { ...settings.whatsapp };
   }
 
   save() {
@@ -206,7 +248,8 @@ export class GeneralSettings implements OnInit {
       taxes: this.taxes,
       financial: this.financial,
       logistics: this.logistics,
-      features: this.features
+      features: this.features,
+      whatsapp: this.whatsapp
     });
     this.toast.success('Settings saved successfully');
   }

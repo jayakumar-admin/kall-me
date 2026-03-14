@@ -155,22 +155,25 @@ export class MenuBulkAdd {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       Array.from(input.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            this.newItems.update(items => {
-              const updated = [...items];
-              const item = { ...updated[index] };
-              item.images = [...(item.images || []), e.target!.result as string];
-              if (item.images.length === 1) {
-                item.image_url = item.images[0];
-              }
-              updated[index] = item;
-              return updated;
-            });
-          }
-        };
-        reader.readAsDataURL(file);
+        this.imageUpload.uploadImage(file).subscribe({
+          next: (url) => {
+            if (url) {
+              this.newItems.update(items => {
+                const updated = [...items];
+                const item = { ...updated[index] };
+                item.images = [...(item.images || []), url];
+                if (item.images.length === 1) {
+                  item.image_url = item.images[0];
+                }
+                updated[index] = item;
+                return updated;
+              });
+            } else {
+              this.toast.error('Failed to upload image');
+            }
+          },
+          error: () => this.toast.error('Failed to upload image')
+        });
       });
     }
   }

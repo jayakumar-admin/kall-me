@@ -21,5 +21,9 @@ export const SETTINGS_ROUTES: Routes = [
   {
     path: 'merchant-menu-editor',
     loadComponent: () => import('./merchant-menu-editor/merchant-menu-editor').then(m => m.MerchantMenuEditor)
+  },
+  {
+    path: 'whatsapp-logs',
+    loadComponent: () => import('./whatsapp-logs/whatsapp-logs').then(m => m.WhatsAppLogs)
   }
 ];

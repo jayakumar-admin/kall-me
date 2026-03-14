@@ -28,8 +28,9 @@ if (hasBrowserBuild) {
   );
 }
 
-// Serve invoices
+// Serve invoices and uploads
 app.use('/invoices', express.static(path.join(__dirname, '../public/invoices')));
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Handle all other requests by serving the Angular index.html (if available)
 // Use a regex route to avoid path-to-regexp parsing issues for simple catch-all.

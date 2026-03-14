@@ -7,150 +7,15 @@ import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
 import { Order } from '../../models';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-invoice-generation',
   standalone: true,
   imports: [CommonModule, FormsModule, MatIconModule],
-  template: `
-    <div class="p-4 md:p-8 max-w-5xl mx-auto space-y-8 print:p-0 print:m-0 print:max-w-none print:space-y-0 print:text-black">
-      <div class="flex items-center justify-between print:hidden">
-        <div>
-          <h1 class="text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Invoice Generation</h1>
-          <p class="text-slate-500 dark:text-slate-400">Generate and preview invoices for orders.</p>
-        </div>
-      </div>
-
-      <div class="card space-y-6 print:border-none print:shadow-none print:p-0 print:m-0">
-        <div class="flex gap-4 print:hidden">
-          <div class="flex-1 relative">
-            <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</mat-icon>
-            <input 
-              type="text" 
-              [(ngModel)]="searchOrderId"
-              (keydown.enter)="searchOrder()"
-              placeholder="Enter Order ID (e.g. ORD-12345)" 
-              class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/50 dark:text-white transition-all"
-            >
-          </div>
-          <button (click)="searchOrder()" class="btn-primary whitespace-nowrap">
-            Find Order
-          </button>
-        </div>
-
-        @if (isLoading()) {
-          <div class="py-12 flex flex-col items-center justify-center text-slate-500 print:hidden">
-            <mat-icon class="animate-spin mb-4">refresh</mat-icon>
-            <p>Searching for order...</p>
-          </div>
-        } @else if (selectedOrder()) {
-          <div #invoicePreview class="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-white dark:bg-[#1E293B] print:border-none print:rounded-none">
-            <!-- Invoice Header -->
-            <div class="p-8 border-b border-slate-200 dark:border-white/10 flex justify-between items-start bg-slate-50 dark:bg-white/5 print:bg-white print:text-black">
-              <div>
-                <h2 class="text-2xl font-black text-[#1A1A1A] dark:text-white tracking-tight print:text-black">INVOICE</h2>
-                <p class="text-slate-500 mt-1 print:text-black">Bill ID: {{ generateBillId(selectedOrder()!) }}</p>
-                <p class="text-slate-500 print:text-black">Order ID: {{ selectedOrder()!.order_number || selectedOrder()!.id }}</p>
-                <p class="text-slate-500 print:text-black">Date: {{ (selectedOrder()!.created_at | date:'medium') || (today | date:'medium') }}</p>
-              </div>
-              <div class="text-right">
-                <div class="w-12 h-12 bg-[#FFC107] rounded-xl flex items-center justify-center shadow-sm ml-auto mb-4 print:bg-transparent print:border print:border-black">
-                  <mat-icon class="text-black">delivery_dining</mat-icon>
-                </div>
-                <h3 class="font-bold text-[#1A1A1A] dark:text-white print:text-black">KALL ME Delivery</h3>
-                <p class="text-sm text-slate-500 print:text-black">123 Delivery Street</p>
-                <p class="text-sm text-slate-500 print:text-black">Food City, FC 12345</p>
-                <p class="text-sm text-slate-500 print:text-black">GSTIN: TAX-KALL-99201</p>
-              </div>
-            </div>
-
-            <!-- Customer & Merchant Info -->
-            <div class="p-8 grid grid-cols-2 gap-8 border-b border-slate-200 dark:border-white/10 print:text-black">
-              <div>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 print:text-black">Billed To:</p>
-                <p class="font-bold text-[#1A1A1A] dark:text-white print:text-black">{{ selectedOrder()!.customer_name }}</p>
-                <p class="text-sm text-slate-500 print:text-black">{{ selectedOrder()!.customer_phone }}</p>
-                <p class="text-sm text-slate-500 print:text-black">{{ selectedOrder()!.delivery_address }}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 print:text-black">Restaurant:</p>
-                <p class="font-bold text-[#1A1A1A] dark:text-white print:text-black">{{ selectedOrder()!.hotel_name || 'Restaurant' }}</p>
-              </div>
-            </div>
-
-            <!-- Order Items -->
-            <div class="p-8 print:text-black">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="border-b border-slate-200 dark:border-white/10 print:border-black">
-                    <th class="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider print:text-black">Item</th>
-                    <th class="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-center print:text-black">Qty</th>
-                    <th class="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-right print:text-black">Price</th>
-                    <th class="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-right print:text-black">Total</th>
-                  </tr>
-                </thead>
-                <tbody class="text-sm">
-                  @for (item of (selectedOrder()?.items || []); track item.menu_id) {
-                    <tr class="border-b border-slate-100 dark:border-white/5 last:border-0 print:border-black">
-                      <td class="py-4 text-[#1A1A1A] dark:text-white print:text-black">{{ item.menu_name || 'Menu Item' }}</td>
-                      <td class="py-4 text-center text-slate-500 print:text-black">{{ item.quantity }}</td>
-                      <td class="py-4 text-right text-slate-500 print:text-black">{{ item.price | currency:'INR' }}</td>
-                      <td class="py-4 text-right font-medium text-[#1A1A1A] dark:text-white print:text-black">{{ item.total | currency:'INR' }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Totals -->
-            <div class="p-8 bg-slate-50 dark:bg-white/5 flex justify-end print:bg-white print:text-black">
-              <div class="w-full max-w-sm space-y-3">
-                <div class="flex justify-between text-sm text-slate-500 print:text-black">
-                  <span>Subtotal ({{ totalProducts() }} items)</span>
-                  <span>{{ subtotal() | currency:'INR' }}</span>
-                </div>
-                <div class="flex justify-between text-sm text-slate-500 print:text-black">
-                  <span>Delivery Fee</span>
-                  <span>{{ selectedOrder()!.shipping_fee | currency:'INR' }}</span>
-                </div>
-                <div class="flex justify-between text-sm text-slate-500 print:text-black">
-                  <span>GST ({{ gstPercent() }}%)</span>
-                  <span>{{ calculatedGst() | currency:'INR' }}</span>
-                </div>
-                <div class="flex justify-between text-sm text-slate-500 print:text-black">
-                  <span>IGST ({{ igstPercent() }}%)</span>
-                  <span>{{ calculatedIgst() | currency:'INR' }}</span>
-                </div>
-                <div class="pt-3 border-t border-slate-200 dark:border-white/10 flex justify-between items-center print:border-black">
-                  <span class="font-bold text-[#1A1A1A] dark:text-white print:text-black">Grand Total</span>
-                  <span class="text-xl font-black text-[#FFC107] print:text-black">{{ grandTotal() | currency:'INR' }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="p-8 border-t border-slate-200 dark:border-white/10 flex justify-end gap-4 bg-white dark:bg-[#1E293B] print:hidden">
-              <button (click)="printInvoice()" class="px-6 py-2 rounded-xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors flex items-center gap-2">
-                <mat-icon class="text-sm">print</mat-icon>
-                Print
-              </button>
-              <button (click)="downloadPdf()" class="btn-primary flex items-center gap-2">
-                <mat-icon class="text-sm">download</mat-icon>
-                Download PDF
-              </button>
-            </div>
-          </div>
-        } @else if (hasSearched()) {
-          <div class="py-12 flex flex-col items-center justify-center text-slate-500 print:hidden">
-            <mat-icon class="text-4xl mb-4 opacity-50">search_off</mat-icon>
-            <p>No order found with that ID.</p>
-          </div>
-        }
-      </div>
-    </div>
-  `,
+  templateUrl: './invoice-generation.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InvoiceGeneration implements OnInit {
@@ -215,23 +80,33 @@ export class InvoiceGeneration implements OnInit {
     this.hasSearched.set(true);
     this.selectedOrder.set(null);
 
-    this.api.getOrders().subscribe({
-      next: (orders) => {
-        const order = orders.find(o => 
-          o.order_number === this.searchOrderId.trim() || 
-          o.id?.toString() === this.searchOrderId.trim()
-        );
-        
-        if (order) {
-          this.selectedOrder.set(order);
-        } else {
-          this.toast.error('Order not found');
-        }
+    this.api.getOrder(this.searchOrderId.trim()).subscribe({
+      next: (order) => {
+        this.selectedOrder.set(order);
         this.isLoading.set(false);
       },
-      error: () => {
-        this.toast.error('Failed to fetch orders');
-        this.isLoading.set(false);
+      error: (err) => {
+        console.error('Failed to fetch order:', err);
+        // Fallback to searching in list if getOrder fails (maybe it's not implemented on external API)
+        this.api.getOrders().subscribe({
+          next: (orders) => {
+            const order = orders.find(o => 
+              o.order_number === this.searchOrderId.trim() || 
+              o.id?.toString() === this.searchOrderId.trim()
+            );
+            
+            if (order) {
+              this.selectedOrder.set(order);
+            } else {
+              this.toast.error('Order not found');
+            }
+            this.isLoading.set(false);
+          },
+          error: () => {
+            this.toast.error('Failed to fetch orders');
+            this.isLoading.set(false);
+          }
+        });
       }
     });
   }
@@ -246,25 +121,114 @@ export class InvoiceGeneration implements OnInit {
 
   async downloadPdf() {
     const order = this.selectedOrder();
-    if (!order || !this.invoicePreview) return;
+    if (!order) return;
 
     this.toast.success('Generating PDF...');
 
-    const canvas = await html2canvas(this.invoicePreview.nativeElement, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff'
-    });
-    
-    const imgData = canvas.toDataURL('image/png');
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const imgProps = doc.getImageProperties(imgData);
-    const pdfWidth = doc.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    
-    doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    doc.save(`invoice_${order.order_number || order.id}.pdf`);
-    
-    this.toast.success('Invoice downloaded successfully');
+    try {
+      const doc = new jsPDF();
+      
+      // Add header
+      doc.setFontSize(22);
+      doc.setTextColor(26, 26, 26); // #1A1A1A
+      doc.text('INVOICE', 14, 25);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139); // slate-500
+      doc.text(`Bill ID: ${this.generateBillId(order)}`, 14, 35);
+      doc.text(`Order ID: ${order.order_number || order.id}`, 14, 40);
+      doc.text(`Date: ${new Date(order.created_at || Date.now()).toLocaleString()}`, 14, 45);
+      
+      // Merchant Info (Right Aligned)
+      doc.setTextColor(26, 26, 26);
+      doc.setFontSize(14);
+      doc.text('KALL ME Delivery', 196, 25, { align: 'right' });
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      doc.text('123 Delivery Street', 196, 32, { align: 'right' });
+      doc.text('Food City, FC 12345', 196, 37, { align: 'right' });
+      doc.text('GSTIN: TAX-KALL-99201', 196, 42, { align: 'right' });
+      
+      // Divider
+      doc.setDrawColor(241, 245, 249); // slate-100
+      doc.line(14, 55, 196, 55);
+      
+      // Billed To & Restaurant
+      doc.setTextColor(100, 116, 139);
+      doc.setFontSize(9);
+      doc.text('BILLED TO:', 14, 65);
+      doc.text('RESTAURANT:', 120, 65);
+      
+      doc.setTextColor(26, 26, 26);
+      doc.setFontSize(11);
+      doc.text(order.customer_name, 14, 72);
+      doc.text(order.hotel_name || 'Restaurant', 120, 72);
+      
+      doc.setTextColor(100, 116, 139);
+      doc.setFontSize(10);
+      doc.text(order.customer_phone, 14, 78);
+      doc.text(order.delivery_address, 14, 84, { maxWidth: 80 });
+      
+      // Items Table
+      const tableData = (order.items || []).map(item => [
+        item.menu_name || 'Menu Item',
+        item.quantity.toString(),
+        `INR ${item.price.toLocaleString()}`,
+        `INR ${(item.total || (item.price * item.quantity)).toLocaleString()}`
+      ]);
+      
+      autoTable(doc, {
+        startY: 100,
+        head: [['Item', 'Qty', 'Price', 'Total']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: {
+          fillColor: [255, 193, 7], // #FFC107
+          textColor: [0, 0, 0],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
+        margin: { left: 14, right: 14 }
+      });
+      
+      const finalY = (doc as any).lastAutoTable?.finalY || 150;
+      
+      // Totals
+      const totalsX = 140;
+      doc.setFontSize(10);
+      doc.setTextColor(100, 116, 139);
+      
+      doc.text(`Subtotal (${this.totalProducts()} items):`, totalsX, finalY + 15);
+      doc.text(`INR ${this.subtotal().toLocaleString()}`, 196, finalY + 15, { align: 'right' });
+      
+      doc.text(`Delivery Fee:`, totalsX, finalY + 22);
+      doc.text(`INR ${(order.shipping_fee || 0).toLocaleString()}`, 196, finalY + 22, { align: 'right' });
+      
+      doc.text(`GST (${this.gstPercent()}%):`, totalsX, finalY + 29);
+      doc.text(`INR ${this.calculatedGst().toLocaleString()}`, 196, finalY + 29, { align: 'right' });
+      
+      doc.text(`IGST (${this.igstPercent()}%):`, totalsX, finalY + 36);
+      doc.text(`INR ${this.calculatedIgst().toLocaleString()}`, 196, finalY + 36, { align: 'right' });
+      
+      // Grand Total
+      doc.setDrawColor(241, 245, 249);
+      doc.line(totalsX, finalY + 42, 196, finalY + 42);
+      
+      doc.setFontSize(14);
+      doc.setTextColor(255, 193, 7); // #FFC107
+      doc.text(`Grand Total:`, totalsX, finalY + 52);
+      doc.text(`INR ${this.grandTotal().toLocaleString()}`, 196, finalY + 52, { align: 'right' });
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184); // slate-400
+      doc.text('Thank you for choosing KALL ME Delivery!', 105, 285, { align: 'center' });
+      
+      doc.save(`invoice_${order.order_number || order.id}.pdf`);
+      this.toast.success('Invoice downloaded successfully');
+    } catch (error) {
+      console.error('PDF Generation Error:', error);
+      this.toast.error('Failed to generate PDF. Please try again.');
+    }
   }
 }

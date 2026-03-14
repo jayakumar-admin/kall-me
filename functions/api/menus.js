@@ -2,13 +2,19 @@ const express = require('express');
 const db = require('../db');
 const router = express.Router();
 
-// Get all menus (with optional hotelId filtering)
+// Get all menus (with optional hotel_id filtering)
 router.get('/', async (req, res) => {
   try {
-    const { hotelId } = req.query;
+    const { hotel_id } = req.query;
     let result;
-    if (hotelId) {
-      result = await db.query('SELECT * FROM menus WHERE hotel_id = $1 ORDER BY id ASC', [hotelId]);
+    if (hotel_id) {
+      result = await db.query(`
+        SELECT m.*, COALESCE(mm.price, m.price) as price
+        FROM menus m
+        LEFT JOIN merchant_menus mm ON m.id = mm.menu_id AND mm.hotel_id = $1
+        WHERE m.hotel_id = $1 OR m.hotel_id IS NULL
+        ORDER BY m.id ASC
+      `, [hotel_id]);
     } else {
       result = await db.query('SELECT * FROM menus ORDER BY id ASC');
     }

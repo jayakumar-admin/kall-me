@@ -30,6 +30,7 @@ export interface DeliveryPerson {
   name: string;
   mobile: string;
   status: 'active' | 'busy' | 'offline';
+  image_url?: string;
 }
 
 export interface Order {
@@ -48,7 +49,7 @@ export interface Order {
   grand_total: number;
   amount_received: number;
   balance_pending: number;
-  status?: 'placed' | 'in-progress' | 'delivered' | 'cancelled';
+  status?: 'placed' | 'in-progress' | 'in-transit' | 'delivered' | 'cancelled';
   items: OrderItem[];
   created_at?: string;
   invoice_url?: string;

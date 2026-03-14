@@ -1,0 +1,192 @@
+    <div class="h-full overflow-y-auto p-6 custom-scrollbar space-y-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white">Delivery Team</h1>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card flex items-center justify-between">
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Drivers</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ drivers().length }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+            <mat-icon>groups</mat-icon>
+          </div>
+        </div>
+        <div class="card flex items-center justify-between">
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Now</p>
+            <p class="text-2xl font-bold text-green-500">{{ activeCount() }}</p>
+            <p class="text-[10px] text-slate-400 font-medium mt-1">Live updates active</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-500">
+            <mat-icon>sensors</mat-icon>
+          </div>
+        </div>
+        <div class="card flex items-center justify-between">
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">On Delivery</p>
+            <p class="text-2xl font-bold text-amber-500">{{ busyCount() }}</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-500">
+            <mat-icon>inventory_2</mat-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="card !p-0 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <div class="relative w-96">
+            <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+            <input 
+              type="text" 
+              placeholder="Search driver name or ID..." 
+              class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl pl-10 pr-4 py-2 text-sm outline-none"
+              (input)="onSearch($event)"
+            >
+          </div>
+          <div class="flex gap-3">
+            <button class="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-sm flex items-center gap-2">
+              <mat-icon>filter_list</mat-icon>
+              Filters
+            </button>
+            <button (click)="openModal()" class="px-4 py-2 rounded-xl bg-[#FFC107] text-black font-bold text-sm flex items-center gap-2">
+              <mat-icon>add</mat-icon>
+              Add New Driver
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 dark:bg-slate-800/50">
+                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Driver Name</th>
+                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number</th>
+                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              @for (driver of paginatedDrivers(); track driver.id) {
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                        <img [src]="driver.image_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + driver.name" alt="">
+                      </div>
+                      <div>
+                        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ driver.name }}</p>
+                        <p class="text-[10px] text-slate-400 uppercase">Emp ID: #KM-{{ driver.id }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-medium">{{ driver.mobile }}</td>
+                  <td class="px-6 py-4">
+                    <span 
+                      [class]="getStatusClass(driver.status)"
+                      class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                    >
+                      {{ driver.status }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center justify-center gap-2">
+                      <button (click)="openModal(driver)" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 transition-colors">
+                        <mat-icon class="text-lg">edit</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <div class="p-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <p class="text-xs text-slate-500">Showing {{ paginatedDrivers().length }} of {{ filteredDrivers().length }} drivers</p>
+          <div class="flex gap-2">
+            <button (click)="prevPage()" [disabled]="currentPage() === 1" class="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs disabled:opacity-50">Previous</button>
+            <button class="w-10 h-10 rounded-xl bg-[#FFC107] text-black font-bold text-xs">{{ currentPage() }}</button>
+            <button (click)="nextPage()" [disabled]="currentPage() === totalPages()" class="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-xs disabled:opacity-50">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    @if (showModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+          <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">
+              {{ editingDriver() ? 'Edit Driver' : 'Add New Driver' }}
+            </h2>
+            <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          
+          <form [formGroup]="driverForm" (ngSubmit)="saveDriver()" class="p-6 space-y-4">
+            
+            <div class="flex flex-col items-center gap-4 mb-6">
+              <div class="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative group border-2 border-slate-200 dark:border-slate-700">
+                <img [src]="croppedImage() || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (driverForm.get('name')?.value || 'new')" alt="Driver profile image" class="w-full h-full object-cover">
+                <label class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                  <mat-icon class="text-white">photo_camera</mat-icon>
+                  <span class="text-[10px] text-white font-bold mt-1">Upload</span>
+                  <input type="file" (change)="fileChangeEvent($event)" class="hidden" accept="image/*">
+                </label>
+              </div>
+              
+              @if (showCropper()) {
+                <div class="w-full h-64 bg-slate-50 dark:bg-slate-800 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                  <image-cropper
+                    [imageChangedEvent]="imageChangedEvent()"
+                    [maintainAspectRatio]="true"
+                    [aspectRatio]="1 / 1"
+                    format="png"
+                    (imageCropped)="imageCropped($event)"
+                    (imageLoaded)="imageLoaded()"
+                    (cropperReady)="cropperReady()"
+                    (loadImageFailed)="loadImageFailed()"
+                    class="h-full"
+                  ></image-cropper>
+                </div>
+              }
+            </div>
+
+            <div>
+              <label for="driverName" class="block text-xs font-bold text-slate-400 uppercase mb-2">Full Name</label>
+              <input id="driverName" type="text" formControlName="name" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all">
+            </div>
+            
+            <div>
+              <label for="driverMobile" class="block text-xs font-bold text-slate-400 uppercase mb-2">Mobile Number</label>
+              <input id="driverMobile" type="text" formControlName="mobile" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all">
+            </div>
+            
+            <div>
+              <label for="driverStatus" class="block text-xs font-bold text-slate-400 uppercase mb-2">Status</label>
+              <select id="driverStatus" formControlName="status" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all">
+                <option value="active">Active</option>
+                <option value="busy">Busy</option>
+                <option value="offline">Offline</option>
+              </select>
+            </div>
+
+            <div class="pt-4 flex gap-3">
+              <button type="button" (click)="closeModal()" class="flex-1 px-6 py-3 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                Cancel
+              </button>
+              <button type="submit" [disabled]="driverForm.invalid" class="flex-1 px-6 py-3 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/20">
+                {{ editingDriver() ? 'Update Driver' : 'Add Driver' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }

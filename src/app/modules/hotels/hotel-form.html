@@ -1,0 +1,70 @@
+    <div class="h-full overflow-y-auto p-6 custom-scrollbar">
+      <div class="max-w-2xl mx-auto">
+        <div class="flex items-center gap-4 mb-8">
+          <button routerLink="/app/hotels" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white">
+            {{ isEditMode() ? 'Edit Restaurant' : 'Add New Restaurant' }}
+          </h1>
+        </div>
+
+        <div class="card space-y-6">
+          <div>
+            <label for="restaurant-image" class="text-xs font-bold text-slate-500 mb-1.5 block">Restaurant Image</label>
+            <div class="flex items-center gap-4">
+              <div class="w-24 h-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 shrink-0 relative group">
+                <img [src]="hotel.image_url" alt="Restaurant image" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <mat-icon class="text-white">upload</mat-icon>
+                </div>
+                <label class="absolute inset-0 w-full h-full cursor-pointer" for="restaurant-image">
+                  <input 
+                    id="restaurant-image"
+                    type="file" 
+                    (change)="onFileSelected($event)"
+                    accept="image/*"
+                    class="opacity-0 w-full h-full cursor-pointer"
+                    [disabled]="isUploading()"
+                  >
+                </label>
+                @if (isUploading()) {
+                  <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <mat-icon class="text-white animate-spin">refresh</mat-icon>
+                  </div>
+                }
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-slate-500 dark:text-slate-400">Upload a high-quality image of the restaurant. Recommended size: 800x600px.</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="name" class="text-xs font-bold text-slate-500 mb-1.5 block">Restaurant Name</label>
+            <input id="name" type="text" [(ngModel)]="hotel.name" class="input-field" placeholder="e.g. Spice Garden">
+          </div>
+          
+          <div>
+            <label for="category" class="text-xs font-bold text-slate-500 mb-1.5 block">Category</label>
+            <select id="category" [(ngModel)]="hotel.category" class="input-field appearance-none">
+              <option value="Indian">Indian</option>
+              <option value="Chinese">Chinese</option>
+              <option value="Italian">Italian</option>
+              <option value="Fast Food">Fast Food</option>
+              <option value="Bakery">Bakery</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="address" class="text-xs font-bold text-slate-500 mb-1.5 block">Address</label>
+            <input id="address" type="text" [(ngModel)]="hotel.address" class="input-field" placeholder="e.g. 123 Main St">
+          </div>
+
+          <div class="pt-4 flex gap-3">
+            <button routerLink="/app/hotels" class="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
+            <button (click)="saveHotel()" class="flex-1 btn-primary">Save Partner</button>
+          </div>
+        </div>
+      </div>
+    </div>

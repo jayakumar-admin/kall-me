@@ -2,18 +2,21 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { ActivatedRoute } from '@angular/router';
 import { SearchService } from '../../services/search.service';
 import { ToastService } from '../../services/toast.service';
 import { CatalogService, MerchantMenuItem } from '../../services/catalog.service';
 import { ApiService } from '../../services/api.service';
 import { Hotel, DeliveryPerson, Order } from '../../models';
 
+import { OrderService } from '../../services/order.service';
+
 @Component({
   selector: 'app-create-order',
   standalone: true,
   imports: [CommonModule, FormsModule, MatIconModule],
   template: `
-    <div class="h-full overflow-y-auto lg:overflow-hidden p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 custom-scrollbar">
+    <div class="h-full overflow-y-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 custom-scrollbar">
       <!-- Left Panel: Hotel Selection -->
       <div class="lg:col-span-3 flex flex-col gap-4 h-auto lg:h-full">
         <div class="flex flex-col">
@@ -164,13 +167,16 @@ import { Hotel, DeliveryPerson, Order } from '../../models';
             <div class="space-y-3">
               <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Customer Details</p>
               <div>
-                <label for="customerName" class="text-[10px] font-bold text-slate-500 mb-1 block">Full Name</label>
+                <label for="customerName" class="text-[10px] font-bold text-slate-500 mb-1 block">Full Name <span class="text-red-500">*</span></label>
                 <input id="customerName" type="text" [(ngModel)]="customer.name" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label for="customerPhone" class="text-[10px] font-bold text-slate-500 mb-1 block">Phone Number</label>
-                  <input id="customerPhone" type="text" [(ngModel)]="customer.phone" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <label for="customerPhone" class="text-[10px] font-bold text-slate-500 mb-1 block">Phone Number <span class="text-red-500">*</span></label>
+                  <div class="relative">
+                    <input id="customerPhone" type="text" [(ngModel)]="customer.phone" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                    <mat-icon (click)="sendCustomerInvoice(customer.phone)" class="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-sm cursor-pointer">chat</mat-icon>
+                  </div>
                 </div>
                 <div>
                   <label for="customerType" class="text-[10px] font-bold text-slate-500 mb-1 block">Customer Type</label>
@@ -181,7 +187,7 @@ import { Hotel, DeliveryPerson, Order } from '../../models';
                 </div>
               </div>
               <div>
-                <label for="deliveryAddress" class="text-[10px] font-bold text-slate-500 mb-1 block">Delivery Address</label>
+                <label for="deliveryAddress" class="text-[10px] font-bold text-slate-500 mb-1 block">Delivery Address <span class="text-red-500">*</span></label>
                 <textarea id="deliveryAddress" [(ngModel)]="customer.address" rows="2" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] resize-none dark:text-white"></textarea>
               </div>
             </div>
@@ -190,16 +196,30 @@ import { Hotel, DeliveryPerson, Order } from '../../models';
             <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-white/5">
               <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Logistics & Payment</p>
               <div>
-                <label for="driverSelect" class="text-[10px] font-bold text-slate-500 mb-1 block">Assign Delivery Driver</label>
-                <div class="relative">
-                  <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-[#FFC107] text-sm">pedal_bike</mat-icon>
-                  <select id="driverSelect" [(ngModel)]="selectedDriverId" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-10 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] appearance-none dark:text-white">
-                    <option value="">Select Driver</option>
-                    @for (driver of drivers(); track driver.id) {
-                      <option [value]="driver.id">{{ driver.name }}</option>
+                <span class="text-[10px] font-bold text-slate-500 mb-1 block">Assign Delivery Driver <span class="text-red-500">*</span></span>
+                <div 
+                  (click)="openDriverModal()"
+                  (keydown.enter)="openDriverModal()"
+                  tabindex="0"
+                  class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg p-3 cursor-pointer hover:border-[#FFC107]/50 transition-colors flex items-center justify-between"
+                >
+                  <div class="flex items-center gap-3">
+                    @if (selectedDriver()) {
+                      <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                        <img [src]="selectedDriver()?.image_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + selectedDriver()?.name" alt="">
+                      </div>
+                      <div class="flex flex-col">
+                        <span class="text-sm font-bold text-[#1A1A1A] dark:text-white">{{ selectedDriver()?.name }}</span>
+                        <span class="text-[10px] text-slate-500">{{ selectedDriver()?.mobile }}</span>
+                      </div>
+                    } @else {
+                      <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                        <mat-icon class="text-slate-400 text-sm">pedal_bike</mat-icon>
+                      </div>
+                      <span class="text-sm text-slate-500">Select a driver</span>
                     }
-                  </select>
-                  <mat-icon class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">expand_more</mat-icon>
+                  </div>
+                  <mat-icon class="text-slate-400 text-sm">chevron_right</mat-icon>
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-3">
@@ -207,7 +227,7 @@ import { Hotel, DeliveryPerson, Order } from '../../models';
                   <label for="amountReceived" class="text-[10px] font-bold text-slate-500 mb-1 block">Amount Received</label>
                   <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">₹</span>
-                    <input id="amountReceived" type="number" [(ngModel)]="amountReceived" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-7 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                    <input id="amountReceived" type="number" [(ngModel)]="amountReceivedValue" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-7 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                   </div>
                 </div>
                 <div>
@@ -228,7 +248,7 @@ import { Hotel, DeliveryPerson, Order } from '../../models';
               </div>
               <div class="flex justify-between text-xs font-medium">
                 <span class="text-slate-500 flex items-center gap-1">Shipping Fee <mat-icon class="text-[10px] h-3 w-3">edit</mat-icon></span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ (shippingFee || 0).toLocaleString() }}.00</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (shippingFee() || 0).toLocaleString() }}.00</span>
               </div>
               
               <div class="bg-[#FFF9E6] p-4 rounded-xl flex justify-between items-center mt-3 border border-[#FFC107]/10">
@@ -239,7 +259,7 @@ import { Hotel, DeliveryPerson, Order } from '../../models';
               <div class="flex flex-col gap-1 pt-3">
                 <div class="flex justify-between items-center">
                   <span class="text-[10px] font-bold text-slate-500">Amount Received</span>
-                  <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ (amountReceived || 0).toLocaleString() }}.00</span>
+                  <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ (amountReceived() || 0).toLocaleString() }}.00</span>
                 </div>
                 <div class="h-px bg-slate-100 border-dashed border-t w-full my-1"></div>
                 <div class="flex justify-between items-center">
@@ -254,6 +274,9 @@ import { Hotel, DeliveryPerson, Order } from '../../models';
           </div>
 
           <div class="p-5 bg-white dark:bg-[#1E293B] border-t border-slate-100 dark:border-white/5">
+            @if (!canConfirm()) {
+              <p class="text-[10px] text-red-500 text-center mb-3 font-bold uppercase tracking-wider">Please fill all required fields to confirm</p>
+            }
             <button 
               (click)="confirmOrder()"
               [disabled]="!canConfirm()"
@@ -267,6 +290,69 @@ import { Hotel, DeliveryPerson, Order } from '../../models';
         </div>
       </div>
     </div>
+
+    <!-- Driver Selection Modal -->
+    @if (showDriverModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-[#1E293B] rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl border border-slate-100 dark:border-white/10 animate-in fade-in zoom-in duration-200">
+          <div class="p-6 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Select Driver</h2>
+            <button (click)="showDriverModal.set(false)" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          
+          <div class="p-4 border-b border-slate-100 dark:border-white/10">
+            <div class="relative">
+              <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+              <input 
+                type="text" 
+                [ngModel]="driverSearchTerm()"
+                (ngModelChange)="driverSearchTerm.set($event)"
+                placeholder="Search drivers..." 
+                class="w-full bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
+              >
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-2">
+            @for (driver of filteredDrivers(); track driver.id) {
+              <div 
+                (click)="selectDriver(driver)"
+                (keydown.enter)="selectDriver(driver)"
+                tabindex="0"
+                class="flex items-center gap-4 p-3 rounded-xl border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 cursor-pointer hover:border-[#FFC107]/50 transition-all"
+                [class.border-[#FFC107]]="selectedDriverId() === driver.id.toString()"
+                [class.bg-[#FFF9E6]/20]="selectedDriverId() === driver.id.toString()"
+              >
+                <div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                  <img [src]="driver.image_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + driver.name" alt="">
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h4 class="font-bold text-slate-900 dark:text-white truncate">{{ driver.name }}</h4>
+                  <p class="text-xs text-slate-500 truncate">{{ driver.mobile }}</p>
+                </div>
+                <div class="shrink-0">
+                  <span 
+                    [class]="driver.status === 'active' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 
+                             driver.status === 'busy' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' : 
+                             'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'"
+                    class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                  >
+                    {{ driver.status }}
+                  </span>
+                </div>
+              </div>
+            } @empty {
+              <div class="py-8 text-center">
+                <mat-icon class="text-4xl text-slate-300 mb-2">person_off</mat-icon>
+                <p class="text-slate-500">No drivers found.</p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
@@ -281,6 +367,7 @@ export class CreateOrder implements OnInit {
   toast = inject(ToastService);
   catalog = inject(CatalogService);
   api = inject(ApiService);
+  orderService = inject(OrderService);
   
   drivers = signal<DeliveryPerson[]>([]);
   selectedMerchant = signal<Hotel | null>(null);
@@ -291,18 +378,52 @@ export class CreateOrder implements OnInit {
   
   cart = signal<{ item: MerchantMenuItem; quantity: number }[]>([]);
   customer = { 
-    name: 'Amit Patel', 
-    phone: '+91 98765 43210', 
-    type: 'Premium' as const, 
-    address: 'Apartment 402, Skyline Residency, Bandra West, Mumbai, 400050' 
+    name: '', 
+    phone: '', 
+    type: 'Regular' as const, 
+    address: '' 
   };
-  selectedDriverId = '';
-  amountReceived = 0;
-  shippingFee = 80;
+  selectedDriverId = signal<string>('');
+  showDriverModal = signal(false);
+  driverSearchTerm = signal('');
+
+  filteredDrivers = computed(() => {
+    const term = this.driverSearchTerm().toLowerCase();
+    return this.drivers().filter(d => 
+      d.name.toLowerCase().includes(term) || 
+      d.mobile.includes(term)
+    );
+  });
+
+  selectedDriver = computed(() => {
+    return this.drivers().find(d => d.id === Number(this.selectedDriverId())) || null;
+  });
+
+  openDriverModal() {
+    this.showDriverModal.set(true);
+    this.driverSearchTerm.set('');
+  }
+
+  selectDriver(driver: DeliveryPerson) {
+    this.selectedDriverId.set(String(driver.id));
+    this.showDriverModal.set(false);
+  }
+
+  amountReceived = signal(0);
+  shippingFee = signal(80);
+
+  get amountReceivedValue() {
+    return this.amountReceived();
+  }
+
+  set amountReceivedValue(value: number | string) {
+    const parsed = Number(value);
+    this.amountReceived.set(Number.isNaN(parsed) ? 0 : parsed);
+  }
 
   subtotal = computed(() => this.cart().reduce((acc, entry) => acc + ((entry.item.merchantPrice ?? entry.item.price) * entry.quantity), 0));
-  grandTotal = computed(() => this.subtotal() + this.shippingFee);
-  balancePending = computed(() => Math.max(0, this.grandTotal() - this.amountReceived));
+  grandTotal = computed(() => this.subtotal() + this.shippingFee());
+  balancePending = computed(() => Math.max(0, this.grandTotal() - this.amountReceived()));
 
   filteredMerchants = computed(() => {
     const filter = this.merchantFilter().toLowerCase();
@@ -318,18 +439,33 @@ export class CreateOrder implements OnInit {
     const hotel = this.selectedMerchant();
     if (!hotel) return [];
     
-    const items = this.catalog.merchantMenus()[hotel.id] || [];
+    const merchantItems = this.catalog.merchantMenus()[hotel.id] || [];
+    const items = (merchantItems.length > 0 ? merchantItems : this.catalog.globalMenu().filter(i => i.hotel_id === hotel.id)) as MerchantMenuItem[];
+    
     if (cat === 'All Items') return items;
     return items.filter(i => i.category === cat);
   });
 
+  route = inject(ActivatedRoute);
+
   ngOnInit() {
     this.api.getDeliveryTeam().subscribe(d => this.drivers.set(d));
-    // Select first merchant by default if available
-    const merchants = this.catalog.merchants();
-    if (merchants.length > 0) {
-      this.selectMerchant(merchants[0]);
-    }
+    
+    this.route.queryParams.subscribe(params => {
+      const merchantId = params['merchantId'];
+      const merchants = this.catalog.merchants();
+      
+      if (merchants.length > 0) {
+        if (merchantId) {
+          const selected = merchants.find(m => m.id === Number(merchantId));
+          if (selected) {
+            this.selectMerchant(selected);
+            return;
+          }
+        }
+        this.selectMerchant(merchants[0]);
+      }
+    });
   }
 
   selectMerchant(merchant: Hotel) {
@@ -361,8 +497,28 @@ export class CreateOrder implements OnInit {
     });
   }
 
+  sendCustomerInvoice(phone: string) {
+    const params = {
+      CustomerName: this.customer.name,
+      OrderNumber: `ORD-${Date.now()}`,
+      HotelName: this.selectedMerchant()?.name || 'Unknown',
+      MenuItems: this.cart().map(c => c.item.name).join(', '),
+      GrandTotal: this.grandTotal(),
+      InvoiceUrl: 'https://kallme.com/invoice/123'
+    };
+    this.api.sendWhatsApp(phone, 'CUSTOMER_INVOICE', params).subscribe({
+      next: () => this.toast.success('Invoice sent via WhatsApp'),
+      error: () => this.toast.error('Failed to send invoice')
+    });
+  }
+
   canConfirm(): boolean {
-    return this.cart().length > 0 && !!this.selectedMerchant() && !!this.customer.name && !!this.customer.phone;
+    return this.cart().length > 0 && 
+           !!this.selectedMerchant() && 
+           !!this.customer.name?.trim() && 
+           !!this.customer.phone?.trim() && 
+           !!this.customer.address?.trim() && 
+           !!this.selectedDriverId();
   }
 
   confirmOrder() {
@@ -370,17 +526,18 @@ export class CreateOrder implements OnInit {
     
     const hotel = this.selectedMerchant()!;
     const orderData: Partial<Order> = {
+      order_number: `ORD-${Date.now()}`,
       hotel_id: hotel.id,
       hotel_name: hotel.name,
-      delivery_person_id: 1, // Default driver
+      delivery_person_id: Number(this.selectedDriverId()) || 1, // Default driver
       customer_name: this.customer.name,
       customer_phone: this.customer.phone,
       customer_type: 'regular',
       delivery_address: this.customer.address || 'Pickup',
       subtotal: this.subtotal(),
-      shipping_fee: this.shippingFee,
+      shipping_fee: this.shippingFee(),
       grand_total: this.grandTotal(),
-      amount_received: this.amountReceived,
+      amount_received: this.amountReceived(),
       balance_pending: this.balancePending(),
       status: 'placed',
       items: this.cart().map(c => {
@@ -401,7 +558,8 @@ export class CreateOrder implements OnInit {
       next: (order) => {
         this.toast.success(`Order #${order.order_number} confirmed successfully!`);
         this.cart.set([]);
-        this.amountReceived = 0;
+        this.amountReceived.set(0);
+        this.orderService.loadOrders();
       },
       error: (err) => {
         console.error('Order creation failed:', err);

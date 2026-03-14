@@ -7,77 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
   selector: 'app-landing',
   standalone: true,
   imports: [CommonModule, RouterLink, MatIconModule],
-  template: `
-    <div class="min-h-screen bg-white text-[#1A1A1A] font-sans">
-      <!-- Header -->
-      <header class="flex items-center justify-between px-8 py-6">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-[#FFC107] rounded-lg flex items-center justify-center">
-            <mat-icon class="text-black text-sm">delivery_dining</mat-icon>
-          </div>
-          <span class="font-display font-black text-xl tracking-tight">Kall me</span>
-        </div>
-        <div class="flex items-center gap-4">
-          <a routerLink="/login" class="text-sm font-bold text-slate-600 hover:text-black">Login</a>
-          <a routerLink="/login" class="bg-black text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-slate-800">Get Started</a>
-        </div>
-      </header>
-
-      <!-- Hero -->
-      <main class="max-w-6xl mx-auto px-4 py-16 text-center">
-        <div class="inline-flex items-center gap-2 bg-slate-100 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-slate-500 mb-6">
-          <mat-icon class="text-sm text-[#FFC107]">emoji_objects</mat-icon>
-          SMART DELIVERY MANAGEMENT
-        </div>
-        <h1 class="text-6xl md:text-7xl font-display font-black tracking-tighter mb-6 leading-tight">
-          Your Restaurant's<br/>
-          <span class="text-[#FFC107]">Digital Edge</span>
-        </h1>
-        <p class="text-lg text-slate-500 max-w-2xl mx-auto mb-16">
-          The ultimate food delivery management system. Streamlining operations for hotels, admins, and delivery partners with professional precision.
-        </p>
-
-        <!-- Cards -->
-        <div class="grid md:grid-cols-3 gap-8">
-          <!-- Card 1 -->
-          <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100">
-            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <mat-icon class="text-[#FFC107]">restaurant</mat-icon>
-            </div>
-            <h3 class="text-xl font-bold mb-4">Explore Hotels & Menus</h3>
-            <p class="text-sm text-slate-500 mb-6">Browse through a curated list of top-rated hotels and their exclusive menus to find your next meal.</p>
-            <a routerLink="/login" class="inline-flex items-center gap-2 text-sm font-bold hover:gap-3 transition-all">
-              View Catalog <mat-icon class="text-sm">arrow_forward</mat-icon>
-            </a>
-          </div>
-
-          <!-- Card 2 -->
-          <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100">
-            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <mat-icon class="text-[#FFC107]">admin_panel_settings</mat-icon>
-            </div>
-            <h3 class="text-xl font-bold mb-4">Admin Portal</h3>
-            <p class="text-sm text-slate-500 mb-6">Securely access management tools, view analytics, and oversee the entire delivery ecosystem.</p>
-            <a routerLink="/login" class="inline-flex items-center gap-2 text-sm font-bold hover:gap-3 transition-all">
-              Go to Dashboard <mat-icon class="text-sm">arrow_forward</mat-icon>
-            </a>
-          </div>
-
-          <!-- Card 3 -->
-          <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100">
-            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <mat-icon class="text-[#FFC107]">local_shipping</mat-icon>
-            </div>
-            <h3 class="text-xl font-bold mb-4">Our Delivery Fleet</h3>
-            <p class="text-sm text-slate-500 mb-6">Track active personnel, manage assignments, and ensure lightning-fast delivery to your doorstep.</p>
-            <a routerLink="/login" class="inline-flex items-center gap-2 text-sm font-bold hover:gap-3 transition-all">
-              Manage Fleet <mat-icon class="text-sm">arrow_forward</mat-icon>
-            </a>
-          </div>
-        </div>
-      </main>
-    </div>
-  `,
+  templateUrl: './landing.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Landing {}

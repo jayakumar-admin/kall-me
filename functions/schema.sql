@@ -48,10 +48,57 @@ CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     order_number VARCHAR(20) UNIQUE NOT NULL,
     hotel_id INTEGER REFERENCES hotels(id),
+    hotel_name VARCHAR(255),
+    delivery_person_id INTEGER REFERENCES delivery_persons(id),
     customer_name VARCHAR(255) NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
+    customer_phone VARCHAR(20),
+    customer_type VARCHAR(20),
+    delivery_address TEXT,
+    subtotal DECIMAL(10,2),
+    shipping_fee DECIMAL(10,2),
+    grand_total DECIMAL(10,2),
+    amount_received DECIMAL(10,2),
+    balance_pending DECIMAL(10,2),
     status VARCHAR(50) DEFAULT 'placed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Order Items table
+CREATE TABLE IF NOT EXISTS order_items (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+    menu_id INTEGER REFERENCES menus(id),
+    menu_name VARCHAR(255),
+    quantity INTEGER NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    total DECIMAL(10,2) NOT NULL
+);
+
+-- WhatsApp Logs table
+CREATE TABLE IF NOT EXISTS whatsapp_logs (
+    id SERIAL PRIMARY KEY,
+    recipient VARCHAR(20) NOT NULL,
+    template_name VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'sent',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Merchant Menus table (for merchant-specific pricing)
+CREATE TABLE IF NOT EXISTS merchant_menus (
+    id SERIAL PRIMARY KEY,
+    hotel_id INTEGER REFERENCES hotels(id) ON DELETE CASCADE,
+    menu_id INTEGER REFERENCES menus(id) ON DELETE CASCADE,
+    price DECIMAL(10,2) NOT NULL,
+    UNIQUE(hotel_id, menu_id)
+);
+
+-- Refresh Tokens table
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL
 );
 
 -- Seed data

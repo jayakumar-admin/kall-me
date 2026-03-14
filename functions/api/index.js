@@ -7,6 +7,8 @@ const deliveryRoutes = require('./delivery.js');
 const reportRoutes = require('./reports.js');
 const uploadRoutes = require('./upload.js');
 const invoiceRoutes = require('./invoices.js');
+const pricingRoutes = require('./pricing.js');
+const whatsappRoutes = require('./whatsapp.js');
 
 const router = express.Router();
 
@@ -18,5 +20,7 @@ router.use('/delivery', deliveryRoutes);
 router.use('/reports', reportRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/invoices', invoiceRoutes);
+router.use('/pricing', pricingRoutes);
+router.use('/whatsapp', whatsappRoutes);
 
 module.exports = router;

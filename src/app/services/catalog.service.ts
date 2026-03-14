@@ -56,7 +56,7 @@ export class CatalogService {
       next: (items) => {
         this.merchantMenus.update(current => ({
           ...current,
-          [hotelId]: items.map(item => ({ ...item, isLinked: true }))
+          [hotelId]: items.map(item => ({ ...item, merchantPrice: item.price, isLinked: true }))
         }));
       }
     });
@@ -149,14 +149,11 @@ export class CatalogService {
     });
   }
 
-  updateMerchantMenu(merchantId: string | number, items: MerchantMenuItem[]) {
-    const id = typeof merchantId === 'string' ? parseInt(merchantId) : merchantId;
-    
-    // In a real app, we would send this to the backend to sync the links.
-    // For now, we'll just update the local state.
+  saveMerchantMenu(merchantId: number, items: MerchantMenuItem[]) {
     this.merchantMenus.update(current => ({
       ...current,
-      [id]: items
+      [merchantId]: items
     }));
+    return this.api.updateMerchantPricing(merchantId, items.map(i => ({ menu_id: i.id, price: i.merchantPrice ?? i.price })));
   }
 }

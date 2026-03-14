@@ -37,8 +37,24 @@ export const routes: Routes = [
         loadComponent: () => import('./modules/orders/orders-list').then(m => m.OrdersList)
       },
       {
+        path: 'orders/:id',
+        loadComponent: () => import('./modules/orders/order-details').then(m => m.OrderDetails)
+      },
+      {
         path: 'hotels',
         loadComponent: () => import('./modules/hotels/hotels-list').then(m => m.HotelsList)
+      },
+      {
+        path: 'hotels/:id',
+        loadComponent: () => import('./modules/hotels/hotel-details').then(m => m.HotelDetails)
+      },
+      {
+        path: 'hotels/create',
+        loadComponent: () => import('./modules/hotels/hotel-form').then(m => m.HotelForm)
+      },
+      {
+        path: 'hotels/:id/edit',
+        loadComponent: () => import('./modules/hotels/hotel-form').then(m => m.HotelForm)
       },
       {
         path: 'delivery',

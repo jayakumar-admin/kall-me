@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,13 +7,15 @@ import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
 import { Order } from '../../models';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-invoice-generation',
   standalone: true,
   imports: [CommonModule, FormsModule, MatIconModule],
   template: `
-    <div class="p-4 md:p-8 max-w-5xl mx-auto space-y-8 print:p-0 print:m-0 print:max-w-none print:space-y-0">
+    <div class="p-4 md:p-8 max-w-5xl mx-auto space-y-8 print:p-0 print:m-0 print:max-w-none print:space-y-0 print:text-black">
       <div class="flex items-center justify-between print:hidden">
         <div>
           <h1 class="text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Invoice Generation</h1>
@@ -44,7 +46,7 @@ import { Order } from '../../models';
             <p>Searching for order...</p>
           </div>
         } @else if (selectedOrder()) {
-          <div class="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-white dark:bg-[#1E293B] print:border-none print:rounded-none">
+          <div #invoicePreview class="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-white dark:bg-[#1E293B] print:border-none print:rounded-none">
             <!-- Invoice Header -->
             <div class="p-8 border-b border-slate-200 dark:border-white/10 flex justify-between items-start bg-slate-50 dark:bg-white/5 print:bg-white print:text-black">
               <div>
@@ -90,7 +92,7 @@ import { Order } from '../../models';
                   </tr>
                 </thead>
                 <tbody class="text-sm">
-                  @for (item of selectedOrder()!.items; track item.menu_id) {
+                  @for (item of (selectedOrder()?.items || []); track item.menu_id) {
                     <tr class="border-b border-slate-100 dark:border-white/5 last:border-0 print:border-black">
                       <td class="py-4 text-[#1A1A1A] dark:text-white print:text-black">{{ item.menu_name || 'Menu Item' }}</td>
                       <td class="py-4 text-center text-slate-500 print:text-black">{{ item.quantity }}</td>
@@ -162,6 +164,8 @@ export class InvoiceGeneration implements OnInit {
   hasSearched = signal(false);
   selectedOrder = signal<Order | null>(null);
   today = new Date();
+
+  @ViewChild('invoicePreview') invoicePreview!: ElementRef;
 
   gstPercent = computed(() => this.settingsService.settings().taxes.gst);
   igstPercent = computed(() => this.settingsService.settings().taxes.igst);
@@ -240,11 +244,27 @@ export class InvoiceGeneration implements OnInit {
     window.print();
   }
 
-  downloadPdf() {
-    this.toast.success('Downloading PDF...');
-    // In a real app, you would use a library like jspdf or html2canvas here
-    setTimeout(() => {
-      this.toast.success('Invoice downloaded successfully');
-    }, 1500);
+  async downloadPdf() {
+    const order = this.selectedOrder();
+    if (!order || !this.invoicePreview) return;
+
+    this.toast.success('Generating PDF...');
+
+    const canvas = await html2canvas(this.invoicePreview.nativeElement, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff'
+    });
+    
+    const imgData = canvas.toDataURL('image/png');
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const imgProps = doc.getImageProperties(imgData);
+    const pdfWidth = doc.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    
+    doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    doc.save(`invoice_${order.order_number || order.id}.pdf`);
+    
+    this.toast.success('Invoice downloaded successfully');
   }
 }

@@ -6,7 +6,7 @@ import { SearchService } from '../../services/search.service';
 import { ToastService } from '../../services/toast.service';
 import { CatalogService, MerchantMenuItem } from '../../services/catalog.service';
 import { ApiService } from '../../services/api.service';
-import { Hotel, MenuItem, DeliveryPerson, Order } from '../../models';
+import { Hotel, DeliveryPerson, Order } from '../../models';
 
 @Component({
   selector: 'app-create-order',
@@ -120,7 +120,7 @@ import { Hotel, MenuItem, DeliveryPerson, Order } from '../../models';
               <div class="flex-1 min-w-0">
                 <div class="flex justify-between items-start">
                   <h4 class="font-bold text-sm text-[#1A1A1A] dark:text-white truncate">{{ item.name }}</h4>
-                  <span class="font-bold text-[#FFC107]">₹{{ (item.merchantPrice ?? item.price).toLocaleString() }}</span>
+                  <span class="font-bold text-[#FFC107]">₹{{ ((item.merchantPrice ?? item.price) || 0).toLocaleString() }}</span>
                 </div>
                 <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{{ item.description }}</p>
                 
@@ -135,7 +135,7 @@ import { Hotel, MenuItem, DeliveryPerson, Order } from '../../models';
                     </button>
                   </div>
                   @if (getQuantity(item) > 0) {
-                    <span class="text-[10px] font-bold text-slate-400">₹{{ (getQuantity(item) * (item.merchantPrice ?? item.price)).toLocaleString() }}</span>
+                    <span class="text-[10px] font-bold text-slate-400">₹{{ ((getQuantity(item) * (item.merchantPrice ?? item.price)) || 0).toLocaleString() }}</span>
                   }
                 </div>
               </div>
@@ -224,22 +224,22 @@ import { Hotel, MenuItem, DeliveryPerson, Order } from '../../models';
             <div class="space-y-2 pt-4 border-t border-slate-100">
               <div class="flex justify-between text-xs font-medium">
                 <span class="text-slate-500">Food Subtotal</span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ subtotal().toLocaleString() }}.00</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (subtotal() || 0).toLocaleString() }}.00</span>
               </div>
               <div class="flex justify-between text-xs font-medium">
                 <span class="text-slate-500 flex items-center gap-1">Shipping Fee <mat-icon class="text-[10px] h-3 w-3">edit</mat-icon></span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ shippingFee }}.00</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (shippingFee || 0).toLocaleString() }}.00</span>
               </div>
               
               <div class="bg-[#FFF9E6] p-4 rounded-xl flex justify-between items-center mt-3 border border-[#FFC107]/10">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-[#1A1A1A]">Grand Total</span>
-                <span class="text-xl font-display font-black text-[#FFC107]">₹{{ grandTotal().toLocaleString() }}.00</span>
+                <span class="text-xl font-display font-black text-[#FFC107]">₹{{ (grandTotal() || 0).toLocaleString() }}.00</span>
               </div>
 
               <div class="flex flex-col gap-1 pt-3">
                 <div class="flex justify-between items-center">
                   <span class="text-[10px] font-bold text-slate-500">Amount Received</span>
-                  <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ amountReceived.toLocaleString() }}.00</span>
+                  <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ (amountReceived || 0).toLocaleString() }}.00</span>
                 </div>
                 <div class="h-px bg-slate-100 border-dashed border-t w-full my-1"></div>
                 <div class="flex justify-between items-center">
@@ -247,7 +247,7 @@ import { Hotel, MenuItem, DeliveryPerson, Order } from '../../models';
                     <span class="text-[10px] font-bold text-red-500 uppercase tracking-tighter">Balance Pending</span>
                     <span class="text-[8px] text-slate-400">To be received</span>
                   </div>
-                  <span class="text-lg font-black text-red-500">₹{{ balancePending().toLocaleString() }}.00</span>
+                  <span class="text-lg font-black text-red-500">₹{{ (balancePending() || 0).toLocaleString() }}.00</span>
                 </div>
               </div>
             </div>

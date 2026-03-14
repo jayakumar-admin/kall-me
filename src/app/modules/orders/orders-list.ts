@@ -53,15 +53,15 @@ import { MainSkeletonComponent } from '../../components/main-skeleton';
           </div>
           <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Revenue</p>
-            <p class="text-2xl font-black text-[#1A1A1A] dark:text-white">₹{{ orderService.stats().revenue.toLocaleString() }}</p>
+            <p class="text-2xl font-black text-[#1A1A1A] dark:text-white">₹{{ (orderService.stats().revenue || 0).toLocaleString() }}</p>
           </div>
           <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Received</p>
-            <p class="text-2xl font-black text-emerald-500">₹{{ orderService.stats().received.toLocaleString() }}</p>
+            <p class="text-2xl font-black text-emerald-500">₹{{ (orderService.stats().received || 0).toLocaleString() }}</p>
           </div>
           <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Balance Pending</p>
-            <p class="text-2xl font-black text-red-500">₹{{ orderService.stats().pending.toLocaleString() }}</p>
+            <p class="text-2xl font-black text-red-500">₹{{ (orderService.stats().pending || 0).toLocaleString() }}</p>
           </div>
         </div>
 
@@ -105,9 +105,9 @@ import { MainSkeletonComponent } from '../../components/main-skeleton';
                         <span class="text-sm font-medium">{{ order.hotel_name }}</span>
                       </div>
                     </td>
-                    <td class="px-6 py-4 font-bold text-[#1A1A1A] dark:text-white">₹{{ order.grand_total.toLocaleString() }}</td>
-                    <td class="px-6 py-4 font-bold text-emerald-500">₹{{ order.amount_received.toLocaleString() }}</td>
-                    <td class="px-6 py-4 font-bold text-red-500">₹{{ order.balance_pending.toLocaleString() }}</td>
+                    <td class="px-6 py-4 font-bold text-[#1A1A1A] dark:text-white">₹{{ (order.grand_total || 0).toLocaleString() }}</td>
+                    <td class="px-6 py-4 font-bold text-emerald-500">₹{{ (order.amount_received || 0).toLocaleString() }}</td>
+                    <td class="px-6 py-4 font-bold text-red-500">₹{{ (order.balance_pending || 0).toLocaleString() }}</td>
                     <td class="px-6 py-4">
                       <div class="relative inline-block">
                         <select 

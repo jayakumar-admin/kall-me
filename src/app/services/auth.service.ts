@@ -25,10 +25,8 @@ export class AuthService {
   isLoggedIn = computed(() => !!this.userSignal());
 
   constructor() {
-    const savedUser = localStorage.getItem('kallme_user');
-    if (savedUser) {
-      this.userSignal.set(JSON.parse(savedUser));
-    }
+    // Default to logout
+    localStorage.removeItem('kallme_user');
   }
 
   login(credentials: { email?: string | null; password?: string | null }) {
@@ -43,7 +41,7 @@ export class AuthService {
       tap(user => {
         this.userSignal.set(user);
         localStorage.setItem('kallme_user', JSON.stringify(user));
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/app/dashboard']);
       }),
       finalize(() => this.loader.hide())
     );

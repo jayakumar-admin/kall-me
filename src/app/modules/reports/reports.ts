@@ -76,23 +76,30 @@ import autoTable from 'jspdf-autotable';
       </div>
 
       <!-- Metrics -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 bg-[#FFC107]/5">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Hotel Earnings</p>
-          <p class="text-3xl font-black text-[#1A1A1A] dark:text-white">₹{{ metrics().hotelEarnings.toLocaleString() }}</p>
-          <p class="text-[10px] text-slate-500 mt-2">Total payout to restaurant partners</p>
+      @if (orders().length === 0) {
+        <div class="py-12 text-center text-slate-500">
+          <mat-icon class="animate-spin text-4xl mb-2">refresh</mat-icon>
+          <p>Loading reports...</p>
         </div>
-        <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Delivery Salary</p>
-          <p class="text-3xl font-black text-[#1A1A1A] dark:text-white">₹{{ metrics().deliverySalary.toLocaleString() }}</p>
-          <p class="text-[10px] text-slate-500 mt-2">Total payout to delivery partners</p>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 bg-[#FFC107]/5">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Hotel Earnings</p>
+            <p class="text-3xl font-black text-[#1A1A1A] dark:text-white">₹{{ (metrics().hotelEarnings || 0).toLocaleString() }}</p>
+            <p class="text-[10px] text-slate-500 mt-2">Total payout to restaurant partners</p>
+          </div>
+          <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Delivery Salary</p>
+            <p class="text-3xl font-black text-[#1A1A1A] dark:text-white">₹{{ (metrics().deliverySalary || 0).toLocaleString() }}</p>
+            <p class="text-[10px] text-slate-500 mt-2">Total payout to delivery partners</p>
+          </div>
+          <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Admin Commission</p>
+            <p class="text-3xl font-black text-[#FFC107]">₹{{ (metrics().adminCommission || 0).toLocaleString() }}</p>
+            <p class="text-[10px] text-slate-500 mt-2">Net platform revenue</p>
+          </div>
         </div>
-        <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Admin Commission</p>
-          <p class="text-3xl font-black text-[#FFC107]">₹{{ metrics().adminCommission.toLocaleString() }}</p>
-          <p class="text-[10px] text-slate-500 mt-2">Net platform revenue</p>
-        </div>
-      </div>
+      }
 
       <!-- Filtered Data Table Preview -->
       <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 !p-0 overflow-hidden">
@@ -127,7 +134,7 @@ import autoTable from 'jspdf-autotable';
                       {{ order.status }}
                     </span>
                   </td>
-                  <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white text-right">₹{{ order.grand_total.toLocaleString() }}</td>
+                  <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white text-right">₹{{ (order.grand_total || 0).toLocaleString() }}</td>
                 </tr>
               }
               @if (filteredOrders().length === 0) {
@@ -199,18 +206,20 @@ export class Reports implements OnInit {
     let totalDeliverySalary = 0;
     let totalAdminCommission = 0;
     
-    data.forEach(o => {
-      const hotel = hotels.find(h => h.id === o.hotel_id);
-      const commissionRate = hotel?.commission_rate || 15; // Default to 15% if not found
-      
-      const adminComm = Math.round(o.subtotal * (commissionRate / 100));
-      const deliveryFee = o.shipping_fee;
-      const hotelEarn = o.subtotal - adminComm;
-      
-      totalHotelEarnings += hotelEarn;
-      totalDeliverySalary += deliveryFee;
-      totalAdminCommission += adminComm;
-    });
+    if (data && hotels) {
+      data.forEach(o => {
+        const hotel = hotels.find(h => h.id === o.hotel_id);
+        const commissionRate = hotel?.commission_rate || 15; // Default to 15% if not found
+        
+        const adminComm = Math.round((o.subtotal || 0) * (commissionRate / 100));
+        const deliveryFee = o.shipping_fee || 0;
+        const hotelEarn = (o.subtotal || 0) - adminComm;
+        
+        totalHotelEarnings += hotelEarn;
+        totalDeliverySalary += deliveryFee;
+        totalAdminCommission += adminComm;
+      });
+    }
     
     return {
       hotelEarnings: totalHotelEarnings,
@@ -220,7 +229,13 @@ export class Reports implements OnInit {
   });
 
   ngOnInit() {
-    this.api.getOrders().subscribe(d => this.orders.set(d));
+    this.api.getOrders().subscribe({
+      next: (d) => {
+        console.log('Orders fetched:', d);
+        this.orders.set(d);
+      },
+      error: (err) => console.error('Failed to fetch orders:', err)
+    });
   }
 
   resetFilters() {
@@ -298,9 +313,9 @@ export class Reports implements OnInit {
     doc.setTextColor(0);
     doc.text(`Summary:`, 14, 40);
     doc.setFontSize(10);
-    doc.text(`Hotel Earnings: Rs. ${m.hotelEarnings.toLocaleString()}`, 14, 46);
-    doc.text(`Delivery Salary: Rs. ${m.deliverySalary.toLocaleString()}`, 14, 52);
-    doc.text(`Admin Commission: Rs. ${m.adminCommission.toLocaleString()}`, 14, 58);
+    doc.text(`Hotel Earnings: Rs. ${(m.hotelEarnings || 0).toLocaleString()}`, 14, 46);
+    doc.text(`Delivery Salary: Rs. ${(m.deliverySalary || 0).toLocaleString()}`, 14, 52);
+    doc.text(`Admin Commission: Rs. ${(m.adminCommission || 0).toLocaleString()}`, 14, 58);
 
     // Table
     const headers = [['Order ID', 'Date', 'Merchant', 'Status', 'Total']];
@@ -309,7 +324,7 @@ export class Reports implements OnInit {
       o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
       o.hotel_name || '',
       o.status || '',
-      `Rs. ${o.grand_total.toLocaleString()}`
+      `Rs. ${(o.grand_total || 0).toLocaleString()}`
     ]);
 
     autoTable(doc, {

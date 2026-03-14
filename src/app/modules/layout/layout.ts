@@ -50,12 +50,12 @@ import { SearchService } from '../../services/search.service';
 
         <!-- Nav Links -->
         <nav class="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
-          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Dashboard', link: '/dashboard', icon: 'dashboard' }"></ng-container>
-          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Live Orders', link: '/orders', icon: 'list_alt' }"></ng-container>
-          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Create Order', link: '/create-order', icon: 'add_circle_outline' }"></ng-container>
-          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Invoice Generation', link: '/invoice', icon: 'receipt_long' }"></ng-container>
-          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Reports', link: '/reports', icon: 'bar_chart' }"></ng-container>
-          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Settings', link: '/settings', icon: 'settings' }"></ng-container>
+          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Dashboard', link: '/app/dashboard', icon: 'dashboard' }"></ng-container>
+          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Live Orders', link: '/app/orders', icon: 'list_alt' }"></ng-container>
+          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Create Order', link: '/app/create-order', icon: 'add_circle_outline' }"></ng-container>
+          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Invoice Generation', link: '/app/invoice', icon: 'receipt_long' }"></ng-container>
+          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Reports', link: '/app/reports', icon: 'bar_chart' }"></ng-container>
+          <ng-container *ngTemplateOutlet="navLink; context: { label: 'Settings', link: '/app/settings', icon: 'settings' }"></ng-container>
         </nav>
 
         <!-- User Profile (Bottom Sidebar) -->
@@ -129,7 +129,7 @@ import { SearchService } from '../../services/search.service';
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-hidden relative">
+        <main class="flex-1 overflow-y-auto relative">
           <router-outlet></router-outlet>
         </main>
       </div>

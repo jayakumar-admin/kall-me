@@ -19,8 +19,8 @@ export const SETTINGS_ROUTES: Routes = [
     loadComponent: () => import('./menu-bulk-add/menu-bulk-add').then(m => m.MenuBulkAdd)
   },
   {
-    path: 'merchant-menu-editor',
-    loadComponent: () => import('./merchant-menu-editor/merchant-menu-editor').then(m => m.MerchantMenuEditor)
+    path: 'hotel-menu-editor',
+    loadComponent: () => import('./hotel-menu-editor/hotel-menu-editor').then(m => m.HotelMenuEditor)
   },
   {
     path: 'whatsapp-logs',

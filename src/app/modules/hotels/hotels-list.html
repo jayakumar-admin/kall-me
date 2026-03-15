@@ -5,7 +5,7 @@
         <div class="flex items-center justify-between">
           <div>
             <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white">Manage Hotels</h1>
-            <p class="text-slate-500 dark:text-slate-400">Add and manage restaurant partners.</p>
+            <p class="text-slate-500 dark:text-slate-400">Add and manage hotel partners.</p>
           </div>
           <a routerLink="/app/hotels/create" class="btn-primary flex items-center gap-2">
             <mat-icon>add</mat-icon>
@@ -14,7 +14,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          @for (hotel of catalog.merchants(); track hotel.id) {
+          @for (hotel of catalog.hotels(); track hotel.id) {
             <div class="card !p-0 overflow-hidden group hover:shadow-lg transition-all">
               <div class="h-48 overflow-hidden relative">
                 <img [src]="hotel.image_url || 'https://picsum.photos/seed/' + hotel.name + '/400/300'" [alt]="hotel.name" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">

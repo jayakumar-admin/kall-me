@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,6 +23,7 @@ export class Login {
   });
 
   loading = false;
+  showPassword = signal(false);
 
   onSubmit() {
     if (this.loginForm.valid) {

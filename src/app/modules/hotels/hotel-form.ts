@@ -41,7 +41,7 @@ export class HotelForm implements OnInit {
     if (id) {
       this.isEditMode.set(true);
       this.hotelId.set(parseInt(id));
-      const existingHotel = this.catalog.merchants().find(h => h.id === parseInt(id));
+      const existingHotel = this.catalog.hotels().find(h => h.id === parseInt(id));
       if (existingHotel) {
         this.hotel = { ...existingHotel };
       }
@@ -77,10 +77,15 @@ export class HotelForm implements OnInit {
       return;
     }
     
+    if ((this.hotel.rating ?? 0) < 0 || (this.hotel.rating ?? 0) > 5) {
+      this.toast.error('Rating must be between 0 and 5');
+      return;
+    }
+    
     if (this.isEditMode() && this.hotelId()) {
-      this.catalog.updateMerchant(this.hotelId()!, this.hotel);
+      this.catalog.updateHotel(this.hotelId()!, this.hotel);
     } else {
-      this.catalog.addMerchant(this.hotel);
+      this.catalog.addHotel(this.hotel);
     }
     
     this.router.navigate(['/app/hotels']);

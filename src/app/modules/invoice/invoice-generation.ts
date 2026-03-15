@@ -8,7 +8,7 @@ import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
 import { Order } from '../../models';
 import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
 @Component({
@@ -177,12 +177,12 @@ export class InvoiceGeneration implements OnInit {
         `INR ${(item.total || (item.price * item.quantity)).toLocaleString()}`
       ]);
       
-      autoTable(doc, {
+      (doc as any).autoTable({
         startY: 100,
         head: [['Item', 'Qty', 'Price', 'Total']],
         body: tableData,
         theme: 'striped',
-        headStyles: {
+        headStyles: { 
           fillColor: [255, 193, 7], // #FFC107
           textColor: [0, 0, 0],
           fontStyle: 'bold'
@@ -191,7 +191,7 @@ export class InvoiceGeneration implements OnInit {
         margin: { left: 14, right: 14 }
       });
       
-      const finalY = (doc as any).lastAutoTable?.finalY || 150;
+      const finalY = (doc as any).lastAutoTable.finalY || 150;
       
       // Totals
       const totalsX = 140;

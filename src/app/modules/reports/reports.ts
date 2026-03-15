@@ -64,11 +64,11 @@ import autoTable from 'jspdf-autotable';
             </select>
           </div>
           <div>
-            <label for="merchantFilter" class="text-xs font-bold text-slate-500 mb-2 block">Merchant</label>
-            <select id="merchantFilter" [ngModel]="merchantFilter()" (ngModelChange)="merchantFilter.set($event)" class="input-field py-2 text-sm appearance-none">
-              <option value="all">All Merchants</option>
-              @for (merchant of uniqueMerchants(); track merchant.id) {
-                <option [value]="merchant.id">{{ merchant.name }}</option>
+            <label for="hotelFilter" class="text-xs font-bold text-slate-500 mb-2 block">Hotel</label>
+            <select id="hotelFilter" [ngModel]="hotelFilter()" (ngModelChange)="hotelFilter.set($event)" class="input-field py-2 text-sm appearance-none">
+              <option value="all">All Hotels</option>
+              @for (hotel of uniqueHotels(); track hotel.id) {
+                <option [value]="hotel.id">{{ hotel.name }}</option>
               }
             </select>
           </div>
@@ -161,10 +161,10 @@ export class Reports implements OnInit {
   startDate = signal<string>('');
   endDate = signal<string>('');
   statusFilter = signal<string>('all');
-  merchantFilter = signal<string>('all');
+  hotelFilter = signal<string>('all');
 
-  uniqueMerchants = computed(() => {
-    return this.catalog.merchants().sort((a, b) => a.name.localeCompare(b.name));
+  uniqueHotels = computed(() => {
+    return this.catalog.hotels().sort((a, b) => a.name.localeCompare(b.name));
   });
 
   filteredOrders = computed(() => {
@@ -173,7 +173,7 @@ export class Reports implements OnInit {
     const start = this.startDate();
     const end = this.endDate();
     const status = this.statusFilter();
-    const merchantId = this.merchantFilter();
+    const hotelId = this.hotelFilter();
 
     if (start) {
       const startDate = new Date(start).getTime();
@@ -190,8 +190,8 @@ export class Reports implements OnInit {
       result = result.filter(o => o.status === status);
     }
 
-    if (merchantId !== 'all') {
-      const id = parseInt(merchantId);
+    if (hotelId !== 'all') {
+      const id = parseInt(hotelId);
       result = result.filter(o => o.hotel_id === id);
     }
 
@@ -200,7 +200,7 @@ export class Reports implements OnInit {
 
   metrics = computed(() => {
     const data = this.filteredOrders();
-    const hotels = this.catalog.merchants();
+    const hotels = this.catalog.hotels();
     
     let totalHotelEarnings = 0;
     let totalDeliverySalary = 0;
@@ -242,7 +242,7 @@ export class Reports implements OnInit {
     this.startDate.set('');
     this.endDate.set('');
     this.statusFilter.set('all');
-    this.merchantFilter.set('all');
+    this.hotelFilter.set('all');
     this.toast.info('Filters reset');
   }
 
@@ -253,7 +253,7 @@ export class Reports implements OnInit {
       return;
     }
 
-    const headers = ['Order ID', 'Date', 'Merchant', 'Customer', 'Status', 'Subtotal', 'Shipping', 'Total'];
+    const headers = ['Order ID', 'Date', 'Hotel', 'Customer', 'Status', 'Subtotal', 'Shipping', 'Total'];
     const rows = data.map(o => [
       o.order_number || '',
       o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
@@ -304,7 +304,7 @@ export class Reports implements OnInit {
       filterText += ` | Period: ${this.startDate() || 'Start'} to ${this.endDate() || 'End'}`;
     }
     if (this.statusFilter() !== 'all') filterText += ` | Status: ${this.statusFilter()}`;
-    if (this.merchantFilter() !== 'all') filterText += ` | Merchant: ${this.merchantFilter()}`;
+    if (this.hotelFilter() !== 'all') filterText += ` | Hotel: ${this.hotelFilter()}`;
     doc.text(filterText, 14, 30);
 
     // Metrics summary
@@ -318,7 +318,7 @@ export class Reports implements OnInit {
     doc.text(`Admin Commission: Rs. ${(m.adminCommission || 0).toLocaleString()}`, 14, 58);
 
     // Table
-    const headers = [['Order ID', 'Date', 'Merchant', 'Status', 'Total']];
+    const headers = [['Order ID', 'Date', 'Hotel', 'Status', 'Total']];
     const rows = data.map(o => [
       o.order_number || '',
       o.created_at ? new Date(o.created_at).toLocaleDateString() : '',

@@ -29,7 +29,7 @@ export class HotelsList {
   currentMenu = computed(() => {
     const hotel = this.selectedHotel();
     if (!hotel) return [];
-    return this.catalog.merchantMenus()[hotel.id] || [];
+    return this.catalog.hotelMenus()[hotel.id] || [];
   });
 
   menuItemForm = {
@@ -43,14 +43,14 @@ export class HotelsList {
 
   deleteHotel(hotel: Hotel) {
     if (confirm(`Are you sure you want to remove ${hotel.name}?`)) {
-      this.catalog.deleteMerchant(hotel.id);
+      this.catalog.deleteHotel(hotel.id);
     }
   }
 
   // Menu Methods
   viewMenu(hotel: Hotel) {
     this.selectedHotel.set(hotel);
-    this.catalog.loadMerchantMenu(hotel.id);
+    this.catalog.loadHotelMenu(hotel.id);
     this.showMenuModal.set(true);
   }
 

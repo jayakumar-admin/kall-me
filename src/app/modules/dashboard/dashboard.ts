@@ -25,11 +25,11 @@ export class Dashboard implements OnInit {
   today = new Date();
   activeDrivers = signal(0);
 
-  filteredMerchants = computed(() => {
+  filteredHotels = computed(() => {
     const term = this.search.searchTerm().toLowerCase();
-    return this.catalog.merchants().filter(m => 
-      m.name.toLowerCase().includes(term) || 
-      m.category.toLowerCase().includes(term)
+    return this.catalog.hotels().filter(h => 
+      h.name.toLowerCase().includes(term) || 
+      h.category.toLowerCase().includes(term)
     ).slice(0, 6); // Show only top 6 on dashboard
   });
 

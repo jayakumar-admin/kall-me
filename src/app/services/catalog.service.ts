@@ -4,8 +4,8 @@ import { ApiService } from './api.service';
 import { Hotel } from '../models';
 import { ToastService } from './toast.service';
 
-export interface MerchantMenuItem extends MenuItem {
-  merchantPrice?: number;
+export interface HotelMenuItem extends MenuItem {
+  hotelPrice?: number;
   isLinked?: boolean;
 }
 
@@ -19,12 +19,12 @@ export class CatalogService {
   // Global repository of all available menu items
   globalMenu = signal<MenuItem[]>([]);
   
-  // List of merchants
-  merchants = signal<Hotel[]>([]);
+  // List of hotels
+  hotels = signal<Hotel[]>([]);
   loading = signal(true);
 
-  // Map of merchant ID to their specific menu items
-  merchantMenus = signal<Record<string, MerchantMenuItem[]>>({});
+  // Map of hotel ID to their specific menu items
+  hotelMenus = signal<Record<string, HotelMenuItem[]>>({});
 
   constructor() {
     this.loadInitialData();
@@ -34,9 +34,9 @@ export class CatalogService {
     this.loading.set(true);
     this.api.getHotels().subscribe({
       next: (hotels) => {
-        this.merchants.set(hotels);
+        this.hotels.set(hotels);
         // Load menus for each hotel
-        hotels.forEach(hotel => this.loadMerchantMenu(hotel.id));
+        hotels.forEach(hotel => this.loadHotelMenu(hotel.id));
         this.loading.set(false);
       },
       error: () => {
@@ -51,59 +51,59 @@ export class CatalogService {
     });
   }
 
-  loadMerchantMenu(hotelId: number) {
+  loadHotelMenu(hotelId: number) {
     this.api.getMenus(hotelId).subscribe({
       next: (items) => {
-        this.merchantMenus.update(current => ({
+        this.hotelMenus.update(current => ({
           ...current,
-          [hotelId]: items.map(item => ({ ...item, merchantPrice: item.price, isLinked: true }))
+          [hotelId]: items.map(item => ({ ...item, hotelPrice: item.price, isLinked: true }))
         }));
       }
     });
   }
 
-  // Add a new merchant
-  addMerchant(merchant: Partial<Hotel>) {
-    this.api.createHotel(merchant).subscribe({
+  // Add a new hotel
+  addHotel(hotel: Partial<Hotel>) {
+    this.api.createHotel(hotel).subscribe({
       next: (newHotel) => {
-        this.merchants.update(current => [...current, newHotel]);
+        this.hotels.update(current => [...current, newHotel]);
         this.toast.success(`${newHotel.name} added successfully`);
       },
-      error: () => this.toast.error('Failed to add restaurant')
+      error: () => this.toast.error('Failed to add hotel')
     });
   }
 
-  // Update merchant
-  updateMerchant(id: number, merchant: Partial<Hotel>) {
-    this.api.updateHotel(id, merchant).subscribe({
+  // Update hotel
+  updateHotel(id: number, hotel: Partial<Hotel>) {
+    this.api.updateHotel(id, hotel).subscribe({
       next: (updated) => {
-        this.merchants.update(current => current.map(m => m.id === id ? updated : m));
+        this.hotels.update(current => current.map(m => m.id === id ? updated : m));
         this.toast.success(`${updated.name} updated successfully`);
       },
-      error: () => this.toast.error('Failed to update restaurant')
+      error: () => this.toast.error('Failed to update hotel')
     });
   }
 
-  // Delete merchant
-  deleteMerchant(id: number) {
+  // Delete hotel
+  deleteHotel(id: number) {
     this.api.deleteHotel(id).subscribe({
       next: () => {
-        this.merchants.update(current => current.filter(m => m.id !== id));
-        this.toast.success('Restaurant removed successfully');
+        this.hotels.update(current => current.filter(m => m.id !== id));
+        this.toast.success('Hotel removed successfully');
       },
-      error: () => this.toast.error('Failed to remove restaurant')
+      error: () => this.toast.error('Failed to remove hotel')
     });
   }
 
-  getMerchantMenu(merchantId: number) {
-    return computed(() => this.merchantMenus()[merchantId] || []);
+  getHotelMenu(hotelId: number) {
+    return computed(() => this.hotelMenus()[hotelId] || []);
   }
 
   addMenuItem(item: Partial<MenuItem>) {
     this.api.createMenuItem(item).subscribe({
       next: (newItem) => {
         if (newItem.hotel_id) {
-          this.loadMerchantMenu(newItem.hotel_id);
+          this.loadHotelMenu(newItem.hotel_id);
         }
         this.toast.success(`${newItem.name} added to menu`);
       },
@@ -115,7 +115,7 @@ export class CatalogService {
     this.api.updateMenuItem(id, item).subscribe({
       next: (updated) => {
         if (updated.hotel_id) {
-          this.loadMerchantMenu(updated.hotel_id);
+          this.loadHotelMenu(updated.hotel_id);
         }
         this.toast.success(`${updated.name} updated`);
       },
@@ -126,7 +126,7 @@ export class CatalogService {
   deleteMenuItem(id: number, hotelId: number) {
     this.api.deleteMenuItem(id).subscribe({
       next: () => {
-        this.loadMerchantMenu(hotelId);
+        this.loadHotelMenu(hotelId);
         this.toast.success('Menu item removed');
       },
       error: () => this.toast.error('Failed to remove menu item')
@@ -142,18 +142,18 @@ export class CatalogService {
         next: (newItem: MenuItem) => {
           this.globalMenu.update(current => [...current, newItem]);
           if (newItem.hotel_id) {
-            this.loadMerchantMenu(newItem.hotel_id);
+            this.loadHotelMenu(newItem.hotel_id);
           }
         }
       });
     });
   }
 
-  saveMerchantMenu(merchantId: number, items: MerchantMenuItem[]) {
-    this.merchantMenus.update(current => ({
+  saveHotelMenu(hotelId: number, items: HotelMenuItem[]) {
+    this.hotelMenus.update(current => ({
       ...current,
-      [merchantId]: items
+      [hotelId]: items
     }));
-    return this.api.updateMerchantPricing(merchantId, items.map(i => ({ menu_id: i.id, price: i.merchantPrice ?? i.price })));
+    return this.api.updateHotelPricing(hotelId, items.map(i => ({ menu_id: i.id, price: i.hotelPrice ?? i.price })));
   }
 }

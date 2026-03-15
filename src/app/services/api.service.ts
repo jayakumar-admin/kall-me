@@ -11,8 +11,8 @@ import { LoaderService } from './loader.service';
 export class ApiService {
   private http = inject(HttpClient);
   private loader = inject(LoaderService);
-  private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
-  // private baseUrl = 'http://localhost:3000/api';
+  // private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  private baseUrl = 'http://localhost:3000/api';
 
 
   private withLoader<T>(request: Observable<T>, message: string): Observable<T> {
@@ -141,7 +141,7 @@ export class ApiService {
     );
   }
 
-  updateMerchantPricing(hotel_id: number, items: { menu_id: number, price: number }[]): Observable<void> {
+  updateHotelPricing(hotel_id: number, items: { menu_id: number, price: number }[]): Observable<void> {
     return this.withLoader(
       this.http.post<void>(`${this.baseUrl}/pricing/update`, { hotel_id, items }),
       'Updating Pricing...'

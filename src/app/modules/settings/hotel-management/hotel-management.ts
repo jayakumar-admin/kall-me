@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { CatalogService } from '../../../services/catalog.service';
 import { ToastService } from '../../../services/toast.service';
-import { Merchant } from '../../../data/static-data';
+import { Hotel } from '../../../models';
 
 @Component({
   selector: 'app-hotel-management',
@@ -155,10 +155,10 @@ export class HotelManagement {
   toast = inject(ToastService);
   cdr = inject(ChangeDetectorRef);
   
-  hotels = computed(() => this.catalog.merchants());
+  hotels = computed(() => this.catalog.hotels());
   
   isModalOpen = signal(false);
-  editingHotel = signal<Merchant | null>(null);
+  editingHotel = signal<Hotel | null>(null);
   
   formData = {
     name: '',
@@ -176,7 +176,7 @@ export class HotelManagement {
     this.isModalOpen.set(true);
   }
 
-  editHotel(hotel: Merchant) {
+  editHotel(hotel: Hotel) {
     this.editingHotel.set(hotel);
     this.formData = { 
       name: hotel.name,
@@ -249,17 +249,17 @@ export class HotelManagement {
     };
     
     if (this.editingHotel()) {
-      this.catalog.updateMerchant(this.editingHotel()!.id, hotelData as Partial<Merchant>);
+      this.catalog.updateHotel(this.editingHotel()!.id, hotelData as Partial<Hotel>);
     } else {
-      this.catalog.addMerchant(hotelData as Partial<Merchant>);
+      this.catalog.addHotel(hotelData as Partial<Hotel>);
     }
     
     this.closeModal();
   }
 
-  deleteHotel(hotel: Merchant) {
+  deleteHotel(hotel: Hotel) {
     if (confirm(`Are you sure you want to delete ${hotel.name}?`)) {
-      this.catalog.deleteMerchant(hotel.id);
+      this.catalog.deleteHotel(hotel.id);
     }
   }
 }

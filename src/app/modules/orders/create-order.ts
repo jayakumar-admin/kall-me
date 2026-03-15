@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute } from '@angular/router';
 import { SearchService } from '../../services/search.service';
 import { ToastService } from '../../services/toast.service';
-import { CatalogService, MerchantMenuItem } from '../../services/catalog.service';
+import { CatalogService, HotelMenuItem } from '../../services/catalog.service';
 import { ApiService } from '../../services/api.service';
 import { Hotel, DeliveryPerson, Order } from '../../models';
 
@@ -24,7 +24,7 @@ import { OrderService } from '../../services/order.service';
             <div class="w-6 h-6 bg-[#FFC107] rounded flex items-center justify-center">
               <mat-icon class="text-black text-sm">storefront</mat-icon>
             </div>
-            Select Merchant
+            Select Hotel
           </h2>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Choose a partner restaurant</p>
         </div>
@@ -33,36 +33,36 @@ import { OrderService } from '../../services/order.service';
           <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">filter_list</mat-icon>
           <input 
             type="text" 
-            [(ngModel)]="merchantFilter"
-            placeholder="Filter merchants..." 
+            [(ngModel)]="hotelFilter"
+            placeholder="Filter hotels..." 
             class="w-full bg-white dark:bg-[#334155] border border-slate-200 dark:border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
           >
         </div>
 
         <div class="flex-1 lg:overflow-y-auto space-y-3 pr-1 custom-scrollbar min-h-[300px] lg:min-h-0">
-          @for (merchant of filteredMerchants(); track merchant.id) {
+          @for (hotel of filteredHotels(); track hotel.id) {
             <div 
-              (click)="selectMerchant(merchant)"
-              (keydown.enter)="selectMerchant(merchant)"
+              (click)="selectHotel(hotel)"
+              (keydown.enter)="selectHotel(hotel)"
               tabindex="0"
               class="group cursor-pointer bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 rounded-xl overflow-hidden transition-all hover:shadow-md"
-              [class.border-[#FFC107]]="selectedMerchant()?.id === merchant.id"
-              [class.ring-2]="selectedMerchant()?.id === merchant.id"
-              [class.ring-[#FFC107]/20]="selectedMerchant()?.id === merchant.id"
+              [class.border-[#FFC107]]="selectedHotel()?.id === hotel.id"
+              [class.ring-2]="selectedHotel()?.id === hotel.id"
+              [class.ring-[#FFC107]/20]="selectedHotel()?.id === hotel.id"
             >
               <div class="h-24 overflow-hidden relative">
-                <img [src]="merchant.image_url || 'https://picsum.photos/seed/' + merchant.name + '/400/300'" [alt]="merchant.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                @if (selectedMerchant()?.id === merchant.id) {
+                <img [src]="hotel.image_url || 'https://picsum.photos/seed/' + hotel.name + '/400/300'" [alt]="hotel.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                @if (selectedHotel()?.id === hotel.id) {
                   <div class="absolute top-2 right-2 w-5 h-5 bg-[#FFC107] rounded-full flex items-center justify-center shadow-lg">
                     <mat-icon class="text-black text-xs font-bold">check</mat-icon>
                   </div>
                 }
               </div>
               <div class="p-3">
-                <h3 class="font-bold text-sm text-[#1A1A1A] dark:text-white truncate">{{ merchant.name }}</h3>
+                <h3 class="font-bold text-sm text-[#1A1A1A] dark:text-white truncate">{{ hotel.name }}</h3>
                 <div class="flex items-center gap-1 text-[#FFC107] mt-0.5">
                   <mat-icon class="text-xs">star</mat-icon>
-                  <span class="text-xs font-bold">{{ merchant.rating }}</span>
+                  <span class="text-xs font-bold">{{ hotel.rating }}</span>
                   <span class="text-[10px] text-slate-400 font-normal ml-1">(4.5)</span>
                 </div>
               </div>
@@ -76,7 +76,7 @@ import { OrderService } from '../../services/order.service';
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-xl font-bold text-[#1A1A1A] dark:text-white">Menu Selection</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400">{{ selectedMerchant()?.name || 'Select a Merchant' }} • {{ filteredMenu().length }} Items Available</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ selectedHotel()?.name || 'Select a Hotel' }} • {{ filteredMenu().length }} Items Available</p>
           </div>
           @if (cart().length > 0) {
             <span class="bg-[#FFF9E6] text-[#FFC107] text-[10px] font-bold px-2 py-1 rounded border border-[#FFC107]/30 uppercase tracking-wider">
@@ -123,7 +123,7 @@ import { OrderService } from '../../services/order.service';
               <div class="flex-1 min-w-0">
                 <div class="flex justify-between items-start">
                   <h4 class="font-bold text-sm text-[#1A1A1A] dark:text-white truncate">{{ item.name }}</h4>
-                  <span class="font-bold text-[#FFC107]">₹{{ ((item.merchantPrice ?? item.price) || 0).toLocaleString() }}</span>
+                  <span class="font-bold text-[#FFC107]">₹{{ ((item.hotelPrice ?? item.price) || 0).toLocaleString() }}</span>
                 </div>
                 <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{{ item.description }}</p>
                 
@@ -138,7 +138,7 @@ import { OrderService } from '../../services/order.service';
                     </button>
                   </div>
                   @if (getQuantity(item) > 0) {
-                    <span class="text-[10px] font-bold text-slate-400">₹{{ ((getQuantity(item) * (item.merchantPrice ?? item.price)) || 0).toLocaleString() }}</span>
+                    <span class="text-[10px] font-bold text-slate-400">₹{{ ((getQuantity(item) * (item.hotelPrice ?? item.price)) || 0).toLocaleString() }}</span>
                   }
                 </div>
               </div>
@@ -227,7 +227,7 @@ import { OrderService } from '../../services/order.service';
                   <label for="amountReceived" class="text-[10px] font-bold text-slate-500 mb-1 block">Amount Received</label>
                   <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">₹</span>
-                    <input id="amountReceived" type="number" [(ngModel)]="amountReceivedValue" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-7 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                    <input id="amountReceived" type="number" [(ngModel)]="amountReceived" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-7 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                   </div>
                 </div>
                 <div>
@@ -248,7 +248,7 @@ import { OrderService } from '../../services/order.service';
               </div>
               <div class="flex justify-between text-xs font-medium">
                 <span class="text-slate-500 flex items-center gap-1">Shipping Fee <mat-icon class="text-[10px] h-3 w-3">edit</mat-icon></span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ (shippingFee() || 0).toLocaleString() }}.00</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (shippingFee || 0).toLocaleString() }}.00</span>
               </div>
               
               <div class="bg-[#FFF9E6] p-4 rounded-xl flex justify-between items-center mt-3 border border-[#FFC107]/10">
@@ -259,7 +259,7 @@ import { OrderService } from '../../services/order.service';
               <div class="flex flex-col gap-1 pt-3">
                 <div class="flex justify-between items-center">
                   <span class="text-[10px] font-bold text-slate-500">Amount Received</span>
-                  <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ (amountReceived() || 0).toLocaleString() }}.00</span>
+                  <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ (amountReceived || 0).toLocaleString() }}.00</span>
                 </div>
                 <div class="h-px bg-slate-100 border-dashed border-t w-full my-1"></div>
                 <div class="flex justify-between items-center">
@@ -370,13 +370,13 @@ export class CreateOrder implements OnInit {
   orderService = inject(OrderService);
   
   drivers = signal<DeliveryPerson[]>([]);
-  selectedMerchant = signal<Hotel | null>(null);
+  selectedHotel = signal<Hotel | null>(null);
   selectedCategory = signal<string>('All Items');
   categories = ['All Items', 'Veg', 'Non-Veg', 'Beverage', 'Dessert'];
   
-  merchantFilter = signal<string>('');
+  hotelFilter = signal<string>('');
   
-  cart = signal<{ item: MerchantMenuItem; quantity: number }[]>([]);
+  cart = signal<{ item: HotelMenuItem; quantity: number }[]>([]);
   customer = { 
     name: '', 
     phone: '', 
@@ -408,39 +408,29 @@ export class CreateOrder implements OnInit {
     this.selectedDriverId.set(String(driver.id));
     this.showDriverModal.set(false);
   }
+  amountReceived = 0;
+  shippingFee = 80;
 
-  amountReceived = signal(0);
-  shippingFee = signal(80);
+  subtotal = computed(() => this.cart().reduce((acc, entry) => acc + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0));
+  grandTotal = computed(() => this.subtotal() + this.shippingFee);
+  balancePending = computed(() => Math.max(0, this.grandTotal() - this.amountReceived));
 
-  get amountReceivedValue() {
-    return this.amountReceived();
-  }
-
-  set amountReceivedValue(value: number | string) {
-    const parsed = Number(value);
-    this.amountReceived.set(Number.isNaN(parsed) ? 0 : parsed);
-  }
-
-  subtotal = computed(() => this.cart().reduce((acc, entry) => acc + ((entry.item.merchantPrice ?? entry.item.price) * entry.quantity), 0));
-  grandTotal = computed(() => this.subtotal() + this.shippingFee());
-  balancePending = computed(() => Math.max(0, this.grandTotal() - this.amountReceived()));
-
-  filteredMerchants = computed(() => {
-    const filter = this.merchantFilter().toLowerCase();
+  filteredHotels = computed(() => {
+    const filter = this.hotelFilter().toLowerCase();
     const globalSearch = this.search.searchTerm().toLowerCase();
-    return this.catalog.merchants().filter(m => 
-      m.name.toLowerCase().includes(filter) && 
-      m.name.toLowerCase().includes(globalSearch)
+    return this.catalog.hotels().filter(h => 
+      h.name.toLowerCase().includes(filter) && 
+      h.name.toLowerCase().includes(globalSearch)
     );
   });
 
   filteredMenu = computed(() => {
     const cat = this.selectedCategory();
-    const hotel = this.selectedMerchant();
+    const hotel = this.selectedHotel();
     if (!hotel) return [];
     
-    const merchantItems = this.catalog.merchantMenus()[hotel.id] || [];
-    const items = (merchantItems.length > 0 ? merchantItems : this.catalog.globalMenu().filter(i => i.hotel_id === hotel.id)) as MerchantMenuItem[];
+    const hotelItems = this.catalog.hotelMenus()[hotel.id] || [];
+    const items = (hotelItems.length > 0 ? hotelItems : this.catalog.globalMenu().filter(i => i.hotel_id === hotel.id)) as HotelMenuItem[];
     
     if (cat === 'All Items') return items;
     return items.filter(i => i.category === cat);
@@ -452,34 +442,34 @@ export class CreateOrder implements OnInit {
     this.api.getDeliveryTeam().subscribe(d => this.drivers.set(d));
     
     this.route.queryParams.subscribe(params => {
-      const merchantId = params['merchantId'];
-      const merchants = this.catalog.merchants();
+      const hotelId = params['hotelId'];
+      const hotels = this.catalog.hotels();
       
-      if (merchants.length > 0) {
-        if (merchantId) {
-          const selected = merchants.find(m => m.id === Number(merchantId));
+      if (hotels.length > 0) {
+        if (hotelId) {
+          const selected = hotels.find(h => h.id === Number(hotelId));
           if (selected) {
-            this.selectMerchant(selected);
+            this.selectHotel(selected);
             return;
           }
         }
-        this.selectMerchant(merchants[0]);
+        this.selectHotel(hotels[0]);
       }
     });
   }
 
-  selectMerchant(merchant: Hotel) {
-    this.selectedMerchant.set(merchant);
-    this.catalog.loadMerchantMenu(merchant.id);
+  selectHotel(hotel: Hotel) {
+    this.selectedHotel.set(hotel);
+    this.catalog.loadHotelMenu(hotel.id);
     this.cart.set([]);
   }
 
-  getQuantity(item: MerchantMenuItem): number {
+  getQuantity(item: HotelMenuItem): number {
     const entry = this.cart().find(e => e.item.id === item.id);
     return entry?.quantity || 0;
   }
 
-  updateQuantity(item: MerchantMenuItem, delta: number) {
+  updateQuantity(item: HotelMenuItem, delta: number) {
     this.cart.update(current => {
       const existingIndex = current.findIndex(e => e.item.id === item.id);
       if (existingIndex > -1) {
@@ -501,7 +491,7 @@ export class CreateOrder implements OnInit {
     const params = {
       CustomerName: this.customer.name,
       OrderNumber: `ORD-${Date.now()}`,
-      HotelName: this.selectedMerchant()?.name || 'Unknown',
+      HotelName: this.selectedHotel()?.name || 'Unknown',
       MenuItems: this.cart().map(c => c.item.name).join(', '),
       GrandTotal: this.grandTotal(),
       InvoiceUrl: 'https://kallme.com/invoice/123'
@@ -514,7 +504,7 @@ export class CreateOrder implements OnInit {
 
   canConfirm(): boolean {
     return this.cart().length > 0 && 
-           !!this.selectedMerchant() && 
+           !!this.selectedHotel() && 
            !!this.customer.name?.trim() && 
            !!this.customer.phone?.trim() && 
            !!this.customer.address?.trim() && 
@@ -524,7 +514,7 @@ export class CreateOrder implements OnInit {
   confirmOrder() {
     if (!this.canConfirm()) return;
     
-    const hotel = this.selectedMerchant()!;
+    const hotel = this.selectedHotel()!;
     const orderData: Partial<Order> = {
       order_number: `ORD-${Date.now()}`,
       hotel_id: hotel.id,
@@ -535,13 +525,13 @@ export class CreateOrder implements OnInit {
       customer_type: 'regular',
       delivery_address: this.customer.address || 'Pickup',
       subtotal: this.subtotal(),
-      shipping_fee: this.shippingFee(),
+      shipping_fee: this.shippingFee,
       grand_total: this.grandTotal(),
-      amount_received: this.amountReceived(),
+      amount_received: this.amountReceived,
       balance_pending: this.balancePending(),
       status: 'placed',
       items: this.cart().map(c => {
-        const price = c.item.merchantPrice ?? c.item.price;
+        const price = c.item.hotelPrice ?? c.item.price;
         return {
           menu_id: c.item.id,
           menu_name: c.item.name,
@@ -558,7 +548,7 @@ export class CreateOrder implements OnInit {
       next: (order) => {
         this.toast.success(`Order #${order.order_number} confirmed successfully!`);
         this.cart.set([]);
-        this.amountReceived.set(0);
+        this.amountReceived = 0;
         this.orderService.loadOrders();
       },
       error: (err) => {

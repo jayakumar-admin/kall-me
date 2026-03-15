@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
-import { CatalogService, MerchantMenuItem } from '../../services/catalog.service';
+import { CatalogService, HotelMenuItem } from '../../services/catalog.service';
 import { OrderService } from '../../services/order.service';
 import { MenuItem } from '../../models';
 
@@ -64,9 +64,9 @@ export class HotelDetails {
   
   hotelId = computed(() => Number(this.route.snapshot.paramMap.get('id')));
   
-  hotel = computed(() => this.catalog.merchants().find(m => m.id === this.hotelId()));
+  hotel = computed(() => this.catalog.hotels().find(m => m.id === this.hotelId()));
   
-  menuItems = computed(() => this.catalog.merchantMenus()[this.hotelId()] || []);
+  menuItems = computed(() => this.catalog.hotelMenus()[this.hotelId()] || []);
   
   filterDate = signal<string>('');
 
@@ -84,7 +84,7 @@ export class HotelDetails {
     effect(() => {
       this.menuItems().forEach(item => {
         if (this.editingPrices[item.id] === undefined) {
-          this.editingPrices[item.id] = (item as MerchantMenuItem).merchantPrice ?? item.price;
+          this.editingPrices[item.id] = (item as HotelMenuItem).hotelPrice ?? item.price;
         }
       });
     });
@@ -92,13 +92,13 @@ export class HotelDetails {
   
   updatePrice(item: MenuItem) {
     const newPrice = this.editingPrices[item.id];
-    if (newPrice !== ((item as MerchantMenuItem).merchantPrice ?? item.price)) {
+    if (newPrice !== ((item as HotelMenuItem).hotelPrice ?? item.price)) {
       const currentItems = this.menuItems().map(i => 
-        i.id === item.id ? { ...i, merchantPrice: newPrice } : i
+        i.id === item.id ? { ...i, hotelPrice: newPrice } : i
       );
-      this.catalog.saveMerchantMenu(this.hotelId(), currentItems).subscribe({
+      this.catalog.saveHotelMenu(this.hotelId(), currentItems).subscribe({
         next: () => {
-          // Update local state if needed, though saveMerchantMenu already does it
+          // Update local state if needed, though saveHotelMenu already does it
           console.log('Price updated successfully');
         },
         error: () => console.error('Failed to update price')

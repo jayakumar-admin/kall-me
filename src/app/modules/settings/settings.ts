@@ -54,7 +54,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-[#1A1A1A] dark:hover:text-white transition-all"
           >
             <mat-icon class="text-[20px] w-5 h-5">price_change</mat-icon>
-            Merchant Pricing
+            Hotel Pricing
           </a>
           <a 
             routerLink="whatsapp-logs" 

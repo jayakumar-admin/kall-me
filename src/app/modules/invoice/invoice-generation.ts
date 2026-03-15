@@ -9,7 +9,6 @@ import { SettingsService } from '../../services/settings.service';
 import { Order } from '../../models';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-invoice-generation',
@@ -139,7 +138,7 @@ export class InvoiceGeneration implements OnInit {
       doc.text(`Order ID: ${order.order_number || order.id}`, 14, 40);
       doc.text(`Date: ${new Date(order.created_at || Date.now()).toLocaleString()}`, 14, 45);
       
-      // Merchant Info (Right Aligned)
+      // Hotel Info (Right Aligned)
       doc.setTextColor(26, 26, 26);
       doc.setFontSize(14);
       doc.text('KALL ME Delivery', 196, 25, { align: 'right' });
@@ -177,6 +176,7 @@ export class InvoiceGeneration implements OnInit {
         `INR ${(item.total || (item.price * item.quantity)).toLocaleString()}`
       ]);
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (doc as any).autoTable({
         startY: 100,
         head: [['Item', 'Qty', 'Price', 'Total']],
@@ -191,6 +191,7 @@ export class InvoiceGeneration implements OnInit {
         margin: { left: 14, right: 14 }
       });
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const finalY = (doc as any).lastAutoTable.finalY || 150;
       
       // Totals

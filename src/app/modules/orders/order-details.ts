@@ -48,7 +48,7 @@ import { Order } from '../../models';
                 <p class="text-sm text-slate-500">{{ order()!.delivery_address }}</p>
               </div>
               <div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Merchant</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Hotel</p>
                 <p class="font-bold text-[#1A1A1A] dark:text-white">{{ order()!.hotel_name }}</p>
               </div>
             </div>
@@ -106,7 +106,7 @@ export class OrderDetails implements OnInit {
         next: (order: Order) => {
           this.order.set(order);
         },
-        error: (err: any) => {
+        error: (err: unknown) => {
           console.error('Failed to fetch order:', err);
           // Fallback to service if API fails or if we want to try local first
           const foundOrder = this.orderService.orders().find(o => o.id?.toString() === id || o.order_number === id);

@@ -4,6 +4,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
 
+interface WhatsAppLog {
+  id: number;
+  created_at: string;
+  recipient: string;
+  template_name: string;
+  message: string;
+  status: string;
+}
+
 @Component({
   selector: 'app-whatsapp-logs',
   standalone: true,
@@ -70,7 +79,7 @@ import { ToastService } from '../../../services/toast.service';
 export class WhatsAppLogs implements OnInit {
   api = inject(ApiService);
   toast = inject(ToastService);
-  logs = signal<any[]>([]);
+  logs = signal<WhatsAppLog[]>([]);
 
   ngOnInit() {
     this.loadLogs();
@@ -78,7 +87,7 @@ export class WhatsAppLogs implements OnInit {
 
   loadLogs() {
     this.api.getWhatsAppLogs().subscribe({
-      next: (logs) => this.logs.set(logs),
+      next: (logs) => this.logs.set(logs as WhatsAppLog[]),
       error: () => this.toast.error('Failed to load WhatsApp logs')
     });
   }

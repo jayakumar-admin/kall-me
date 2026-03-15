@@ -1,9 +1,9 @@
 
 import { Hotel, MenuItem } from '../models';
 
-export type { Hotel as Merchant, MenuItem };
+export type { Hotel, MenuItem };
 
-export const MERCHANTS: Hotel[] = [
+export const HOTELS: Hotel[] = [
   {
     id: 1,
     name: 'Grand Hyatt Hotel',

@@ -19,7 +19,8 @@ export class AuthService {
   private http = inject(HttpClient);
   private loader = inject(LoaderService);
   private userSignal = signal<User | null>(null);
-  private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  // private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  private baseUrl = 'http://localhost:3000/api';
 
   user = computed(() => this.userSignal());
   isLoggedIn = computed(() => !!this.userSignal());

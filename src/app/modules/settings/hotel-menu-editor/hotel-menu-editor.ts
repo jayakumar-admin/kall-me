@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CatalogService, HotelMenuItem } from '../../../services/catalog.service';
+import { MenuItem } from '../../../data/static-data';
 import { ToastService } from '../../../services/toast.service';
 
 @Component({
@@ -174,8 +175,8 @@ export class HotelMenuEditor {
   availableItems = computed(() => {
     const id = this.selectedHotelId();
     if (id === null) return this.catalog.globalMenu();
-    const hotelItemIds = new Set((this.catalog.hotelMenus()[id] || []).map(i => i.id));
-    return this.catalog.globalMenu().filter(i => !hotelItemIds.has(i.id));
+    const hotelItemIds = new Set((this.catalog.hotelMenus()[id] || []).map((i: HotelMenuItem) => i.id));
+    return this.catalog.globalMenu().filter((i: MenuItem) => !hotelItemIds.has(i.id));
   });
 
   drop(event: CdkDragDrop<HotelMenuItem[]>) {
@@ -185,7 +186,7 @@ export class HotelMenuEditor {
     if (event.previousContainer === event.container) {
       const currentItems = [...this.hotelItems()];
       moveItemInArray(currentItems, event.previousIndex, event.currentIndex);
-      this.catalog.hotelMenus.update(current => ({
+      this.catalog.hotelMenus.update((current: Record<string, HotelMenuItem[]>) => ({
         ...current,
         [id]: currentItems
       }));
@@ -201,7 +202,7 @@ export class HotelMenuEditor {
       const currentHotelItems = [...this.hotelItems()];
       currentHotelItems.splice(event.currentIndex, 0, newItem);
       
-      this.catalog.hotelMenus.update(current => ({
+      this.catalog.hotelMenus.update((current: Record<string, HotelMenuItem[]>) => ({
         ...current,
         [id]: currentHotelItems
       }));
@@ -213,8 +214,8 @@ export class HotelMenuEditor {
     const id = this.selectedHotelId();
     if (id === null) return;
 
-    const currentItems = this.hotelItems().filter(i => i.id !== item.id);
-    this.catalog.hotelMenus.update(current => ({
+    const currentItems = this.hotelItems().filter((i: HotelMenuItem) => i.id !== item.id);
+    this.catalog.hotelMenus.update((current: Record<string, HotelMenuItem[]>) => ({
       ...current,
       [id]: currentItems
     }));

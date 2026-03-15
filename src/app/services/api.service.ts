@@ -26,28 +26,28 @@ export class ApiService {
   getHotels(): Observable<Hotel[]> {
     return this.withLoader(
       this.http.get<Hotel[]>(`${this.baseUrl}/hotels`),
-      'Fetching Restaurants...'
+      'Fetching Hotels...'
     );
   }
 
   createHotel(hotel: Partial<Hotel>): Observable<Hotel> {
     return this.withLoader(
       this.http.post<Hotel>(`${this.baseUrl}/hotels`, hotel),
-      'Adding Restaurant...'
+      'Adding Hotel...'
     );
   }
 
   updateHotel(id: number, hotel: Partial<Hotel>): Observable<Hotel> {
     return this.withLoader(
       this.http.put<Hotel>(`${this.baseUrl}/hotels/${id}`, hotel),
-      'Updating Restaurant...'
+      'Updating Hotel...'
     );
   }
 
   deleteHotel(id: number): Observable<void> {
     return this.withLoader(
       this.http.delete<void>(`${this.baseUrl}/hotels/${id}`),
-      'Removing Restaurant...'
+      'Removing Hotel...'
     );
   }
 
@@ -155,9 +155,9 @@ export class ApiService {
     );
   }
 
-  getWhatsAppLogs(): Observable<any[]> {
+  getWhatsAppLogs(): Observable<unknown[]> {
     return this.withLoader(
-      this.http.get<any[]>(`${this.baseUrl}/whatsapp/logs`),
+      this.http.get<unknown[]>(`${this.baseUrl}/whatsapp/logs`),
       'Fetching WhatsApp Logs...'
     );
   }

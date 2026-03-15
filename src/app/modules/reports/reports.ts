@@ -113,7 +113,7 @@ import autoTable from 'jspdf-autotable';
               <tr class="bg-white dark:bg-[#1E293B] border-b border-slate-100 dark:border-white/5">
                 <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Order ID</th>
                 <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Merchant</th>
+                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hotel</th>
                 <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
                 <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Amount</th>
               </tr>

@@ -285,7 +285,7 @@ import { OrderService } from '../../services/order.service';
               <mat-icon>check_circle</mat-icon>
               CONFIRM & DISPATCH ORDER
             </button>
-            <p class="text-[8px] text-center text-slate-400 uppercase tracking-widest mt-3 font-bold italic">Order will be dispatched immediately to merchant</p>
+            <p class="text-[8px] text-center text-slate-400 uppercase tracking-widest mt-3 font-bold italic">Order will be dispatched immediately to hotel</p>
           </div>
         </div>
       </div>

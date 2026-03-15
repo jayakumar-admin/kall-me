@@ -180,10 +180,12 @@ import { SettingsService } from '../../../services/settings.service';
               </div>
             </div>
             
-            <div class="p-4 bg-emerald-50 dark:bg-emerald-500/5 rounded-xl border border-emerald-100 dark:border-emerald-500/10" *ngIf="whatsapp.enabled">
-              <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest mb-1">Status: Active</p>
-              <p class="text-xs text-slate-500 dark:text-slate-400">WhatsApp notifications will be sent for order confirmations and delivery assignments.</p>
-            </div>
+            @if (whatsapp.enabled) {
+              <div class="p-4 bg-emerald-50 dark:bg-emerald-500/5 rounded-xl border border-emerald-100 dark:border-emerald-500/10">
+                <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest mb-1">Status: Active</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">WhatsApp notifications will be sent for order confirmations and delivery assignments.</p>
+              </div>
+            }
           </div>
         </div>
 

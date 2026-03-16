@@ -6,13 +6,14 @@ import { RouterLink } from '@angular/router';
 import { CatalogService } from '../../services/catalog.service';
 import { ToastService } from '../../services/toast.service';
 import { Hotel, MenuItem } from '../../models';
+import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.component';
 
 import { MainSkeletonComponent } from '../../components/main-skeleton';
 
 @Component({
   selector: 'app-hotels-list',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, MainSkeletonComponent, RouterLink],
+  imports: [CommonModule, MatIconModule, FormsModule, MainSkeletonComponent, RouterLink, ConfirmDialog],
   templateUrl: './hotels-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -25,6 +26,9 @@ export class HotelsList {
   showMenuItemModal = signal(false);
   selectedHotel = signal<Hotel | null>(null);
   editingMenuItemId = signal<number | null>(null);
+  
+  showDeleteConfirm = signal(false);
+  itemToDelete = signal<{ type: 'hotel' | 'menu', data: Hotel | MenuItem } | null>(null);
   
   currentMenu = computed(() => {
     const hotel = this.selectedHotel();
@@ -42,9 +46,26 @@ export class HotelsList {
   };
 
   deleteHotel(hotel: Hotel) {
-    if (confirm(`Are you sure you want to remove ${hotel.name}?`)) {
-      this.catalog.deleteHotel(hotel.id);
+    this.itemToDelete.set({ type: 'hotel', data: hotel });
+    this.showDeleteConfirm.set(true);
+  }
+
+  deleteMenuItem(item: MenuItem) {
+    this.itemToDelete.set({ type: 'menu', data: item });
+    this.showDeleteConfirm.set(true);
+  }
+
+  confirmDelete() {
+    const item = this.itemToDelete();
+    if (!item) return;
+
+    if (item.type === 'hotel') {
+      this.catalog.deleteHotel((item.data as Hotel).id);
+    } else {
+      const menuItem = item.data as MenuItem;
+      this.catalog.deleteMenuItem(menuItem.id, menuItem.hotel_id);
     }
+    this.showDeleteConfirm.set(false);
   }
 
   // Menu Methods
@@ -95,11 +116,5 @@ export class HotelsList {
       this.catalog.addMenuItem(this.menuItemForm);
     }
     this.showMenuItemModal.set(false);
-  }
-
-  deleteMenuItem(item: MenuItem) {
-    if (confirm(`Are you sure you want to remove ${item.name}?`)) {
-      this.catalog.deleteMenuItem(item.id, item.hotel_id);
-    }
   }
 }

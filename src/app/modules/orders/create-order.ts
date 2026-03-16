@@ -227,7 +227,7 @@ import { OrderService } from '../../services/order.service';
                   <label for="amountReceived" class="text-[10px] font-bold text-slate-500 mb-1 block">Amount Received</label>
                   <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">₹</span>
-                    <input id="amountReceived" type="number" [(ngModel)]="amountReceived" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-7 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                    <input id="amountReceived" type="number" [ngModel]="amountReceived()" (ngModelChange)="amountReceived.set($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-7 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                   </div>
                 </div>
                 <div>
@@ -248,7 +248,7 @@ import { OrderService } from '../../services/order.service';
               </div>
               <div class="flex justify-between text-xs font-medium">
                 <span class="text-slate-500 flex items-center gap-1">Shipping Fee <mat-icon class="text-[10px] h-3 w-3">edit</mat-icon></span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ (shippingFee || 0).toLocaleString() }}.00</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (shippingFee() || 0).toLocaleString() }}.00</span>
               </div>
               
               <div class="bg-[#FFF9E6] p-4 rounded-xl flex justify-between items-center mt-3 border border-[#FFC107]/10">
@@ -259,7 +259,7 @@ import { OrderService } from '../../services/order.service';
               <div class="flex flex-col gap-1 pt-3">
                 <div class="flex justify-between items-center">
                   <span class="text-[10px] font-bold text-slate-500">Amount Received</span>
-                  <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ (amountReceived || 0).toLocaleString() }}.00</span>
+                  <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ (amountReceived() || 0).toLocaleString() }}.00</span>
                 </div>
                 <div class="h-px bg-slate-100 border-dashed border-t w-full my-1"></div>
                 <div class="flex justify-between items-center">
@@ -408,12 +408,13 @@ export class CreateOrder implements OnInit {
     this.selectedDriverId.set(String(driver.id));
     this.showDriverModal.set(false);
   }
-  amountReceived = 0;
-  shippingFee = 80;
+
+  amountReceived = signal<number>(0);
+  shippingFee = signal<number>(80);
 
   subtotal = computed(() => this.cart().reduce((acc, entry) => acc + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0));
-  grandTotal = computed(() => this.subtotal() + this.shippingFee);
-  balancePending = computed(() => Math.max(0, this.grandTotal() - this.amountReceived));
+  grandTotal = computed(() => this.subtotal() + this.shippingFee());
+  balancePending = computed(() => Math.max(0, this.grandTotal() - this.amountReceived()));
 
   filteredHotels = computed(() => {
     const filter = this.hotelFilter().toLowerCase();
@@ -525,9 +526,9 @@ export class CreateOrder implements OnInit {
       customer_type: 'regular',
       delivery_address: this.customer.address || 'Pickup',
       subtotal: this.subtotal(),
-      shipping_fee: this.shippingFee,
+      shipping_fee: this.shippingFee(),
       grand_total: this.grandTotal(),
-      amount_received: this.amountReceived,
+      amount_received: this.amountReceived(),
       balance_pending: this.balancePending(),
       status: 'placed',
       items: this.cart().map(c => {
@@ -548,7 +549,7 @@ export class CreateOrder implements OnInit {
       next: (order) => {
         this.toast.success(`Order #${order.order_number} confirmed successfully!`);
         this.cart.set([]);
-        this.amountReceived = 0;
+        this.amountReceived.set(0);
         this.orderService.loadOrders();
       },
       error: (err) => {

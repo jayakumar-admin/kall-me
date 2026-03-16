@@ -16,18 +16,32 @@
   --radius-2xl: 1.5rem;
 }
 
+:root {
+  --background: #F8F9FA;
+  --foreground: #1A1A1A;
+  --card-bg: #FFFFFF;
+  --card-border: #F1F5F9;
+  --input-bg: #FFFFFF;
+  --input-border: #E2E8F0;
+}
+
 @layer base {
   body {
-    @apply font-sans bg-[#F8F9FA] text-[#1A1A1A] transition-colors duration-300;
+    @apply font-sans bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300;
+  }
+  
+  .dark {
+    --background: #0F172A;
+    --foreground: #F1F5F9;
+    --card-bg: #1E293B;
+    --card-border: rgba(255, 255, 255, 0.05);
+    --input-bg: #334155;
+    --input-border: rgba(255, 255, 255, 0.1);
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-display font-bold;
   }
-}
-
-.dark body {
-  @apply bg-[#0F172A] text-[#F1F5F9];
 }
 
 @layer components {
@@ -36,19 +50,11 @@
   }
   
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-6 transition-all duration-300;
-  }
-
-  .dark .card {
-    @apply bg-[#1E293B] border-white/5 shadow-none;
+    @apply bg-[var(--card-bg)] rounded-2xl shadow-sm border border-[var(--card-border)] p-6 transition-all duration-300;
   }
   
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20 outline-none transition-all;
-  }
-
-  .dark .input-field {
-    @apply bg-[#334155] border-white/10 text-white focus:border-[#FFC107];
+    @apply w-full px-4 py-3 rounded-xl border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--foreground)] focus:border-[#FFC107] focus:ring-2 focus:ring-[#FFC107]/20 outline-none transition-all;
   }
 }
 

@@ -1,9 +1,10 @@
 const express = require('express');
 const db = require('../db');
+const authenticateToken = require('./authMiddleware');
 const router = express.Router();
 
 // Get all orders
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const result = await db.query(`
       SELECT o.*, h.name as hotel_name 
@@ -28,7 +29,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create order
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   const client = await db.pool.connect();
   try {
     await client.query('BEGIN');
@@ -65,6 +66,24 @@ router.post('/', async (req, res) => {
       }
     }
 
+    // Create notifications
+    const adminLink = `/app/orders/${order.id}`;
+    const deliveryLink = `/app/delivery-orders?id=${order.id}`;
+    
+    // Notify admins
+    await client.query(
+      'INSERT INTO notifications (role, title, message, link) VALUES ($1, $2, $3, $4)',
+      ['admin', 'New Order Created', `Order ${order.order_number} has been placed.`, adminLink]
+    );
+    
+    // Notify delivery person if assigned
+    if (delivery_person_id) {
+      await client.query(
+        'INSERT INTO notifications (role, user_id, title, message, link) VALUES ($1, $2, $3, $4, $5)',
+        ['delivery', delivery_person_id, 'New Order Assigned', `You have been assigned order ${order.order_number}.`, deliveryLink]
+      );
+    }
+
     await client.query('COMMIT');
     res.status(201).json(order);
   } catch (err) {
@@ -77,7 +96,7 @@ router.post('/', async (req, res) => {
 });
 
 // Get order by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query(`
@@ -101,7 +120,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update order status
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -110,7 +129,26 @@ router.patch('/:id/status', async (req, res) => {
       [status, id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Order not found' });
-    res.json(result.rows[0]);
+    
+    const order = result.rows[0];
+    const adminLink = `/app/orders/${order.id}`;
+    const deliveryLink = `/app/delivery-orders?id=${order.id}`;
+    
+    // Notify admins
+    await db.query(
+      'INSERT INTO notifications (role, title, message, link) VALUES ($1, $2, $3, $4)',
+      ['admin', 'Order Status Updated', `Order ${order.order_number} status changed to ${status}.`, adminLink]
+    );
+    
+    // Notify delivery person if assigned
+    if (order.delivery_person_id) {
+      await db.query(
+        'INSERT INTO notifications (role, user_id, title, message, link) VALUES ($1, $2, $3, $4, $5)',
+        ['delivery', order.delivery_person_id, 'Order Status Updated', `Order ${order.order_number} status changed to ${status}.`, deliveryLink]
+      );
+    }
+    
+    res.json(order);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -118,7 +156,7 @@ router.patch('/:id/status', async (req, res) => {
 });
 
 // Delete order
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query('DELETE FROM orders WHERE id = $1 RETURNING *', [id]);

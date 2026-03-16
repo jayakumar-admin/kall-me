@@ -5,9 +5,11 @@ import { finalize, tap } from 'rxjs';
 import { LoaderService } from './loader.service';
 
 export interface User {
+  id: number;
   name: string;
   email: string;
-  role: string;
+  mobile?: string;
+  role: 'admin' | 'delivery' | 'staff';
   token?: string;
 }
 
@@ -19,11 +21,16 @@ export class AuthService {
   private http = inject(HttpClient);
   private loader = inject(LoaderService);
   private userSignal = signal<User | null>(null);
-  // private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
-  private baseUrl = 'http://localhost:3000/api';
+  public permissionsSignal = signal<Record<string, boolean>>({});
+   // private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  // public baseUrl = 'http://localhost:3000/api';
+  public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
 
   user = computed(() => this.userSignal());
   isLoggedIn = computed(() => !!this.userSignal());
+  isAdmin = computed(() => this.userSignal()?.role === 'admin');
+  isDelivery = computed(() => this.userSignal()?.role === 'delivery');
+  permissions = computed(() => this.permissionsSignal());
 
   private inactivityTimer: ReturnType<typeof setTimeout> | null = null;
   private warningTimer: ReturnType<typeof setTimeout> | null = null;
@@ -31,13 +38,21 @@ export class AuthService {
   private readonly WARNING_TIME = 59 * 60 * 1000; // 59 minutes
 
   constructor() {
-    const storedUser = localStorage.getItem('kallme_user');
-    if (storedUser) {
-      try {
-        this.userSignal.set(JSON.parse(storedUser));
-        this.setupInactivityListeners();
-      } catch {
-        localStorage.removeItem('kallme_user');
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      const storedUser = localStorage.getItem('kallme_user');
+      const storedPermissions = localStorage.getItem('kallme_permissions');
+      
+      if (storedUser) {
+        try {
+          this.userSignal.set(JSON.parse(storedUser));
+          if (storedPermissions) {
+            this.permissionsSignal.set(JSON.parse(storedPermissions));
+          }
+          this.setupInactivityListeners();
+        } catch {
+          localStorage.removeItem('kallme_user');
+          localStorage.removeItem('kallme_permissions');
+        }
       }
     }
   }
@@ -66,16 +81,37 @@ export class AuthService {
     }
   }
 
-  login(credentials: { email?: string | null; password?: string | null }) {
+  login(credentials: { email?: string | null; password?: string | null; mobile?: string | null; role?: 'admin' | 'delivery' }) {
     this.loader.show('Authenticating...');
-    return this.http.post<{ success: boolean; accessToken: string; user: User }>(`${this.baseUrl}/auth/login`, credentials).pipe(
+    const endpoint = `${this.baseUrl}/auth/login`;
+    
+    // Normalize credentials (use email field for both email and mobile)
+    const payload = {
+      email: credentials.email || credentials.mobile,
+      password: credentials.password
+    };
+    
+    return this.http.post<{ success: boolean; accessToken: string; user: User; permissions?: { menu_name: string; enabled: boolean }[] }>(endpoint, payload).pipe(
       tap(response => {
         if (response.success) {
           const user = { ...response.user, token: response.accessToken };
           this.userSignal.set(user);
           localStorage.setItem('kallme_user', JSON.stringify(user));
+          
+          if (response.permissions) {
+            const perms: Record<string, boolean> = {};
+            response.permissions.forEach(p => perms[p.menu_name] = p.enabled);
+            this.permissionsSignal.set(perms);
+            localStorage.setItem('kallme_permissions', JSON.stringify(perms));
+          }
+
           this.setupInactivityListeners();
-          this.router.navigate(['/app/dashboard']);
+          
+          if (user.role === 'delivery') {
+            this.router.navigate(['/app/delivery-dashboard']);
+          } else {
+            this.router.navigate(['/app/dashboard']);
+          }
         }
       }),
       finalize(() => this.loader.hide())
@@ -83,9 +119,12 @@ export class AuthService {
   }
 
   logout() {
-    this.http.post(`${this.baseUrl}/auth/logout`, {}).subscribe();
+    const endpoint = `${this.baseUrl}/auth/logout`;
+    this.http.post(endpoint, {}).subscribe();
     this.userSignal.set(null);
+    this.permissionsSignal.set({});
     localStorage.removeItem('kallme_user');
+    localStorage.removeItem('kallme_permissions');
     this.router.navigate(['/login']);
   }
 
@@ -99,6 +138,27 @@ export class AuthService {
           localStorage.setItem('kallme_user', JSON.stringify(updatedUser));
         }
       })
+    );
+  }
+
+  forgotPassword(data: { email?: string; mobile?: string }) {
+    this.loader.show('Sending reset token...');
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/forgot-password`, data).pipe(
+      finalize(() => this.loader.hide())
+    );
+  }
+
+  resetPassword(data: { token: string; newPassword: string }) {
+    this.loader.show('Resetting password...');
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/reset-password`, data).pipe(
+      finalize(() => this.loader.hide())
+    );
+  }
+
+  changePassword(data: { currentPassword: string; newPassword: string }) {
+    this.loader.show('Changing password...');
+    return this.http.post<{ message: string }>(`${this.baseUrl}/auth/change-password`, data).pipe(
+      finalize(() => this.loader.hide())
     );
   }
 }

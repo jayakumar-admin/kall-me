@@ -1,0 +1,152 @@
+<div class="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="text-center space-y-4">
+    <div class="relative inline-block">
+      <div class="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-lg">
+        <mat-icon class="!text-4xl">person</mat-icon>
+      </div>
+      <button class="absolute bottom-0 right-0 p-2 bg-white text-emerald-600 rounded-full shadow-md border border-gray-100">
+        <mat-icon class="!text-lg">photo_camera</mat-icon>
+      </button>
+    </div>
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">{{ profile()?.name }}</h1>
+      <p class="text-gray-500">Delivery Partner</p>
+    </div>
+  </div>
+
+  <!-- Profile Card -->
+  <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="p-6 border-b border-gray-50 flex items-center justify-between">
+      <h2 class="font-bold text-gray-900">Personal Information</h2>
+      <button (click)="toggleEdit()" class="text-emerald-600 font-bold text-sm">
+        {{ isEditing() ? 'Cancel' : 'Edit' }}
+      </button>
+    </div>
+
+    <div class="p-6 space-y-6">
+      <!-- Name -->
+      <div class="space-y-1">
+        <label for="name" class="text-xs font-bold text-gray-400 uppercase tracking-wider">Full Name</label>
+        @if (isEditing()) {
+          <input id="name" [(ngModel)]="profile()!.name" type="text" 
+                 class="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 font-medium">
+        } @else {
+          <p class="text-gray-900 font-medium">{{ profile()?.name }}</p>
+        }
+      </div>
+
+      <!-- Email -->
+      <div class="space-y-1">
+        <label for="email" class="text-xs font-bold text-gray-400 uppercase tracking-wider">Email Address</label>
+        @if (isEditing()) {
+          <input id="email" [(ngModel)]="profile()!.email" type="email" 
+                 class="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 font-medium">
+        } @else {
+          <p class="text-gray-900 font-medium">{{ profile()?.email }}</p>
+        }
+      </div>
+
+      <!-- Phone -->
+      <div class="space-y-1">
+        <label for="phone" class="text-xs font-bold text-gray-400 uppercase tracking-wider">Phone Number</label>
+        @if (isEditing()) {
+          <input id="phone" [(ngModel)]="profile()!.phone" type="tel" 
+                 class="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 font-medium">
+        } @else {
+          <p class="text-gray-900 font-medium">{{ profile()?.phone }}</p>
+        }
+      </div>
+
+      <!-- Vehicle -->
+      <div class="space-y-1">
+        <label for="vehicle" class="text-xs font-bold text-gray-400 uppercase tracking-wider">Vehicle Number</label>
+        @if (isEditing()) {
+          <input id="vehicle" [(ngModel)]="profile()!.vehicle_number" type="text" 
+                 class="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 font-medium">
+        } @else {
+          <p class="text-gray-900 font-medium">{{ profile()?.vehicle_number || 'Not set' }}</p>
+        }
+      </div>
+    </div>
+
+    @if (isEditing()) {
+      <div class="p-6 bg-gray-50">
+        <button (click)="saveProfile()" 
+                class="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold text-lg hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200">
+          Save Changes
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Settings & Logout -->
+  <div class="space-y-3">
+    <button (click)="showChangePassword.set(true)" 
+            class="w-full p-4 bg-white rounded-2xl border border-gray-100 flex items-center justify-between group">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-gray-50 text-gray-400 rounded-xl group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+          <mat-icon>lock</mat-icon>
+        </div>
+        <span class="font-bold text-gray-700">Change Password</span>
+      </div>
+      <mat-icon class="text-gray-300">chevron_right</mat-icon>
+    </button>
+
+    <button (click)="logout()" 
+            class="w-full p-4 bg-white rounded-2xl border border-red-100 flex items-center justify-between group">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-red-50 text-red-600 rounded-xl">
+          <mat-icon>logout</mat-icon>
+        </div>
+        <span class="font-bold text-red-600">Logout</span>
+      </div>
+      <mat-icon class="text-red-200">chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <!-- Change Password Modal -->
+  @if (showChangePassword()) {
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+          <h2 class="text-xl font-bold text-gray-900">Change Password</h2>
+          <button (click)="showChangePassword.set(false)" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        
+        <div class="p-6 space-y-4">
+          <div class="space-y-1">
+            <label for="currentPassword" class="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Password</label>
+            <input id="currentPassword" type="password" [(ngModel)]="passwordData.currentPassword" 
+                   class="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 font-medium">
+          </div>
+          
+          <div class="space-y-1">
+            <label for="newPassword" class="text-xs font-bold text-gray-400 uppercase tracking-wider">New Password</label>
+            <input id="newPassword" type="password" [(ngModel)]="passwordData.newPassword" 
+                   class="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 font-medium">
+          </div>
+          
+          <div class="space-y-1">
+            <label for="confirmPassword" class="text-xs font-bold text-gray-400 uppercase tracking-wider">Confirm New Password</label>
+            <input id="confirmPassword" type="password" [(ngModel)]="passwordData.confirmPassword" 
+                   class="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 font-medium">
+          </div>
+        </div>
+        
+        <div class="p-6 bg-gray-50 flex gap-3">
+          <button (click)="showChangePassword.set(false)" 
+                  class="flex-1 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-100 transition-colors">
+            Cancel
+          </button>
+          <button (click)="changePassword()" 
+                  class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200">
+            Update
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -15,11 +15,13 @@ export class OrderService {
   
   stats = computed(() => {
     const allOrders = this.orders();
+    const getNumber = (value: number | string | undefined) => Math.round(Number(value) || 0);
+
     return {
       total: allOrders.length,
-      revenue: allOrders.reduce((acc, o) => acc + o.grand_total, 0),
-      received: allOrders.reduce((acc, o) => acc + o.amount_received, 0),
-      pending: allOrders.reduce((acc, o) => acc + o.balance_pending, 0)
+      revenue: allOrders.reduce((acc, o) => acc + getNumber(o.grand_total), 0),
+      received: allOrders.reduce((acc, o) => acc + getNumber(o.amount_received), 0),
+      pending: allOrders.reduce((acc, o) => acc + getNumber(o.balance_pending), 0)
     };
   });
 

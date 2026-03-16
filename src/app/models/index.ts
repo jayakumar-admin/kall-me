@@ -49,7 +49,7 @@ export interface Order {
   grand_total: number;
   amount_received: number;
   balance_pending: number;
-  status?: 'placed' | 'in-progress' | 'in-transit' | 'delivered' | 'cancelled';
+  status?: 'placed' | 'in-progress' | 'in-transit' | 'delivered' | 'cancelled' | 'pending' | 'accepted' | 'picked-up' | 'preparing';
   items: OrderItem[];
   created_at?: string;
   invoice_url?: string;
@@ -67,4 +67,23 @@ export interface DashboardStats {
   totalOrdersToday: number;
   totalRevenue: number;
   activeDeliveryPersons: number;
+}
+
+export interface DeliveryUser {
+  id: number;
+  name: string;
+  mobile: string;
+  phone?: string; // Alias for mobile used in some templates
+  email: string;
+  password?: string;
+  status: 'active' | 'inactive';
+  vehicle_number?: string;
+  created_at?: string;
+}
+
+export interface DeliveryPermission {
+  id: number;
+  userId: string;
+  userName: string;
+  permissions: Record<string, boolean>;
 }

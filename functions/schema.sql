@@ -3,9 +3,26 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
+    mobile VARCHAR(20),
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Password Reset Tokens table
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER,
+    delivery_person_id INTEGER,
+    token TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (delivery_person_id) REFERENCES delivery_persons(id) ON DELETE CASCADE,
+    CHECK (
+        (user_id IS NOT NULL AND delivery_person_id IS NULL) OR
+        (user_id IS NULL AND delivery_person_id IS NOT NULL)
+    )
 );
 
 -- Seed data
@@ -40,6 +57,7 @@ CREATE TABLE IF NOT EXISTS delivery_persons (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     mobile VARCHAR(20),
+    password VARCHAR(255) NOT NULL DEFAULT '$2b$10$YourHashedPasswordHere',
     status VARCHAR(20) DEFAULT 'active'
 );
 
@@ -101,6 +119,18 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     expires_at TIMESTAMP NOT NULL
 );
 
+-- Notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER, -- Can be null if for all admins
+    role VARCHAR(20) NOT NULL, -- 'admin' or 'delivery'
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    link VARCHAR(255),
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Seed data
 INSERT INTO hotels (name, address, category, rating, commission_rate, image_url, status) VALUES
 ('Spice Garden', '123 Curry Lane', 'Indian', 4.5, 15, 'https://picsum.photos/seed/spice/400/300', 'active'),
@@ -116,13 +146,13 @@ INSERT INTO menus (hotel_id, name, description, price, category, image_url) VALU
 (4, 'Wagyu Beef Sliders', 'Set of 3 with truffle mayo', 1950.00, 'Starters', 'https://picsum.photos/seed/wagyu/200/200'),
 (4, 'Truffle Mushroom Risotto', 'Italian arborio rice with seasonal truffle', 2600.00, 'Main Course', 'https://picsum.photos/seed/risotto/200/200');
 
-INSERT INTO delivery_persons (name, mobile, status) VALUES
-('Rajesh Kumar', '+91 98765 43210', 'active'),
-('Sunil Verma', '+91 98765 43211', 'busy'),
-('Vikram Singh', '+91 98765 43212', 'offline'),
-('Rohan Gupta', '+91 98765 43213', 'active');
+INSERT INTO delivery_persons (name, mobile, password, status) VALUES
+('Rajesh Kumar', '+91 98765 43210', '$2b$10$YourHashedPasswordHere', 'active'),
+('Sunil Verma', '+91 98765 43211', '$2b$10$YourHashedPasswordHere', 'busy'),
+('Vikram Singh', '+91 98765 43212', '$2b$10$YourHashedPasswordHere', 'offline'),
+('Rohan Gupta', '+91 98765 43213', '$2b$10$YourHashedPasswordHere', 'active');
 
-INSERT INTO orders (order_number, hotel_id, customer_name, amount, status) VALUES
-('#KL-9821', 1, 'Rahul Sharma', 42.50, 'delivered'),
-('#KL-9822', 2, 'Anjali Gupta', 28.90, 'in-transit'),
-('#KL-9823', 3, 'Arjun Singh', 15.20, 'preparing');
+INSERT INTO orders (order_number, hotel_id, customer_name, grand_total, status, delivery_person_id) VALUES
+('#KL-9821', 1, 'Rahul Sharma', 42.50, 'delivered', 1),
+('#KL-9822', 2, 'Anjali Gupta', 28.90, 'in-transit', 2),
+('#KL-9823', 3, 'Arjun Singh', 15.20, 'preparing', 1);

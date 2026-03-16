@@ -7,10 +7,12 @@ import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { DeliveryPerson } from '../../models';
 
+import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.component';
+
 @Component({
   selector: 'app-delivery-list',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule, ReactiveFormsModule, ImageCropperComponent],
+  imports: [CommonModule, MatIconModule, FormsModule, ReactiveFormsModule, ImageCropperComponent, ConfirmDialog],
   templateUrl: './delivery-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -24,13 +26,16 @@ export class DeliveryList implements OnInit {
   searchTerm = signal('');
   
   showModal = signal(false);
+  showDeleteConfirm = signal(false);
+  driverToDelete = signal<DeliveryPerson | null>(null);
   editingDriver = signal<DeliveryPerson | null>(null);
   
   driverForm = this.fb.group({
     name: ['', [Validators.required]],
     mobile: ['', [Validators.required]],
     status: ['active', [Validators.required]],
-    image_url: ['']
+    image_url: [''],
+    password: ['']
   });
 
   activeCount = signal(0);
@@ -204,15 +209,25 @@ export class DeliveryList implements OnInit {
   }
 
   deleteDriver(driver: DeliveryPerson) {
-    if (confirm(`Are you sure you want to remove ${driver.name}?`)) {
-      this.api.deleteDeliveryPerson(driver.id!).subscribe({
-        next: () => {
-          this.toast.success('Driver removed successfully');
-          this.loadDrivers();
-        },
-        error: () => this.toast.error('Failed to remove driver')
-      });
-    }
+    this.driverToDelete.set(driver);
+    this.showDeleteConfirm.set(true);
+  }
+
+  confirmDelete() {
+    const driver = this.driverToDelete();
+    if (!driver) return;
+
+    this.api.deleteDeliveryPerson(driver.id!).subscribe({
+      next: () => {
+        this.toast.success('Driver removed successfully');
+        this.loadDrivers();
+        this.showDeleteConfirm.set(false);
+      },
+      error: () => {
+        this.toast.error('Failed to remove driver');
+        this.showDeleteConfirm.set(false);
+      }
+    });
   }
 }
 

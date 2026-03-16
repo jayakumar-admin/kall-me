@@ -25,5 +25,17 @@ export const SETTINGS_ROUTES: Routes = [
   {
     path: 'whatsapp-logs',
     loadComponent: () => import('./whatsapp-logs/whatsapp-logs').then(m => m.WhatsAppLogs)
+  },
+  {
+    path: 'delivery-permissions',
+    loadComponent: () => import('./delivery-permissions/delivery-permissions').then(m => m.DeliveryPermissions)
+  },
+  {
+    path: 'security',
+    loadComponent: () => import('./security/security').then(m => m.SecuritySettings)
+  },
+  {
+    path: 'user-management',
+    loadComponent: () => import('./user-management/user-management').then(m => m.UserManagement)
   }
 ];

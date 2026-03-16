@@ -170,3 +170,12 @@
         </div>
       </div>
     }
+
+    @if (showDeleteConfirm()) {
+      <app-confirm-dialog
+        [title]="'Confirm Delete'"
+        [message]="'Are you sure you want to remove this ' + itemToDelete()?.type + '?'"
+        (confirmed)="confirmDelete()"
+        (cancelled)="showDeleteConfirm.set(false)">
+      </app-confirm-dialog>
+    }

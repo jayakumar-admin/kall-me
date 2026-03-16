@@ -1,0 +1,58 @@
+<div class="p-6 space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Delivery Permissions</h1>
+    <p class="text-sm text-gray-500">Manage module access for delivery personnel.</p>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-100">
+            <th class="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Delivery Person</th>
+            @for (module of modules; track module) {
+              <th class="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">{{ module }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          @for (item of permissions(); track item.userId) {
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="p-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center font-bold">
+                    {{ item.userName.charAt(0) }}
+                  </div>
+                  <div>
+                    <p class="font-bold text-gray-900">{{ item.userName }}</p>
+                    <p class="text-xs text-gray-500">ID: {{ item.userId }}</p>
+                  </div>
+                </div>
+              </td>
+              @for (module of modules; track module) {
+                <td class="p-4 text-center">
+                  <button (click)="togglePermission(item, module)" 
+                          class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                          [ngClass]="item.permissions[module] !== false ? 'bg-emerald-600' : 'bg-gray-200'">
+                    <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                          [ngClass]="item.permissions[module] !== false ? 'translate-x-6' : 'translate-x-1'"></span>
+                  </button>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td [attr.colspan]="modules.length + 1" class="p-12 text-center">
+                <div class="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <mat-icon class="!text-3xl">people_outline</mat-icon>
+                </div>
+                <h3 class="text-gray-900 font-bold">No delivery personnel found</h3>
+                <p class="text-gray-500 text-sm">Add delivery personnel in the Delivery Team section first.</p>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

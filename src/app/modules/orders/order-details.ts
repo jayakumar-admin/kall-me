@@ -100,25 +100,27 @@ export class OrderDetails implements OnInit {
   order = signal<Order | null>(null);
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.api.getOrder(id).subscribe({
-        next: (order: Order) => {
-          this.order.set(order);
-        },
-        error: (err: unknown) => {
-          console.error('Failed to fetch order:', err);
-          // Fallback to service if API fails or if we want to try local first
-          const foundOrder = this.orderService.orders().find(o => o.id?.toString() === id || o.order_number === id);
-          if (foundOrder) {
-            this.order.set(foundOrder);
-          } else {
-            this.toast.error('Order not found');
-            this.router.navigate(['/app/orders']);
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      if (id) {
+        this.api.getOrder(id).subscribe({
+          next: (order: Order) => {
+            this.order.set(order);
+          },
+          error: (err: unknown) => {
+            console.error('Failed to fetch order:', err);
+            // Fallback to service if API fails or if we want to try local first
+            const foundOrder = this.orderService.orders().find(o => o.id?.toString() === id || o.order_number === id);
+            if (foundOrder) {
+              this.order.set(foundOrder);
+            } else {
+              this.toast.error('Order not found');
+              this.router.navigate(['/app/orders']);
+            }
           }
-        }
-      });
-    }
+        });
+      }
+    });
   }
 
   getStatusClass(status: string): string {

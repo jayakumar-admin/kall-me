@@ -1,0 +1,116 @@
+<div class="p-4 md:p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Delivery Dashboard</h1>
+      <p class="text-sm text-gray-500">Welcome back! Here's your delivery overview.</p>
+    </div>
+    <button (click)="loadDashboardData()" class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Total Assigned -->
+    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+          <mat-icon class="!text-xl">assignment</mat-icon>
+        </div>
+      </div>
+      <p class="text-sm text-gray-500 font-medium">Total Assigned</p>
+      <h3 class="text-2xl font-bold text-gray-900">{{ stats().total }}</h3>
+    </div>
+
+    <!-- Pending -->
+    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <div class="p-2 bg-amber-50 text-amber-600 rounded-xl">
+          <mat-icon class="!text-xl">pending_actions</mat-icon>
+        </div>
+      </div>
+      <p class="text-sm text-gray-500 font-medium">Pending</p>
+      <h3 class="text-2xl font-bold text-gray-900">{{ stats().pending }}</h3>
+    </div>
+
+    <!-- Completed -->
+    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+          <mat-icon class="!text-xl">task_alt</mat-icon>
+        </div>
+      </div>
+      <p class="text-sm text-gray-500 font-medium">Completed</p>
+      <h3 class="text-2xl font-bold text-gray-900">{{ stats().completed }}</h3>
+    </div>
+
+    <!-- Earnings -->
+    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <div class="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+          <mat-icon class="!text-xl">payments</mat-icon>
+        </div>
+      </div>
+      <p class="text-sm text-gray-500 font-medium">Today's Earnings</p>
+      <h3 class="text-2xl font-bold text-gray-900">₹{{ stats().earnings | number:'1.0-0' }}</h3>
+    </div>
+  </div>
+
+  <!-- Recent Assigned Orders -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="p-4 border-b border-gray-50 flex items-center justify-between">
+      <h2 class="font-bold text-gray-900">Recent Assigned Orders</h2>
+      <a routerLink="/app/delivery-orders" class="text-sm font-medium text-emerald-600 hover:text-emerald-700">View All</a>
+    </div>
+
+    <div class="divide-y divide-gray-50">
+      @for (order of recentOrders(); track order.id) {
+        <div class="p-4 hover:bg-gray-50 transition-colors">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">{{ order.order_number }}</span>
+              <h3 class="font-bold text-gray-900">{{ order.hotel_name }}</h3>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+                  [ngClass]="{
+                    'bg-amber-50 text-amber-600': order.status === 'placed' || order.status === 'preparing',
+                    'bg-blue-50 text-blue-600': order.status === 'accepted' || order.status === 'picked-up',
+                    'bg-indigo-50 text-indigo-600': order.status === 'in-transit',
+                    'bg-emerald-50 text-emerald-600': order.status === 'delivered'
+                  }">
+              {{ order.status }}
+            </span>
+          </div>
+          
+          <div class="space-y-1 text-sm text-gray-500">
+            <div class="flex items-center gap-2">
+              <mat-icon class="!text-base">person</mat-icon>
+              <span>{{ order.customer_name }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <mat-icon class="!text-base">location_on</mat-icon>
+              <span class="truncate">{{ order.delivery_address }}</span>
+            </div>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between">
+            <span class="text-lg font-bold text-gray-900">₹{{ order.grand_total | number:'1.0-0' }}</span>
+            <a [routerLink]="['/app/delivery-orders']" [queryParams]="{ id: order.id }" 
+               class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors">
+              Update Status
+            </a>
+          </div>
+        </div>
+      } @empty {
+        <div class="p-12 text-center">
+          <div class="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+            <mat-icon class="!text-3xl">assignment_late</mat-icon>
+          </div>
+          <h3 class="text-gray-900 font-bold">No orders assigned</h3>
+          <p class="text-gray-500 text-sm">You don't have any assigned orders at the moment.</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>

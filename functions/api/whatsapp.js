@@ -21,6 +21,14 @@ const sendWhatsAppMessage = async (to, templateName, message) => {
 };
 
 const templates = {
+  ACCOUNT_CREATED: (params) => `ACCOUNT CREATED
+Hello ${params.Name},
+Your account has been created on Kall me.
+Role: ${params.Role}
+Username: ${params.Username}
+Password: ${params.Password}
+Please login and change your password.
+- Kall me Team`,
   ORDER_ASSIGNED: (params) => `ORDER ASSIGNED (DELIVERY PERSON)
 Hello ${params.DeliveryPersonName},
 New delivery assigned.
@@ -76,4 +84,4 @@ router.post('/send', async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = { router, sendWhatsAppMessage, templates };

@@ -178,6 +178,11 @@
               </select>
             </div>
 
+            <div>
+              <label for="driverPassword" class="block text-xs font-bold text-slate-400 uppercase mb-2">Password (Optional for Edit)</label>
+              <input id="driverPassword" type="password" formControlName="password" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all" placeholder="Set login password">
+            </div>
+
             <div class="pt-4 flex gap-3">
               <button type="button" (click)="closeModal()" class="flex-1 px-6 py-3 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                 Cancel
@@ -189,4 +194,13 @@
           </form>
         </div>
       </div>
+    }
+
+    @if (showDeleteConfirm()) {
+      <app-confirm-dialog
+        [title]="'Remove Driver'"
+        [message]="'Are you sure you want to remove ' + driverToDelete()?.name + '?'"
+        (confirmed)="confirmDelete()"
+        (cancelled)="showDeleteConfirm.set(false)">
+      </app-confirm-dialog>
     }

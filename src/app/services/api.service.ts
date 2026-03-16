@@ -2,7 +2,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, finalize } from 'rxjs';
-import { Hotel, MenuItem, DeliveryPerson, Order } from '../models';
+import { Hotel, MenuItem, DeliveryPerson, Order, DeliveryUser, DeliveryPermission } from '../models';
+import { User } from './auth.service';
 import { LoaderService } from './loader.service';
 
 @Injectable({
@@ -11,8 +12,8 @@ import { LoaderService } from './loader.service';
 export class ApiService {
   private http = inject(HttpClient);
   private loader = inject(LoaderService);
-  // private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
-  private baseUrl = 'http://localhost:3000/api';
+  private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  // private baseUrl = 'http://localhost:3000/api';
 
 
   private withLoader<T>(request: Observable<T>, message: string): Observable<T> {
@@ -162,11 +163,91 @@ export class ApiService {
     );
   }
 
+  // Delivery Portal APIs
+  deliveryLogin(credentials: { username?: string | null; password?: string | null }): Observable<User> {
+    return this.withLoader(
+      this.http.post<User>(`${this.baseUrl}/delivery/login`, credentials),
+      'Authenticating...'
+    );
+  }
+
+  getDeliveryOrders(): Observable<Order[]> {
+    return this.withLoader(
+      this.http.get<Order[]>(`${this.baseUrl}/delivery/orders`),
+      'Loading Assigned Orders...'
+    );
+  }
+
+  getDeliveryOrder(id: string | number): Observable<Order> {
+    return this.withLoader(
+      this.http.get<Order>(`${this.baseUrl}/delivery/orders/${id}`),
+      'Fetching Order Details...'
+    );
+  }
+
+  updateDeliveryStatus(orderId: number, status: string): Observable<Order> {
+    return this.withLoader(
+      this.http.put<Order>(`${this.baseUrl}/delivery/order-status`, { orderId, status }),
+      'Updating Status...'
+    );
+  }
+
+  getDeliveryProfile(): Observable<DeliveryUser> {
+    return this.withLoader(
+      this.http.get<DeliveryUser>(`${this.baseUrl}/delivery/profile`),
+      'Loading Profile...'
+    );
+  }
+
+  updateDeliveryProfile(profile: Partial<DeliveryUser>): Observable<unknown> {
+    return this.withLoader(
+      this.http.put<unknown>(`${this.baseUrl}/delivery/profile`, profile),
+      'Updating Profile...'
+    );
+  }
+
+  // Admin: Delivery Permissions
+  getDeliveryPermissions(): Observable<DeliveryPermission[]> {
+    return this.withLoader(
+      this.http.get<DeliveryPermission[]>(`${this.baseUrl}/admin/delivery-permissions`),
+      'Loading Permissions...'
+    );
+  }
+
+  updateDeliveryPermission(userId: string, permissions: Record<string, boolean>): Observable<unknown> {
+    return this.withLoader(
+      this.http.put<unknown>(`${this.baseUrl}/admin/delivery-permissions`, { userId, permissions }),
+      'Updating Permission...'
+    );
+  }
+
   // Reports
   getDailyReport(): Observable<unknown[]> {
     return this.withLoader(
       this.http.get<unknown[]>(`${this.baseUrl}/reports/daily`),
       'Generating Report...'
+    );
+  }
+
+  // User Management
+  getUsers(): Observable<User[]> {
+    return this.withLoader(
+      this.http.get<User[]>(`${this.baseUrl}/auth/users`),
+      'Loading Users...'
+    );
+  }
+
+  registerUser(userData: Partial<User>): Observable<User> {
+    return this.withLoader(
+      this.http.post<User>(`${this.baseUrl}/auth/register`, userData),
+      'Creating Account...'
+    );
+  }
+
+  deleteUser(id: string | number): Observable<void> {
+    return this.withLoader(
+      this.http.delete<void>(`${this.baseUrl}/auth/users/${id}`),
+      'Removing User...'
     );
   }
 }

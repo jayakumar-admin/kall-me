@@ -4,6 +4,7 @@
           <h1 class="text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Invoice Generation</h1>
           <p class="text-slate-500 dark:text-slate-400">Generate and preview invoices for orders.</p>
         </div>
+        <a routerLink="/app/bulk-invoice" class="btn-primary">Bulk Invoice Generation</a>
       </div>
 
       <div class="card space-y-6 print:border-none print:shadow-none print:p-0 print:m-0">
@@ -108,7 +109,7 @@
                 </div>
                 <div class="pt-3 border-t border-slate-200 dark:border-white/10 flex justify-between items-center print:border-black">
                   <span class="font-bold text-[#1A1A1A] dark:text-white print:text-black">Grand Total</span>
-                  <span class="text-xl font-black text-[#FFC107] print:text-black">{{ grandTotal() | currency:'INR' }}</span>
+                  <span class="text-xl font-black text-red-500 dark:text-red-400 print:text-black">{{ grandTotal() }}</span>
                 </div>
               </div>
             </div>

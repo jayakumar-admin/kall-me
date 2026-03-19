@@ -58,6 +58,9 @@ export class CatalogService {
           ...current,
           [hotelId]: items.map(item => ({ ...item, hotelPrice: item.price, isLinked: true }))
         }));
+      },
+      error: () => {
+        this.toast.error(`Failed to load menu for hotel ${hotelId}`);
       }
     });
   }

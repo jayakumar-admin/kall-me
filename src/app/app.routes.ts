@@ -51,6 +51,11 @@ export const routes: Routes = [
         canActivate: [roleGuard(['admin'])]
       },
       {
+        path: 'bulk-invoice',
+        loadComponent: () => import('./modules/invoice/bulk-invoice-generation').then(m => m.BulkInvoiceGeneration),
+        canActivate: [roleGuard(['admin'])]
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./modules/orders/orders-list').then(m => m.OrdersList),
         canActivate: [roleGuard(['admin'])]

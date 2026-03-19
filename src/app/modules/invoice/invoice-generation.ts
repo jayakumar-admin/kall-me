@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
@@ -13,9 +13,8 @@ import 'jspdf-autotable';
 @Component({
   selector: 'app-invoice-generation',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule],
-  templateUrl: './invoice-generation.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  imports: [CommonModule, FormsModule, MatIconModule, RouterLink],
+  templateUrl: './invoice-generation.html'
 })
 export class InvoiceGeneration implements OnInit {
   api = inject(ApiService);
@@ -65,8 +64,9 @@ export class InvoiceGeneration implements OnInit {
 
   grandTotal = computed(() => {
     const order = this.selectedOrder();
-    if (!order) return 0;
-    return this.subtotal() + (order.shipping_fee || 0) + this.calculatedGst() + this.calculatedIgst();
+    if (!order) return 'No order';
+    const total = this.subtotal() + (order.shipping_fee || 0) + this.calculatedGst() + this.calculatedIgst();
+    return 'Total: ' + total;
   });
 
   searchOrder() {
@@ -81,6 +81,7 @@ export class InvoiceGeneration implements OnInit {
 
     this.api.getOrder(this.searchOrderId.trim()).subscribe({
       next: (order) => {
+        console.log('Order found:', order);
         this.selectedOrder.set(order);
         this.isLoading.set(false);
       },

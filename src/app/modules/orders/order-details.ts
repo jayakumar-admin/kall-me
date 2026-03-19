@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../services/api.service';
@@ -10,7 +11,7 @@ import { Order } from '../../models';
 @Component({
   selector: 'app-order-details',
   standalone: true,
-  imports: [CommonModule, MatIconModule, RouterLink],
+  imports: [CommonModule, MatIconModule, RouterLink, FormsModule],
   template: `
     <div class="h-full overflow-y-auto p-6 custom-scrollbar">
       @if (order()) {
@@ -74,6 +75,15 @@ import { Order } from '../../models';
                 <span class="text-slate-500">Shipping</span>
                 <span class="text-[#1A1A1A] dark:text-white">₹{{ (order()!.shipping_fee || 0).toLocaleString() }}</span>
               </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-500">Balance Pending</span>
+                <div class="flex items-center gap-2">
+                  <input type="number" [(ngModel)]="pendingAmount" class="w-24 bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <button (click)="updatePending()" class="text-[#FFC107] hover:text-[#FFA000]">
+                    <mat-icon>save</mat-icon>
+                  </button>
+                </div>
+              </div>
               <div class="flex justify-between text-lg font-black pt-2 border-t border-slate-100 dark:border-white/5">
                 <span class="text-[#1A1A1A] dark:text-white">Grand Total</span>
                 <span class="text-[#FFC107]">₹{{ (order()!.grand_total || 0).toLocaleString() }}</span>
@@ -98,6 +108,7 @@ export class OrderDetails implements OnInit {
   orderService = inject(OrderService);
   toast = inject(ToastService);
   order = signal<Order | null>(null);
+  pendingAmount = 0;
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -106,13 +117,14 @@ export class OrderDetails implements OnInit {
         this.api.getOrder(id).subscribe({
           next: (order: Order) => {
             this.order.set(order);
+            this.pendingAmount = order.balance_pending || 0;
           },
           error: (err: unknown) => {
             console.error('Failed to fetch order:', err);
-            // Fallback to service if API fails or if we want to try local first
             const foundOrder = this.orderService.orders().find(o => o.id?.toString() === id || o.order_number === id);
             if (foundOrder) {
               this.order.set(foundOrder);
+              this.pendingAmount = foundOrder.balance_pending || 0;
             } else {
               this.toast.error('Order not found');
               this.router.navigate(['/app/orders']);
@@ -121,6 +133,22 @@ export class OrderDetails implements OnInit {
         });
       }
     });
+  }
+
+  updatePending() {
+    const order = this.order();
+    if (order && order.id) {
+      this.api.updateOrder(order.id, { balance_pending: this.pendingAmount }).subscribe({
+        next: (updatedOrder) => {
+          this.order.set(updatedOrder);
+          this.toast.success('Pending amount updated successfully');
+        },
+        error: (err) => {
+          console.error('Failed to update pending amount:', err);
+          this.toast.error('Failed to update pending amount');
+        }
+      });
+    }
   }
 
   getStatusClass(status: string): string {

@@ -8,7 +8,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [CommonModule, MatIconModule, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
-    <div class="h-full flex flex-col md:flex-row bg-slate-50 dark:bg-[#0F172A]">
+    <div class="min-h-screen flex flex-col md:flex-row bg-slate-50 dark:bg-[#0F172A]">
       <!-- Settings Sidebar -->
       <div class="w-full md:w-64 bg-white dark:bg-[#1E293B] border-r border-slate-200 dark:border-white/5 flex flex-col shrink-0">
         <div class="p-6 border-b border-slate-200 dark:border-white/5">
@@ -92,7 +92,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       </div>
 
       <!-- Content Area -->
-      <div class="flex-1 overflow-hidden bg-white dark:bg-[#0F172A] relative">
+      <div class="flex-1 overflow-y-auto bg-white dark:bg-[#0F172A] relative custom-scrollbar">
         <router-outlet></router-outlet>
       </div>
     </div>

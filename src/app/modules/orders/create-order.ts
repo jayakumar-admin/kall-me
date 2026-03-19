@@ -16,10 +16,10 @@ import { OrderService } from '../../services/order.service';
   standalone: true,
   imports: [CommonModule, FormsModule, MatIconModule],
   template: `
-    <div class="h-full overflow-y-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 custom-scrollbar">
+    <div class="h-full overflow-hidden p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Left Panel: Hotel Selection -->
-      <div class="lg:col-span-3 flex flex-col gap-4 h-auto lg:h-full">
-        <div class="flex flex-col">
+      <div class="lg:col-span-3 flex flex-col gap-4 h-full overflow-hidden">
+        <div class="flex flex-col shrink-0">
           <h2 class="text-lg font-bold text-[#1A1A1A] dark:text-white flex items-center gap-2">
             <div class="w-6 h-6 bg-[#FFC107] rounded flex items-center justify-center">
               <mat-icon class="text-black text-sm">storefront</mat-icon>
@@ -29,7 +29,7 @@ import { OrderService } from '../../services/order.service';
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Choose a partner restaurant</p>
         </div>
         
-        <div class="relative">
+        <div class="relative shrink-0">
           <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">filter_list</mat-icon>
           <input 
             type="text" 
@@ -39,7 +39,7 @@ import { OrderService } from '../../services/order.service';
           >
         </div>
 
-        <div class="flex-1 lg:overflow-y-auto space-y-3 pr-1 custom-scrollbar min-h-[300px] lg:min-h-0">
+        <div class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
           @for (hotel of filteredHotels(); track hotel.id) {
             <div 
               (click)="selectHotel(hotel)"
@@ -72,8 +72,8 @@ import { OrderService } from '../../services/order.service';
       </div>
 
       <!-- Center Panel: Menu Selection -->
-      <div class="lg:col-span-5 flex flex-col gap-4 h-auto lg:h-full">
-        <div class="flex items-center justify-between">
+      <div class="lg:col-span-5 flex flex-col gap-4 h-full overflow-hidden">
+        <div class="flex items-center justify-between shrink-0">
           <div>
             <h2 class="text-xl font-bold text-[#1A1A1A] dark:text-white">Menu Selection</h2>
             <p class="text-xs text-slate-500 dark:text-slate-400">{{ selectedHotel()?.name || 'Select a Hotel' }} • {{ filteredMenu().length }} Items Available</p>
@@ -85,25 +85,37 @@ import { OrderService } from '../../services/order.service';
           }
         </div>
 
-        <!-- Category Tabs -->
-        <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          @for (cat of categories; track cat) {
-            <button 
-              (click)="selectedCategory.set(cat)"
-              [class.bg-[#FFC107]]="selectedCategory() === cat"
-              [class.text-black]="selectedCategory() === cat"
-              [class.bg-white]="selectedCategory() !== cat"
-              [class.dark:bg-[#1E293B]]="selectedCategory() !== cat"
-              [class.text-slate-600]="selectedCategory() !== cat"
-              [class.dark:text-slate-400]="selectedCategory() !== cat"
-              class="px-5 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all shadow-sm border border-slate-100 dark:border-white/5"
+        <!-- Category Tabs & Search -->
+        <div class="flex flex-col gap-3 shrink-0">
+          <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            @for (cat of categories; track cat) {
+              <button 
+                (click)="selectedCategory.set(cat)"
+                [class.bg-[#FFC107]]="selectedCategory() === cat"
+                [class.text-black]="selectedCategory() === cat"
+                [class.bg-white]="selectedCategory() !== cat"
+                [class.dark:bg-[#1E293B]]="selectedCategory() !== cat"
+                [class.text-slate-600]="selectedCategory() !== cat"
+                [class.dark:text-slate-400]="selectedCategory() !== cat"
+                class="px-5 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all shadow-sm border border-slate-100 dark:border-white/5"
+              >
+                {{ cat }}
+              </button>
+            }
+          </div>
+          <div class="relative">
+            <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+            <input 
+              type="text" 
+              [ngModel]="menuSearchTerm()"
+              (ngModelChange)="menuSearchTerm.set($event)"
+              placeholder="Search menu items..." 
+              class="w-full bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
             >
-              {{ cat }}
-            </button>
-          }
+          </div>
         </div>
 
-        <div class="flex-1 lg:overflow-y-auto space-y-3 pr-1 custom-scrollbar min-h-[400px] lg:min-h-0">
+        <div class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
           @for (item of filteredMenu(); track item.id) {
             <div 
               class="bg-white dark:bg-[#1E293B] rounded-xl border border-slate-100 dark:border-white/5 p-3 flex gap-4 items-center group transition-all hover:border-[#FFC107]/30"
@@ -153,8 +165,8 @@ import { OrderService } from '../../services/order.service';
       </div>
 
       <!-- Right Panel: Order Summary -->
-      <div class="lg:col-span-4 flex flex-col gap-4 h-auto lg:h-full">
-        <div class="flex items-center gap-2">
+      <div class="lg:col-span-4 flex flex-col gap-4 h-full overflow-hidden">
+        <div class="flex items-center gap-2 shrink-0">
           <div class="w-6 h-6 bg-[#FFC107] rounded flex items-center justify-center">
             <mat-icon class="text-black text-sm">receipt_long</mat-icon>
           </div>
@@ -162,7 +174,7 @@ import { OrderService } from '../../services/order.service';
         </div>
 
         <div class="bg-white dark:bg-[#1E293B] rounded-2xl border border-slate-200 dark:border-white/5 flex-1 flex flex-col overflow-hidden shadow-sm">
-          <div class="p-5 space-y-5 lg:overflow-y-auto flex-1 custom-scrollbar">
+          <div class="p-5 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
             <!-- Customer Details -->
             <div class="space-y-3">
               <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Customer Details</p>
@@ -273,7 +285,7 @@ import { OrderService } from '../../services/order.service';
             </div>
           </div>
 
-          <div class="p-5 bg-white dark:bg-[#1E293B] border-t border-slate-100 dark:border-white/5">
+          <div class="p-5 bg-white dark:bg-[#1E293B] border-t border-slate-100 dark:border-white/5 shrink-0">
             @if (!canConfirm()) {
               <p class="text-[10px] text-red-500 text-center mb-3 font-bold uppercase tracking-wider">Please fill all required fields to confirm</p>
             }
@@ -425,16 +437,29 @@ export class CreateOrder implements OnInit {
     );
   });
 
+  menuSearchTerm = signal('');
+
   filteredMenu = computed(() => {
     const cat = this.selectedCategory();
     const hotel = this.selectedHotel();
+    const term = this.menuSearchTerm().toLowerCase();
+    
     if (!hotel) return [];
     
-    const hotelItems = this.catalog.hotelMenus()[hotel.id] || [];
-    const items = (hotelItems.length > 0 ? hotelItems : this.catalog.globalMenu().filter(i => i.hotel_id === hotel.id)) as HotelMenuItem[];
+    let hotelItems = this.catalog.hotelMenus()[hotel.id] || [];
     
-    if (cat === 'All Items') return items;
-    return items.filter(i => i.category === cat);
+    if (cat !== 'All Items') {
+      hotelItems = hotelItems.filter(i => i.category === cat);
+    }
+    
+    if (term) {
+      hotelItems = hotelItems.filter(i => 
+        i.name.toLowerCase().includes(term) || 
+        (i.category && i.category.toLowerCase().includes(term))
+      );
+    }
+    
+    return hotelItems;
   });
 
   route = inject(ActivatedRoute);

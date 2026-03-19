@@ -142,6 +142,13 @@ export class ApiService {
     );
   }
 
+  updateOrder(id: number, order: Partial<Order>): Observable<Order> {
+    return this.withLoader(
+      this.http.patch<Order>(`${this.baseUrl}/orders/${id}`, order),
+      'Updating Order...'
+    );
+  }
+
   updateHotelPricing(hotel_id: number, items: { menu_id: number, price: number }[]): Observable<void> {
     return this.withLoader(
       this.http.post<void>(`${this.baseUrl}/pricing/update`, { hotel_id, items }),

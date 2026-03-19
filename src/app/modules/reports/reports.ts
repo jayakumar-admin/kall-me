@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
+import { ECharts, EChartsOption } from 'echarts';
+import { NgxEchartsDirective } from 'ngx-echarts';
 import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { Order } from '../../models';
@@ -12,7 +14,7 @@ import autoTable from 'jspdf-autotable';
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule],
+  imports: [CommonModule, MatIconModule, FormsModule, NgxEchartsDirective],
   template: `
     <div class="h-full overflow-y-auto p-6 custom-scrollbar space-y-8">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -29,6 +31,24 @@ import autoTable from 'jspdf-autotable';
             <mat-icon class="text-lg">picture_as_pdf</mat-icon>
             Export PDF
           </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/10">
+        <div class="flex">
+          @for (tab of tabs; track tab) {
+            <button (click)="currentTab.set(tab)" [class.border-[#FFC107]]="currentTab() === tab" class="px-4 py-2 border-b-2 font-bold text-sm transition-colors" [class.text-[#FFC107]]="currentTab() === tab" [class.text-slate-500]="currentTab() !== tab">
+              {{ tab }}
+            </button>
+          }
+        </div>
+        <div class="flex gap-2">
+          @for (sub of subTabs; track sub) {
+            <button (click)="currentSubTab.set(sub)" [class.bg-[#FFC107]]="currentSubTab() === sub" class="px-3 py-1 rounded-md text-xs font-bold transition-colors" [class.text-black]="currentSubTab() === sub" [class.text-slate-500]="currentSubTab() !== sub">
+              {{ sub }}
+            </button>
+          }
         </div>
       </div>
 
@@ -83,69 +103,61 @@ import autoTable from 'jspdf-autotable';
         </div>
       } @else {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 bg-[#FFC107]/5">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Hotel Earnings</p>
-            <p class="text-3xl font-black text-[#1A1A1A] dark:text-white">₹{{ (metrics().hotelEarnings || 0).toLocaleString() }}</p>
-            <p class="text-[10px] text-slate-500 mt-2">Total payout to restaurant partners</p>
-          </div>
-          <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Delivery Salary</p>
-            <p class="text-3xl font-black text-[#1A1A1A] dark:text-white">₹{{ (metrics().deliverySalary || 0).toLocaleString() }}</p>
-            <p class="text-[10px] text-slate-500 mt-2">Total payout to delivery partners</p>
-          </div>
-          <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Admin Commission</p>
-            <p class="text-3xl font-black text-[#FFC107]">₹{{ (metrics().adminCommission || 0).toLocaleString() }}</p>
-            <p class="text-[10px] text-slate-500 mt-2">Net platform revenue</p>
-          </div>
+          @for (item of metrics().items; track item.label) {
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ item.label }}</p>
+              <p class="text-2xl font-black text-[#1A1A1A] dark:text-white">{{ item.value }}</p>
+            </div>
+          }
         </div>
+        
+        @if (currentSubTab() === 'Chart') {
+          <!-- Charts -->
+          <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white">{{ currentTab() }} Analytics</h3>
+              <button (click)="downloadChart()" class="text-xs font-bold text-[#FFC107] hover:text-[#E6AE06] transition-colors flex items-center gap-1">
+                <mat-icon class="text-sm">download</mat-icon>
+                Download Chart
+              </button>
+            </div>
+            <div echarts [options]="chartOptions()" class="h-80" (chartInit)="onChartInit($event)"></div>
+          </div>
+        } @else {
+          <!-- Filtered Data Table -->
+          <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 !p-0 overflow-hidden">
+            <div class="p-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50 dark:bg-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white">{{ currentTab() }} Data</h3>
+              <span class="text-xs font-bold text-slate-500 bg-white dark:bg-[#1E293B] px-2 py-1 rounded-md border border-slate-200 dark:border-white/10">{{ filteredOrders().length }} Records</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr [class]="tableConfig().headerColor" class="border-b border-slate-100 dark:border-white/5">
+                    @for (header of tableConfig().headers; track header) {
+                      <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" [class.text-right]="header === 'Amount' || header === 'Earnings'">{{ header }}</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-white/5 bg-white dark:bg-[#1E293B]">
+                  @for (row of tableConfig().rows; track row) {
+                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                      @for (cell of row; track cell) {
+                        <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white" [class.text-right]="cell.toString().startsWith('₹')">{{ cell }}</td>
+                      }
+                    </tr>
+                  }
+                  @if (tableConfig().rows.length === 0) {
+                    <tr>
+                      <td [attr.colspan]="tableConfig().headers.length" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">No records match the selected filters.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
       }
-
-      <!-- Filtered Data Table Preview -->
-      <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 !p-0 overflow-hidden">
-        <div class="p-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50 dark:bg-white/5">
-          <h3 class="font-bold text-[#1A1A1A] dark:text-white">Filtered Orders Preview</h3>
-          <span class="text-xs font-bold text-slate-500 bg-white dark:bg-[#1E293B] px-2 py-1 rounded-md border border-slate-200 dark:border-white/10">{{ filteredOrders().length }} Orders</span>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-white dark:bg-[#1E293B] border-b border-slate-100 dark:border-white/5">
-                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Order ID</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hotel</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-white/5 bg-white dark:bg-[#1E293B]">
-              @for (order of filteredOrders().slice(0, 5); track order.id) {
-                <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                  <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white">{{ order.order_number }}</td>
-                  <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">{{ order.created_at | date:'shortDate' }}</td>
-                  <td class="px-4 py-3 text-sm text-[#1A1A1A] dark:text-white">{{ order.hotel_name }}</td>
-                  <td class="px-4 py-3">
-                    <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border"
-                      [ngClass]="{
-                        'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20': order.status === 'delivered',
-                        'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:border-red-500/20': order.status === 'cancelled',
-                        'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20': order.status === 'in-progress' || order.status === 'placed'
-                      }">
-                      {{ order.status }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white text-right">₹{{ (order.grand_total || 0).toLocaleString() }}</td>
-                </tr>
-              }
-              @if (filteredOrders().length === 0) {
-                <tr>
-                  <td colspan="5" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">No orders match the selected filters.</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -157,6 +169,29 @@ export class Reports implements OnInit {
   
   orders = signal<Order[]>([]);
   
+  // Tabs
+  tabs = [
+    'Overview', 
+    'Hotel-wise', 
+    'Delivery Person-wise', 
+    'Menu-wise', 
+    'Orders', 
+    'Commission / Earnings', 
+    'Top Performing Hotels', 
+    'Top Selling Menus'
+  ];
+  currentTab = signal('Overview');
+  subTabs = ['Chart', 'Table'];
+  currentSubTab = signal('Table');
+
+  // Reset sub-tab when main tab changes
+  constructor() {
+    effect(() => {
+      this.currentTab();
+      this.currentSubTab.set('Table');
+    });
+  }
+
   // Filters
   startDate = signal<string>('');
   endDate = signal<string>('');
@@ -198,19 +233,86 @@ export class Reports implements OnInit {
     return result;
   });
 
+  tableConfig = computed(() => {
+    const tab = this.currentTab();
+    if (tab === 'Hotel-wise') {
+      return {
+        headers: ['Hotel', 'Orders', 'Revenue', 'Avg Order'],
+        rows: Object.values(this.groupedByHotel()).map(g => [g.name, g.orders, `₹${g.revenue.toLocaleString()}`, `₹${Math.round(g.revenue / g.orders).toLocaleString()}`]),
+        headerColor: 'bg-indigo-50 dark:bg-indigo-900/20'
+      };
+    } else if (tab === 'Delivery Man-wise') {
+      return {
+        headers: ['Delivery Person', 'Orders', 'Earnings'],
+        rows: Object.values(this.groupedByDelivery()).map(g => [g.name, g.orders, `₹${g.earnings.toLocaleString()}`]),
+        headerColor: 'bg-emerald-50 dark:bg-emerald-900/20'
+      };
+    } else if (tab === 'Menu-wise') {
+      return {
+        headers: ['Menu Item', 'Quantity', 'Revenue'],
+        rows: Object.values(this.groupedByMenu()).map(g => [g.name, g.quantity, `₹${g.revenue.toLocaleString()}`]),
+        headerColor: 'bg-amber-50 dark:bg-amber-900/20'
+      };
+    } else {
+      return {
+        headers: ['Order ID', 'Date', 'Hotel', 'Status', 'Amount'],
+        rows: this.filteredOrders().map(o => [
+          o.order_number || '',
+          o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
+          o.hotel_name || '',
+          o.status || '',
+          `₹${(o.grand_total || 0).toLocaleString()}`
+        ]),
+        headerColor: 'bg-slate-50 dark:bg-slate-900/20'
+      };
+    }
+  });
+
+  groupedByHotel = computed(() => {
+    const grouped: Record<number, { name: string, orders: number, revenue: number }> = {};
+    this.filteredOrders().forEach(o => {
+      if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_name || 'Unknown', orders: 0, revenue: 0 };
+      grouped[o.hotel_id].orders++;
+      grouped[o.hotel_id].revenue += o.grand_total || 0;
+    });
+    return grouped;
+  });
+
+  groupedByDelivery = computed(() => {
+    const grouped: Record<number, { name: string, orders: number, earnings: number }> = {};
+    this.filteredOrders().forEach(o => {
+      if (!grouped[o.delivery_person_id]) grouped[o.delivery_person_id] = { name: o.delivery_person_name || 'Unknown', orders: 0, earnings: 0 };
+      grouped[o.delivery_person_id].orders++;
+      grouped[o.delivery_person_id].earnings += o.shipping_fee || 0;
+    });
+    return grouped;
+  });
+
+  groupedByMenu = computed(() => {
+    const grouped: Record<number, { name: string, quantity: number, revenue: number }> = {};
+    this.filteredOrders().forEach(o => {
+      (o.items || []).forEach(item => {
+        if (!grouped[item.menu_id]) grouped[item.menu_id] = { name: item.menu_name || 'Unknown', quantity: 0, revenue: 0 };
+        grouped[item.menu_id].quantity += item.quantity;
+        grouped[item.menu_id].revenue += item.total;
+      });
+    });
+    return grouped;
+  });
+
   metrics = computed(() => {
     const data = this.filteredOrders();
-    const hotels = this.catalog.hotels();
+    const tab = this.currentTab();
     
-    let totalHotelEarnings = 0;
-    let totalDeliverySalary = 0;
-    let totalAdminCommission = 0;
-    
-    if (data && hotels) {
+    if (tab === 'Overview') {
+      const hotels = this.catalog.hotels();
+      let totalHotelEarnings = 0;
+      let totalDeliverySalary = 0;
+      let totalAdminCommission = 0;
+      
       data.forEach(o => {
         const hotel = hotels.find(h => h.id === o.hotel_id);
-        const commissionRate = hotel?.commission_rate || 15; // Default to 15% if not found
-        
+        const commissionRate = hotel?.commission_rate || 15;
         const adminComm = Math.round((o.subtotal || 0) * (commissionRate / 100));
         const deliveryFee = o.shipping_fee || 0;
         const hotelEarn = (o.subtotal || 0) - adminComm;
@@ -219,14 +321,224 @@ export class Reports implements OnInit {
         totalDeliverySalary += deliveryFee;
         totalAdminCommission += adminComm;
       });
+      return {
+        type: 'Overview',
+        items: [
+          { label: 'Hotel Earnings', value: `₹${totalHotelEarnings.toLocaleString()}` },
+          { label: 'Delivery Salary', value: `₹${totalDeliverySalary.toLocaleString()}` },
+          { label: 'Admin Commission', value: `₹${totalAdminCommission.toLocaleString()}` }
+        ]
+      };
+    } else if (tab === 'Hotel-wise') {
+      const grouped: Record<number, { name: string, orders: number, revenue: number }> = {};
+      data.forEach(o => {
+        if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_name || 'Unknown', orders: 0, revenue: 0 };
+        grouped[o.hotel_id].orders++;
+        grouped[o.hotel_id].revenue += o.grand_total || 0;
+      });
+      return {
+        type: 'Hotel-wise',
+        items: Object.values(grouped).map(g => ({
+          label: g.name,
+          value: `Orders: ${g.orders} | Rev: ₹${g.revenue.toLocaleString()} | Avg: ₹${Math.round(g.revenue / g.orders).toLocaleString()}`
+        }))
+      };
+    } else if (tab === 'Delivery Man-wise') {
+      const grouped: Record<number, { name: string, orders: number, earnings: number }> = {};
+      data.forEach(o => {
+        if (!grouped[o.delivery_person_id]) grouped[o.delivery_person_id] = { name: o.delivery_person_name || 'Unknown', orders: 0, earnings: 0 };
+        grouped[o.delivery_person_id].orders++;
+        grouped[o.delivery_person_id].earnings += o.shipping_fee || 0;
+      });
+      return {
+        type: 'Delivery Man-wise',
+        items: Object.values(grouped).map(g => ({
+          label: g.name,
+          value: `Orders: ${g.orders} | Earnings: ₹${g.earnings.toLocaleString()}`
+        }))
+      };
+    } else if (tab === 'Menu-wise') {
+      const grouped: Record<number, { name: string, quantity: number, revenue: number }> = {};
+      data.forEach(o => {
+        (o.items || []).forEach(item => {
+          if (!grouped[item.menu_id]) grouped[item.menu_id] = { name: item.menu_name || 'Unknown', quantity: 0, revenue: 0 };
+          grouped[item.menu_id].quantity += item.quantity;
+          grouped[item.menu_id].revenue += item.total;
+        });
+      });
+      return {
+        type: 'Menu-wise',
+        items: Object.values(grouped).map(g => ({
+          label: g.name,
+          value: `Qty: ${g.quantity} | Rev: ₹${g.revenue.toLocaleString()}`
+        }))
+      };
+    } else if (tab === 'Orders') {
+      return {
+        type: 'Orders',
+        items: [
+          { label: 'Total Orders', value: data.length.toString() },
+          { label: 'Total Revenue', value: `₹${data.reduce((sum, o) => sum + (o.grand_total || 0), 0).toLocaleString()}` }
+        ]
+      };
+    } else if (tab === 'Commission / Earnings') {
+      const totalComm = data.reduce((sum, o) => {
+        const hotel = this.catalog.hotels().find(h => h.id === o.hotel_id);
+        const rate = hotel?.commission_rate || 15;
+        return sum + Math.round((o.subtotal || 0) * (rate / 100));
+      }, 0);
+      return {
+        type: 'Commission / Earnings',
+        items: [
+          { label: 'Total Commission', value: `₹${totalComm.toLocaleString()}` }
+        ]
+      };
+    } else if (tab === 'Top Performing Hotels') {
+      const grouped: Record<number, { name: string, revenue: number }> = {};
+      data.forEach(o => {
+        if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_name || 'Unknown', revenue: 0 };
+        grouped[o.hotel_id].revenue += o.grand_total || 0;
+      });
+      return {
+        type: 'Top Performing Hotels',
+        items: Object.values(grouped)
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 5)
+          .map(g => ({ label: g.name, value: `₹${g.revenue.toLocaleString()}` }))
+      };
+    } else if (tab === 'Top Selling Menus') {
+      const grouped: Record<number, { name: string, quantity: number }> = {};
+      data.forEach(o => {
+        (o.items || []).forEach(item => {
+          if (!grouped[item.menu_id]) grouped[item.menu_id] = { name: item.menu_name || 'Unknown', quantity: 0 };
+          grouped[item.menu_id].quantity += item.quantity;
+        });
+      });
+      return {
+        type: 'Top Selling Menus',
+        items: Object.values(grouped)
+          .sort((a, b) => b.quantity - a.quantity)
+          .slice(0, 5)
+          .map(g => ({ label: g.name, value: `Qty: ${g.quantity}` }))
+      };
     }
-    
-    return {
-      hotelEarnings: totalHotelEarnings,
-      deliverySalary: totalDeliverySalary,
-      adminCommission: totalAdminCommission
-    };
+    return { type: 'Other', items: [] };
   });
+
+  chartOptions = computed(() => {
+    const data = this.filteredOrders();
+    const tab = this.currentTab();
+    
+    let xAxisData: string[] = [];
+    let seriesData: number[] = [];
+    
+    if (tab === 'Overview') {
+      // Group by date
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
+        grouped[date] = (grouped[date] || 0) + (o.grand_total || 0);
+      });
+      xAxisData = Object.keys(grouped);
+      seriesData = Object.values(grouped);
+    } else if (tab === 'Hotel-wise') {
+      // Group by hotel
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        const hotel = o.hotel_name || 'Unknown';
+        grouped[hotel] = (grouped[hotel] || 0) + (o.grand_total || 0);
+      });
+      xAxisData = Object.keys(grouped);
+      seriesData = Object.values(grouped);
+    } else if (tab === 'Delivery Man-wise') {
+      // Group by delivery person
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        const person = o.delivery_person_name || 'Unknown';
+        grouped[person] = (grouped[person] || 0) + (o.grand_total || 0);
+      });
+      xAxisData = Object.keys(grouped);
+      seriesData = Object.values(grouped);
+    } else if (tab === 'Menu-wise') {
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        (o.items || []).forEach(item => {
+          const name = item.menu_name || 'Unknown';
+          grouped[name] = (grouped[name] || 0) + (item.total || 0);
+        });
+      });
+      xAxisData = Object.keys(grouped);
+      seriesData = Object.values(grouped);
+    } else if (tab === 'Orders') {
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
+        grouped[date] = (grouped[date] || 0) + 1;
+      });
+      xAxisData = Object.keys(grouped);
+      seriesData = Object.values(grouped);
+    } else if (tab === 'Commission / Earnings') {
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        const hotel = this.catalog.hotels().find(h => h.id === o.hotel_id);
+        const rate = hotel?.commission_rate || 15;
+        const comm = Math.round((o.subtotal || 0) * (rate / 100));
+        const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
+        grouped[date] = (grouped[date] || 0) + comm;
+      });
+      xAxisData = Object.keys(grouped);
+      seriesData = Object.values(grouped);
+    } else if (tab === 'Top Performing Hotels') {
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        const hotel = o.hotel_name || 'Unknown';
+        grouped[hotel] = (grouped[hotel] || 0) + (o.grand_total || 0);
+      });
+      const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      xAxisData = sorted.map(e => e[0]);
+      seriesData = sorted.map(e => e[1]);
+    } else if (tab === 'Top Selling Menus') {
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        (o.items || []).forEach(item => {
+          const name = item.menu_name || 'Unknown';
+          grouped[name] = (grouped[name] || 0) + item.quantity;
+        });
+      });
+      const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      xAxisData = sorted.map(e => e[0]);
+      seriesData = sorted.map(e => e[1]);
+    }
+
+    return {
+      title: { text: `${this.currentTab()} Report`, left: 'center' },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      xAxis: { type: 'category', data: xAxisData, axisLabel: { rotate: 45 } },
+      yAxis: { type: 'value' },
+      series: [{ data: seriesData, type: 'bar', itemStyle: { color: '#FFC107' } }]
+    } as EChartsOption;
+  });
+
+  private chartInstance: ECharts | null = null;
+
+  onChartInit(ec: unknown) {
+    this.chartInstance = ec as ECharts;
+  }
+
+  downloadChart() {
+    if (this.chartInstance) {
+      const url = this.chartInstance.getDataURL({
+        type: 'png',
+        pixelRatio: 2,
+        backgroundColor: '#fff'
+      });
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `chart_${this.currentTab()}_${new Date().toISOString().split('T')[0]}.png`;
+      link.click();
+      this.toast.success('Chart downloaded successfully');
+    }
+  }
 
   ngOnInit() {
     this.api.getOrders().subscribe({
@@ -247,34 +559,25 @@ export class Reports implements OnInit {
   }
 
   exportCSV() {
-    const data = this.filteredOrders();
-    if (data.length === 0) {
+    const config = this.tableConfig();
+    if (config.rows.length === 0) {
       this.toast.error('No data to export');
       return;
     }
 
-    const headers = ['Order ID', 'Date', 'Hotel', 'Customer', 'Status', 'Subtotal', 'Shipping', 'Total'];
-    const rows = data.map(o => [
-      o.order_number || '',
-      o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
-      o.hotel_name || '',
-      o.customer_name || '',
-      o.status || '',
-      (o.subtotal || 0).toString(),
-      (o.shipping_fee || 0).toString(),
-      (o.grand_total || 0).toString()
-    ]);
+    const headers = config.headers;
+    const rows = config.rows;
 
     const csvContent = [
       headers.join(','),
-      ...rows.map(e => e.map(field => `"${field}"`).join(','))
+      ...rows.map(row => row.map(field => `"${field}"`).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `kallme_report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `kallme_report_${this.currentTab()}_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -313,9 +616,13 @@ export class Reports implements OnInit {
     doc.setTextColor(0);
     doc.text(`Summary:`, 14, 40);
     doc.setFontSize(10);
-    doc.text(`Hotel Earnings: Rs. ${(m.hotelEarnings || 0).toLocaleString()}`, 14, 46);
-    doc.text(`Delivery Salary: Rs. ${(m.deliverySalary || 0).toLocaleString()}`, 14, 52);
-    doc.text(`Admin Commission: Rs. ${(m.adminCommission || 0).toLocaleString()}`, 14, 58);
+    
+    // Display items from the metrics object instead of hardcoded properties
+    let y = 46;
+    m.items.forEach(item => {
+      doc.text(`${item.label}: ${item.value}`, 14, y);
+      y += 6;
+    });
 
     // Table
     const headers = [['Order ID', 'Date', 'Hotel', 'Status', 'Total']];

@@ -166,18 +166,18 @@ export class Reports implements OnInit {
   private api = inject(ApiService);
   private toast = inject(ToastService);
   private catalog = inject(CatalogService);
-  
+
   orders = signal<Order[]>([]);
-  
+
   // Tabs
   tabs = [
-    'Overview', 
-    'Hotel-wise', 
-    'Delivery Person-wise', 
-    'Menu-wise', 
-    'Orders', 
-    'Commission / Earnings', 
-    'Top Performing Hotels', 
+    'Overview',
+    'Hotel-wise',
+    'Delivery Person-wise',
+    'Menu-wise',
+    'Orders',
+    'Commission / Earnings',
+    'Top Performing Hotels',
     'Top Selling Menus'
   ];
   currentTab = signal('Overview');
@@ -204,7 +204,7 @@ export class Reports implements OnInit {
 
   filteredOrders = computed(() => {
     let result = this.orders();
-    
+
     const start = this.startDate();
     const end = this.endDate();
     const status = this.statusFilter();
@@ -214,7 +214,7 @@ export class Reports implements OnInit {
       const startDate = new Date(start).getTime();
       result = result.filter(o => o.created_at && new Date(o.created_at).getTime() >= startDate);
     }
-    
+
     if (end) {
       const endDate = new Date(end);
       endDate.setHours(23, 59, 59, 999);
@@ -273,7 +273,7 @@ export class Reports implements OnInit {
     this.filteredOrders().forEach(o => {
       if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_name || 'Unknown', orders: 0, revenue: 0 };
       grouped[o.hotel_id].orders++;
-      grouped[o.hotel_id].revenue += o.grand_total || 0;
+      grouped[o.hotel_id].revenue += Number(o.grand_total) || 0;
     });
     return grouped;
   });
@@ -283,7 +283,7 @@ export class Reports implements OnInit {
     this.filteredOrders().forEach(o => {
       if (!grouped[o.delivery_person_id]) grouped[o.delivery_person_id] = { name: o.delivery_person_name || 'Unknown', orders: 0, earnings: 0 };
       grouped[o.delivery_person_id].orders++;
-      grouped[o.delivery_person_id].earnings += o.shipping_fee || 0;
+      grouped[o.delivery_person_id].earnings += Number(o.shipping_fee) || 0;
     });
     return grouped;
   });
@@ -293,8 +293,8 @@ export class Reports implements OnInit {
     this.filteredOrders().forEach(o => {
       (o.items || []).forEach(item => {
         if (!grouped[item.menu_id]) grouped[item.menu_id] = { name: item.menu_name || 'Unknown', quantity: 0, revenue: 0 };
-        grouped[item.menu_id].quantity += item.quantity;
-        grouped[item.menu_id].revenue += item.total;
+        grouped[item.menu_id].quantity += Number(item.quantity) || 0;
+        grouped[item.menu_id].revenue += Number(item.total) || 0;
       });
     });
     return grouped;
@@ -303,20 +303,20 @@ export class Reports implements OnInit {
   metrics = computed(() => {
     const data = this.filteredOrders();
     const tab = this.currentTab();
-    
+
     if (tab === 'Overview') {
       const hotels = this.catalog.hotels();
       let totalHotelEarnings = 0;
       let totalDeliverySalary = 0;
       let totalAdminCommission = 0;
-      
+
       data.forEach(o => {
         const hotel = hotels.find(h => h.id === o.hotel_id);
         const commissionRate = hotel?.commission_rate || 15;
-        const adminComm = Math.round((o.subtotal || 0) * (commissionRate / 100));
-        const deliveryFee = o.shipping_fee || 0;
-        const hotelEarn = (o.subtotal || 0) - adminComm;
-        
+        const adminComm = Math.round((Number(o.subtotal) || 0) * (commissionRate / 100));
+        const deliveryFee = Number(o.shipping_fee) || 0;
+        const hotelEarn = (Number(o.subtotal) || 0) - adminComm;
+
         totalHotelEarnings += hotelEarn;
         totalDeliverySalary += deliveryFee;
         totalAdminCommission += adminComm;
@@ -334,7 +334,7 @@ export class Reports implements OnInit {
       data.forEach(o => {
         if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_name || 'Unknown', orders: 0, revenue: 0 };
         grouped[o.hotel_id].orders++;
-        grouped[o.hotel_id].revenue += o.grand_total || 0;
+        grouped[o.hotel_id].revenue += Number(o.grand_total) || 0;
       });
       return {
         type: 'Hotel-wise',
@@ -348,7 +348,7 @@ export class Reports implements OnInit {
       data.forEach(o => {
         if (!grouped[o.delivery_person_id]) grouped[o.delivery_person_id] = { name: o.delivery_person_name || 'Unknown', orders: 0, earnings: 0 };
         grouped[o.delivery_person_id].orders++;
-        grouped[o.delivery_person_id].earnings += o.shipping_fee || 0;
+        grouped[o.delivery_person_id].earnings += Number(o.shipping_fee) || 0;
       });
       return {
         type: 'Delivery Man-wise',
@@ -362,8 +362,8 @@ export class Reports implements OnInit {
       data.forEach(o => {
         (o.items || []).forEach(item => {
           if (!grouped[item.menu_id]) grouped[item.menu_id] = { name: item.menu_name || 'Unknown', quantity: 0, revenue: 0 };
-          grouped[item.menu_id].quantity += item.quantity;
-          grouped[item.menu_id].revenue += item.total;
+          grouped[item.menu_id].quantity += Number(item.quantity) || 0;
+          grouped[item.menu_id].revenue += Number(item.total) || 0;
         });
       });
       return {
@@ -378,14 +378,14 @@ export class Reports implements OnInit {
         type: 'Orders',
         items: [
           { label: 'Total Orders', value: data.length.toString() },
-          { label: 'Total Revenue', value: `₹${data.reduce((sum, o) => sum + (o.grand_total || 0), 0).toLocaleString()}` }
+          { label: 'Total Revenue', value: `₹${data.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0).toLocaleString()}` }
         ]
       };
     } else if (tab === 'Commission / Earnings') {
       const totalComm = data.reduce((sum, o) => {
         const hotel = this.catalog.hotels().find(h => h.id === o.hotel_id);
         const rate = hotel?.commission_rate || 15;
-        return sum + Math.round((o.subtotal || 0) * (rate / 100));
+        return sum + Math.round((Number(o.subtotal) || 0) * (rate / 100));
       }, 0);
       return {
         type: 'Commission / Earnings',
@@ -397,7 +397,7 @@ export class Reports implements OnInit {
       const grouped: Record<number, { name: string, revenue: number }> = {};
       data.forEach(o => {
         if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_name || 'Unknown', revenue: 0 };
-        grouped[o.hotel_id].revenue += o.grand_total || 0;
+        grouped[o.hotel_id].revenue += Number(o.grand_total) || 0;
       });
       return {
         type: 'Top Performing Hotels',
@@ -428,16 +428,16 @@ export class Reports implements OnInit {
   chartOptions = computed(() => {
     const data = this.filteredOrders();
     const tab = this.currentTab();
-    
+
     let xAxisData: string[] = [];
     let seriesData: number[] = [];
-    
+
     if (tab === 'Overview') {
       // Group by date
       const grouped: Record<string, number> = {};
       data.forEach(o => {
         const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
-        grouped[date] = (grouped[date] || 0) + (o.grand_total || 0);
+        grouped[date] = (grouped[date] || 0) + (Number(o.grand_total) || 0);
       });
       xAxisData = Object.keys(grouped);
       seriesData = Object.values(grouped);
@@ -446,7 +446,7 @@ export class Reports implements OnInit {
       const grouped: Record<string, number> = {};
       data.forEach(o => {
         const hotel = o.hotel_name || 'Unknown';
-        grouped[hotel] = (grouped[hotel] || 0) + (o.grand_total || 0);
+        grouped[hotel] = (grouped[hotel] || 0) + (Number(o.grand_total) || 0);
       });
       xAxisData = Object.keys(grouped);
       seriesData = Object.values(grouped);
@@ -455,7 +455,7 @@ export class Reports implements OnInit {
       const grouped: Record<string, number> = {};
       data.forEach(o => {
         const person = o.delivery_person_name || 'Unknown';
-        grouped[person] = (grouped[person] || 0) + (o.grand_total || 0);
+        grouped[person] = (grouped[person] || 0) + (Number(o.grand_total) || 0);
       });
       xAxisData = Object.keys(grouped);
       seriesData = Object.values(grouped);
@@ -464,7 +464,7 @@ export class Reports implements OnInit {
       data.forEach(o => {
         (o.items || []).forEach(item => {
           const name = item.menu_name || 'Unknown';
-          grouped[name] = (grouped[name] || 0) + (item.total || 0);
+          grouped[name] = (grouped[name] || 0) + (Number(item.total) || 0);
         });
       });
       xAxisData = Object.keys(grouped);
@@ -482,7 +482,7 @@ export class Reports implements OnInit {
       data.forEach(o => {
         const hotel = this.catalog.hotels().find(h => h.id === o.hotel_id);
         const rate = hotel?.commission_rate || 15;
-        const comm = Math.round((o.subtotal || 0) * (rate / 100));
+        const comm = Math.round((Number(o.subtotal) || 0) * (rate / 100));
         const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
         grouped[date] = (grouped[date] || 0) + comm;
       });
@@ -492,7 +492,7 @@ export class Reports implements OnInit {
       const grouped: Record<string, number> = {};
       data.forEach(o => {
         const hotel = o.hotel_name || 'Unknown';
-        grouped[hotel] = (grouped[hotel] || 0) + (o.grand_total || 0);
+        grouped[hotel] = (grouped[hotel] || 0) + (Number(o.grand_total) || 0);
       });
       const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
       xAxisData = sorted.map(e => e[0]);
@@ -513,7 +513,7 @@ export class Reports implements OnInit {
     return {
       title: { text: `${this.currentTab()} Report`, left: 'center' },
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      xAxis: { type: 'category', data: xAxisData, axisLabel: { rotate: 45 } },
+      xAxis: { type: 'category' as const, data: xAxisData, axisLabel: { rotate: 45 } },
       yAxis: { type: 'value' },
       series: [{ data: seriesData, type: 'bar', itemStyle: { color: '#FFC107' } }]
     } as EChartsOption;
@@ -582,7 +582,7 @@ export class Reports implements OnInit {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     this.toast.success('CSV exported successfully');
   }
 
@@ -594,11 +594,11 @@ export class Reports implements OnInit {
     }
 
     const doc = new jsPDF();
-    
+
     // Title
     doc.setFontSize(20);
     doc.text('Kall Me - Financial Report', 14, 22);
-    
+
     // Filters info
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -616,7 +616,7 @@ export class Reports implements OnInit {
     doc.setTextColor(0);
     doc.text(`Summary:`, 14, 40);
     doc.setFontSize(10);
-    
+
     // Display items from the metrics object instead of hardcoded properties
     let y = 46;
     m.items.forEach(item => {
@@ -644,7 +644,7 @@ export class Reports implements OnInit {
     });
 
     doc.save(`kallme_report_${new Date().toISOString().split('T')[0]}.pdf`);
-    
+
     this.toast.success('PDF exported successfully');
   }
 }

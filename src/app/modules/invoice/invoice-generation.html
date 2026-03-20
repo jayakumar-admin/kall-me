@@ -109,7 +109,7 @@
                 </div>
                 <div class="pt-3 border-t border-slate-200 dark:border-white/10 flex justify-between items-center print:border-black">
                   <span class="font-bold text-[#1A1A1A] dark:text-white print:text-black">Grand Total</span>
-                  <span class="text-xl font-black text-red-500 dark:text-red-400 print:text-black">{{ grandTotal() }}</span>
+                  <span class="text-xl font-black text-red-500 dark:text-red-400 print:text-black">{{ grandTotal() | currency:'INR' }}</span>
                 </div>
               </div>
             </div>

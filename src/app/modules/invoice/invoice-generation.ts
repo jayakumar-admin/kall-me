@@ -64,9 +64,10 @@ export class InvoiceGeneration implements OnInit {
 
   grandTotal = computed(() => {
     const order = this.selectedOrder();
-    if (!order) return 'No order';
-    const total = this.subtotal() + (order.shipping_fee || 0) + this.calculatedGst() + this.calculatedIgst();
-    return 'Total: ' + total;
+    if (!order) return 0;
+    const shippingFee = Number(order.shipping_fee) || 0;
+    const total = Number(this.subtotal()) + shippingFee + Number(this.calculatedGst()) + Number(this.calculatedIgst());
+    return total;
   });
 
   searchOrder() {

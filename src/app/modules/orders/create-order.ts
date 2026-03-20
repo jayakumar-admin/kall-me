@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -60,11 +60,6 @@ import { OrderService } from '../../services/order.service';
               </div>
               <div class="p-3">
                 <h3 class="font-bold text-sm text-[#1A1A1A] dark:text-white truncate">{{ hotel.name }}</h3>
-                <div class="flex items-center gap-1 text-[#FFC107] mt-0.5">
-                  <mat-icon class="text-xs">star</mat-icon>
-                  <span class="text-xs font-bold">{{ hotel.rating }}</span>
-                  <span class="text-[10px] text-slate-400 font-normal ml-1">(4.5)</span>
-                </div>
               </div>
             </div>
           }
@@ -425,8 +420,8 @@ export class CreateOrder implements OnInit {
   shippingFee = signal<number>(80);
 
   subtotal = computed(() => this.cart().reduce((acc, entry) => acc + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0));
-  grandTotal = computed(() => this.subtotal() + this.shippingFee());
-  balancePending = computed(() => Math.max(0, this.grandTotal() - this.amountReceived()));
+  grandTotal = computed(() => Number(this.subtotal()) + Number(this.shippingFee() || 0));
+  balancePending = computed(() => Math.max(0, Number(this.grandTotal()) - Number(this.amountReceived() || 0)));
 
   filteredHotels = computed(() => {
     const filter = this.hotelFilter().toLowerCase();
@@ -464,14 +459,12 @@ export class CreateOrder implements OnInit {
 
   route = inject(ActivatedRoute);
 
-  ngOnInit() {
-    this.api.getDeliveryTeam().subscribe(d => this.drivers.set(d));
-    
-    this.route.queryParams.subscribe(params => {
-      const hotelId = params['hotelId'];
+  constructor() {
+    effect(() => {
       const hotels = this.catalog.hotels();
+      const hotelId = this.route.snapshot.queryParams['hotelId'];
       
-      if (hotels.length > 0) {
+      if (hotels.length > 0 && !this.selectedHotel()) {
         if (hotelId) {
           const selected = hotels.find(h => h.id === Number(hotelId));
           if (selected) {
@@ -481,7 +474,11 @@ export class CreateOrder implements OnInit {
         }
         this.selectHotel(hotels[0]);
       }
-    });
+    }, { allowSignalWrites: true });
+  }
+
+  ngOnInit() {
+    this.api.getDeliveryTeam().subscribe(d => this.drivers.set(d));
   }
 
   selectHotel(hotel: Hotel) {

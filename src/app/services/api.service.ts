@@ -137,7 +137,7 @@ export class ApiService {
 
   updateOrderStatus(id: number, status: string): Observable<Order> {
     return this.withLoader(
-      this.http.patch<Order>(`${this.baseUrl}/orders/${id}`, { status }),
+      this.http.patch<Order>(`${this.baseUrl}/orders/${id}/status`, { status }),
       'Updating Order Status...'
     );
   }

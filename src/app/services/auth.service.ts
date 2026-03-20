@@ -91,7 +91,7 @@ export class AuthService {
       password: credentials.password
     };
     
-    return this.http.post<{ success: boolean; accessToken: string; user: User; permissions?: { menu_name: string; enabled: boolean }[] }>(endpoint, payload).pipe(
+    return this.http.post<{ success: boolean; accessToken: string; user: User; permissions?: { menu_name: string; enabled: boolean }[] }>(endpoint, payload, { withCredentials: true }).pipe(
       tap(response => {
         if (response.success) {
           const user = { ...response.user, token: response.accessToken };
@@ -120,7 +120,7 @@ export class AuthService {
 
   logout() {
     const endpoint = `${this.baseUrl}/auth/logout`;
-    this.http.post(endpoint, {}).subscribe();
+    this.http.post(endpoint, {}, { withCredentials: true }).subscribe();
     this.userSignal.set(null);
     this.permissionsSignal.set({});
     localStorage.removeItem('kallme_user');

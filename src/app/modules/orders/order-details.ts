@@ -60,7 +60,7 @@ import { Order } from '../../models';
                 @for (item of order()!.items; track item.menu_id) {
                   <div class="flex justify-between text-sm">
                     <span class="text-[#1A1A1A] dark:text-white">{{ item.menu_name }} x {{ item.quantity }}</span>
-                    <span class="font-medium text-[#1A1A1A] dark:text-white">₹{{ (item.total || 0).toLocaleString() }}</span>
+                    <span class="font-medium text-[#1A1A1A] dark:text-white">₹{{ (1 * (item.total || 0)).toLocaleString() }}</span>
                   </div>
                 }
               </div>
@@ -69,11 +69,11 @@ import { Order } from '../../models';
             <div class="border-t border-slate-100 dark:border-white/5 pt-6 space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-slate-500">Subtotal</span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ (order()!.subtotal || 0).toLocaleString() }}</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (1 * (order()!.subtotal || 0)).toLocaleString() }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-slate-500">Shipping</span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ (order()!.shipping_fee || 0).toLocaleString() }}</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (1 * (order()!.shipping_fee || 0)).toLocaleString() }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-slate-500">Balance Pending</span>
@@ -86,7 +86,7 @@ import { Order } from '../../models';
               </div>
               <div class="flex justify-between text-lg font-black pt-2 border-t border-slate-100 dark:border-white/5">
                 <span class="text-[#1A1A1A] dark:text-white">Grand Total</span>
-                <span class="text-[#FFC107]">₹{{ (order()!.grand_total || 0).toLocaleString() }}</span>
+                <span class="text-[#FFC107]">₹{{ (1 * (order()!.grand_total || 0)).toLocaleString() }}</span>
               </div>
             </div>
           </div>

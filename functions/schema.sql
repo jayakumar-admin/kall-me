@@ -92,6 +92,13 @@ CREATE TABLE IF NOT EXISTS order_items (
     total DECIMAL(10,2) NOT NULL
 );
 
+-- Settings table
+CREATE TABLE IF NOT EXISTS settings (
+    id SERIAL PRIMARY KEY,
+    key VARCHAR(255) UNIQUE NOT NULL,
+    value JSONB NOT NULL
+);
+
 -- WhatsApp Logs table
 CREATE TABLE IF NOT EXISTS whatsapp_logs (
     id SERIAL PRIMARY KEY,

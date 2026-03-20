@@ -4,7 +4,7 @@
   "description": "Backend for AI Studio App",
   "main": "index.js",
   "scripts": {
-      "lint": "eslint .",
+    "lint": "eslint .",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
@@ -12,12 +12,13 @@
     "logs": "firebase functions:log",
     "dev": "nodemon local-server.js"
   },
-    "engines": {
+  "engines": {
     "node": "24"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "busboy": "^1.6.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.1.0",

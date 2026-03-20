@@ -1,16 +1,31 @@
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 const functions = require('firebase-functions');
-const apiRoutes = require('./api/index');
+const cookieParser = require('cookie-parser');
+const db = require('./db');
+const apiRoutes = require('./api/index.js');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const port = process.env.PORT || 3000; // Use 3001 for dev, 3000 for prod (if set)
 
-app.use(cors());
+// Initialize schema
+try {
+  const schemaPath = path.join(__dirname, 'schema.sql');
+  const schema = fs.readFileSync(schemaPath, 'utf8');
+  db.query(schema).then(() => console.log('Database schema initialized')).catch(console.error);
+} catch (e) {
+  console.error('Error reading schema.sql', e);
+}
+
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 // API Routes
 app.use('/api', apiRoutes);
@@ -21,7 +36,7 @@ const browserIndexHtml = path.join(browserDistFolder, 'index.html');
 const hasBrowserBuild = fs.existsSync(browserIndexHtml);
 
 if (hasBrowserBuild) {
-  app.use(express.static(browserDistFolder));
+app.use(express.static(browserDistFolder));
 } else {
   console.warn(
     `WARNING: Angular build not found at ${browserIndexHtml}. Run 'npm run build' from the repo root to generate it.`

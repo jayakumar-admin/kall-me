@@ -155,6 +155,36 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
+// Update order details
+router.patch('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    const setClause = Object.keys(updates)
+      .map((key, index) => `${key} = $${index + 1}`)
+      .join(', ');
+    const values = Object.values(updates);
+    values.push(id);
+
+    const result = await db.query(
+      `UPDATE orders SET ${setClause} WHERE id = $${values.length} RETURNING *`,
+      values
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Order not found' });
+    
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Delete order
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {

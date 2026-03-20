@@ -26,10 +26,10 @@ export class Dashboard implements OnInit {
   activeDrivers = signal(0);
 
   filteredHotels = computed(() => {
-    const term = this.search.searchTerm().toLowerCase();
+    const term = (this.search.searchTerm() || '').toLowerCase();
     return this.catalog.hotels().filter(h => 
-      h.name.toLowerCase().includes(term) || 
-      h.category.toLowerCase().includes(term)
+      (h.name || '').toLowerCase().includes(term) || 
+      (h.category || '').toLowerCase().includes(term)
     ).slice(0, 6); // Show only top 6 on dashboard
   });
 

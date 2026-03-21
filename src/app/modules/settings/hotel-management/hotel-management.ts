@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { CatalogService } from '../../../services/catalog.service';
 import { ToastService } from '../../../services/toast.service';
+import { ImageUploadService } from '../../../services/image-upload.service';
 import { Hotel } from '../../../models';
 
 @Component({
@@ -153,6 +154,7 @@ import { Hotel } from '../../../models';
 export class HotelManagement {
   catalog = inject(CatalogService);
   toast = inject(ToastService);
+  imageUpload = inject(ImageUploadService);
   cdr = inject(ChangeDetectorRef);
   
   hotels = computed(() => this.catalog.hotels());
@@ -211,17 +213,20 @@ export class HotelManagement {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       Array.from(input.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            this.formData.images.push(e.target.result as string);
-            if (this.formData.images.length === 1) {
-              this.formData.image_url = e.target.result as string;
+        this.imageUpload.uploadImage(file).subscribe({
+          next: (url) => {
+            if (url) {
+              this.formData.images.push(url);
+              if (this.formData.images.length === 1) {
+                this.formData.image_url = url;
+              }
+              this.cdr.markForCheck();
+            } else {
+              this.toast.error('Failed to upload image');
             }
-            this.cdr.markForCheck();
-          }
-        };
-        reader.readAsDataURL(file);
+          },
+          error: () => this.toast.error('Failed to upload image')
+        });
       });
     }
   }

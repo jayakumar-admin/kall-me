@@ -22,9 +22,13 @@ export interface AppSettings {
     promoCodes: boolean;
   };
   whatsapp: {
+    apiUrl: string;
     apiKey: string;
-    phoneNumberId: string;
-    businessAccountId: string;
+    welcomeMessageTemplate: string;
+    orderConfirmationClientTemplate: string;
+    orderConfirmationAdminTemplate: string;
+    orderCancelledTemplate: string;
+    deliveryOnboardTemplate: string;
     enabled: boolean;
   };
 }
@@ -34,7 +38,9 @@ export interface AppSettings {
 })
 export class SettingsService {
   private http = inject(HttpClient);
-  private baseUrl = '/api/settings';
+  // private baseUrls = 'http://localhost:3000/api';
+  private baseUrls = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  private baseUrl = `${this.baseUrls}/settings`;
 
   private defaultSettings: AppSettings = {
     taxes: {
@@ -57,9 +63,13 @@ export class SettingsService {
       promoCodes: true
     },
     whatsapp: {
+      apiUrl: 'https://graph.facebook.com/v22.0/YOUR_PHONE_NUMBER_ID/messages',
       apiKey: '',
-      phoneNumberId: '',
-      businessAccountId: '',
+      welcomeMessageTemplate: 'welcome_message',
+      orderConfirmationClientTemplate: 'order_confirmation_client',
+      orderConfirmationAdminTemplate: 'order_confirmation_admin',
+      orderCancelledTemplate: 'order_cancelled',
+      deliveryOnboardTemplate: 'delivery_onboard',
       enabled: false
     }
   };

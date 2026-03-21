@@ -1,6 +1,6 @@
 {
-  "name": "ai-studio-angular-app",
-  "version": "0.0.0",
+  "name": "kall-me-web",
+  "version": "0.0.1",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

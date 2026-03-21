@@ -92,6 +92,15 @@ CREATE TABLE IF NOT EXISTS order_items (
     total DECIMAL(10,2) NOT NULL
 );
 
+-- Merchant Menus table (for linking menus to hotels with custom prices)
+CREATE TABLE IF NOT EXISTS merchant_menus (
+    id SERIAL PRIMARY KEY,
+    hotel_id INTEGER REFERENCES hotels(id) ON DELETE CASCADE,
+    menu_id INTEGER REFERENCES menus(id) ON DELETE CASCADE,
+    price DECIMAL(10,2) NOT NULL,
+    UNIQUE(hotel_id, menu_id)
+);
+
 -- Settings table
 CREATE TABLE IF NOT EXISTS settings (
     id SERIAL PRIMARY KEY,

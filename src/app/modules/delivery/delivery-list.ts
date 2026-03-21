@@ -7,6 +7,7 @@ import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { DeliveryPerson } from '../../models';
 
+import { ImageUploadService } from '../../services/image-upload.service';
 import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -20,6 +21,7 @@ export class DeliveryList implements OnInit {
   private api = inject(ApiService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+  private imageUpload = inject(ImageUploadService);
 
   drivers = signal<DeliveryPerson[]>([]);
   filteredDrivers = signal<DeliveryPerson[]>([]);
@@ -29,6 +31,7 @@ export class DeliveryList implements OnInit {
   showDeleteConfirm = signal(false);
   driverToDelete = signal<DeliveryPerson | null>(null);
   editingDriver = signal<DeliveryPerson | null>(null);
+  isUploading = signal(false);
   
   driverForm = this.fb.group({
     name: ['', [Validators.required]],
@@ -158,14 +161,35 @@ export class DeliveryList implements OnInit {
   }
 
   imageCropped(event: ImageCroppedEvent) {
-    if (event.objectUrl) {
-      // For ngx-image-cropper v8+, objectUrl is preferred, but we need base64 to save
-      // Let's use base64 if available, else we might need to fetch it
-      this.croppedImage.set(event.base64 || event.objectUrl);
-      this.driverForm.patchValue({ image_url: event.base64 || event.objectUrl });
-    } else if (event.base64) {
+    if (event.base64) {
       this.croppedImage.set(event.base64);
-      this.driverForm.patchValue({ image_url: event.base64 });
+      this.isUploading.set(true);
+      
+      const byteString = atob(event.base64.split(',')[1]);
+      const mimeString = event.base64.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      const blob = new Blob([ab], { type: mimeString });
+      const file = new File([blob], 'image.png', { type: mimeString });
+      
+      this.imageUpload.uploadImage(file).subscribe({
+        next: (url) => {
+          if (url) {
+            this.driverForm.patchValue({ image_url: url });
+            this.toast.success('Image uploaded successfully');
+          } else {
+            this.toast.error('Failed to upload image');
+          }
+          this.isUploading.set(false);
+        },
+        error: () => {
+          this.toast.error('Failed to upload image');
+          this.isUploading.set(false);
+        }
+      });
     }
   }
 

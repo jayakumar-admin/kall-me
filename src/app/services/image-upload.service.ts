@@ -7,12 +7,12 @@ import { Observable, catchError, map, of } from 'rxjs';
 })
 export class ImageUploadService {
   private http = inject(HttpClient);
-
+  private baseUrl = 'http://localhost:3000/api';
   uploadImage(file: File): Observable<string | null> {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post<{ url: string }>('/api/upload', formData).pipe(
+    return this.http.post<{ url: string }>(`${this.baseUrl}/upload`, formData).pipe(
       map(response => response.url),
       catchError(error => {
         console.error('Upload failed:', error);

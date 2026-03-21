@@ -165,18 +165,34 @@ import { SettingsService } from '../../../services/settings.service';
               </label>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" [class.opacity-50]="!whatsapp.enabled">
+            <div class="grid grid-cols-1 gap-6" [class.opacity-50]="!whatsapp.enabled">
               <div>
-                <label for="whatsappApiKey" class="text-xs font-bold text-slate-500 mb-2 block">WhatsApp API Key</label>
-                <input id="whatsappApiKey" type="password" [(ngModel)]="whatsapp.apiKey" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="EAABw...">
+                <label for="whatsappApiUrl" class="text-xs font-bold text-slate-500 mb-2 block">WhatsApp API URL</label>
+                <input id="whatsappApiUrl" type="text" [(ngModel)]="whatsapp.apiUrl" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="https://graph.facebook.com/v22.0/...">
               </div>
               <div>
-                <label for="phoneNumberId" class="text-xs font-bold text-slate-500 mb-2 block">Phone Number ID</label>
-                <input id="phoneNumberId" type="text" [(ngModel)]="whatsapp.phoneNumberId" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="105...">
+                <label for="whatsappApiKey" class="text-xs font-bold text-slate-500 mb-2 block">API Key</label>
+                <input id="whatsappApiKey" type="password" [(ngModel)]="whatsapp.apiKey" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="Your secret API key or token">
               </div>
-              <div class="md:col-span-2">
-                <label for="businessAccountId" class="text-xs font-bold text-slate-500 mb-2 block">WhatsApp Business Account ID</label>
-                <input id="businessAccountId" type="text" [(ngModel)]="whatsapp.businessAccountId" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="102...">
+              <div>
+                <label for="welcomeMessageTemplate" class="text-xs font-bold text-slate-500 mb-2 block">Welcome Message Template Name</label>
+                <input id="welcomeMessageTemplate" type="text" [(ngModel)]="whatsapp.welcomeMessageTemplate" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="welcome_message">
+              </div>
+              <div>
+                <label for="orderConfirmationClientTemplate" class="text-xs font-bold text-slate-500 mb-2 block">Order Confirmation (Client) Template Name</label>
+                <input id="orderConfirmationClientTemplate" type="text" [(ngModel)]="whatsapp.orderConfirmationClientTemplate" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="order_confirmation_client">
+              </div>
+              <div>
+                <label for="orderConfirmationAdminTemplate" class="text-xs font-bold text-slate-500 mb-2 block">Order Confirmation (Admin) Template Name</label>
+                <input id="orderConfirmationAdminTemplate" type="text" [(ngModel)]="whatsapp.orderConfirmationAdminTemplate" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="order_confirmation_admin">
+              </div>
+              <div>
+                <label for="orderCancelledTemplate" class="text-xs font-bold text-slate-500 mb-2 block">Order Cancelled Template Name</label>
+                <input id="orderCancelledTemplate" type="text" [(ngModel)]="whatsapp.orderCancelledTemplate" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="order_cancelled">
+              </div>
+              <div>
+                <label for="deliveryOnboardTemplate" class="text-xs font-bold text-slate-500 mb-2 block">Delivery Onboard Template Name</label>
+                <input id="deliveryOnboardTemplate" type="text" [(ngModel)]="whatsapp.deliveryOnboardTemplate" [disabled]="!whatsapp.enabled" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#25D366] dark:text-white" placeholder="delivery_onboard">
               </div>
             </div>
             
@@ -230,9 +246,13 @@ export class GeneralSettings implements OnInit {
   };
 
   whatsapp = {
+    apiUrl: '',
     apiKey: '',
-    phoneNumberId: '',
-    businessAccountId: '',
+    welcomeMessageTemplate: '',
+    orderConfirmationClientTemplate: '',
+    orderConfirmationAdminTemplate: '',
+    orderCancelledTemplate: '',
+    deliveryOnboardTemplate: '',
     enabled: false
   };
 

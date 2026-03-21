@@ -138,7 +138,9 @@ export class OrderDetails implements OnInit {
   updatePending() {
     const order = this.order();
     if (order && order.id) {
-      this.api.updateOrder(order.id, { balance_pending: this.pendingAmount }).subscribe({
+      const grandTotal = order.grand_total || 0;
+      const amountReceived = grandTotal - this.pendingAmount;
+      this.api.updateOrder(order.id, { balance_pending: this.pendingAmount, amount_received: amountReceived }).subscribe({
         next: (updatedOrder) => {
           this.order.set(updatedOrder);
           this.toast.success('Pending amount updated successfully');

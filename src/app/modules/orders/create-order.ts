@@ -447,6 +447,9 @@ export class CreateOrder implements OnInit {
       hotelItems = hotelItems.filter(i => i.category === cat);
     }
     
+    // Filter to only show linked menus
+    hotelItems = hotelItems.filter(i => i.isLinked);
+    
     if (term) {
       hotelItems = hotelItems.filter(i => 
         i.name.toLowerCase().includes(term) || 

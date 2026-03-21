@@ -166,18 +166,18 @@ export class Reports implements OnInit {
   private api = inject(ApiService);
   private toast = inject(ToastService);
   private catalog = inject(CatalogService);
-
+  
   orders = signal<Order[]>([]);
-
+  
   // Tabs
   tabs = [
-    'Overview',
-    'Hotel-wise',
-    'Delivery Person-wise',
-    'Menu-wise',
-    'Orders',
-    'Commission / Earnings',
-    'Top Performing Hotels',
+    'Overview', 
+    'Hotel-wise', 
+    'Delivery Person-wise', 
+    'Menu-wise', 
+    'Orders', 
+    'Commission / Earnings', 
+    'Top Performing Hotels', 
     'Top Selling Menus'
   ];
   currentTab = signal('Overview');
@@ -204,7 +204,7 @@ export class Reports implements OnInit {
 
   filteredOrders = computed(() => {
     let result = this.orders();
-
+    
     const start = this.startDate();
     const end = this.endDate();
     const status = this.statusFilter();
@@ -214,7 +214,7 @@ export class Reports implements OnInit {
       const startDate = new Date(start).getTime();
       result = result.filter(o => o.created_at && new Date(o.created_at).getTime() >= startDate);
     }
-
+    
     if (end) {
       const endDate = new Date(end);
       endDate.setHours(23, 59, 59, 999);
@@ -303,20 +303,20 @@ export class Reports implements OnInit {
   metrics = computed(() => {
     const data = this.filteredOrders();
     const tab = this.currentTab();
-
+    
     if (tab === 'Overview') {
       const hotels = this.catalog.hotels();
       let totalHotelEarnings = 0;
       let totalDeliverySalary = 0;
       let totalAdminCommission = 0;
-
+      
       data.forEach(o => {
         const hotel = hotels.find(h => h.id === o.hotel_id);
         const commissionRate = hotel?.commission_rate || 15;
         const adminComm = Math.round((Number(o.subtotal) || 0) * (commissionRate / 100));
         const deliveryFee = Number(o.shipping_fee) || 0;
         const hotelEarn = (Number(o.subtotal) || 0) - adminComm;
-
+        
         totalHotelEarnings += hotelEarn;
         totalDeliverySalary += deliveryFee;
         totalAdminCommission += adminComm;
@@ -428,10 +428,10 @@ export class Reports implements OnInit {
   chartOptions = computed(() => {
     const data = this.filteredOrders();
     const tab = this.currentTab();
-
+    
     let xAxisData: string[] = [];
     let seriesData: number[] = [];
-
+    
     if (tab === 'Overview') {
       // Group by date
       const grouped: Record<string, number> = {};
@@ -582,7 +582,7 @@ export class Reports implements OnInit {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
+    
     this.toast.success('CSV exported successfully');
   }
 
@@ -594,11 +594,11 @@ export class Reports implements OnInit {
     }
 
     const doc = new jsPDF();
-
+    
     // Title
     doc.setFontSize(20);
     doc.text('Kall Me - Financial Report', 14, 22);
-
+    
     // Filters info
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -616,7 +616,7 @@ export class Reports implements OnInit {
     doc.setTextColor(0);
     doc.text(`Summary:`, 14, 40);
     doc.setFontSize(10);
-
+    
     // Display items from the metrics object instead of hardcoded properties
     let y = 46;
     m.items.forEach(item => {
@@ -644,7 +644,7 @@ export class Reports implements OnInit {
     });
 
     doc.save(`kallme_report_${new Date().toISOString().split('T')[0]}.pdf`);
-
+    
     this.toast.success('PDF exported successfully');
   }
 }

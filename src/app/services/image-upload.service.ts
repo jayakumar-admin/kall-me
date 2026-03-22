@@ -1,13 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
+import { ApiService } from './api.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImageUploadService {
   private http = inject(HttpClient);
-  public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  private api = inject(ApiService);
+  public baseUrl = this.api.baseUrl;
   uploadImage(file: File): Observable<string | null> {
     const formData = new FormData();
     formData.append('file', file);

@@ -48,9 +48,6 @@ export interface AppSettings {
 export class SettingsService {
   private http = inject(HttpClient);
   private api = inject(ApiService);
-  // private baseUrls = 'http://localhost:3000/api';
-  private baseUrls = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
-  // private baseUrl = `${this.baseUrls}/settings`;
   private get baseUrl() { return `${this.api.baseUrl}/settings`; }
   private get shippingUrl() { return `${this.api.baseUrl}/shipping`; }
   private toast = inject(ToastService);

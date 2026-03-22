@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { finalize, tap } from 'rxjs';
 import { LoaderService } from './loader.service';
+import { ApiService } from './api.service';
 
 export interface User {
   id: number;
@@ -22,9 +23,8 @@ export class AuthService {
   private loader = inject(LoaderService);
   private userSignal = signal<User | null>(null);
   public permissionsSignal = signal<Record<string, boolean>>({});
-   // private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
-  // public baseUrl = 'http://localhost:3000/api';
- public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  private api = inject(ApiService);
+  public baseUrl = this.api.baseUrl;
 
   user = computed(() => this.userSignal());
   isLoggedIn = computed(() => !!this.userSignal());

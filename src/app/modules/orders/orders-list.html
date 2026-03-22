@@ -173,13 +173,13 @@
               </div>
             </td>
             <td class="px-6 py-4 font-bold text-[#1A1A1A] dark:text-white">
-              ₹{{ (order.grand_total || 0).toLocaleString() }}
+              ₹{{ (1 * (order.grand_total || 0)).toLocaleString() }}
             </td>
             <td class="px-6 py-4 font-bold text-emerald-500">
-              ₹{{ (order.amount_received || 0).toLocaleString() }}
+              ₹{{ (1 * (order.amount_received || 0)).toLocaleString() }}
             </td>
             <td class="px-6 py-4 font-bold text-red-500">
-              ₹{{ (order.balance_pending || 0).toLocaleString() }}
+              ₹{{ (1 * (order.balance_pending || 0)).toLocaleString() }}
             </td>
             <td class="px-6 py-4">
               <div class="relative inline-block">

@@ -73,7 +73,13 @@ import { Order } from '../../models';
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-slate-500">Shipping</span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ (1 * (order()!.shipping_fee || 0)).toLocaleString() }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-[#1A1A1A] dark:text-white">₹</span>
+                  <input type="number" [(ngModel)]="shippingFeeAmount" class="w-24 bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <button (click)="updateShippingFee()" class="text-[#FFC107] hover:text-[#FFA000]">
+                    <mat-icon>save</mat-icon>
+                  </button>
+                </div>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-slate-500">Balance Pending</span>
@@ -86,7 +92,13 @@ import { Order } from '../../models';
               </div>
               <div class="flex justify-between text-lg font-black pt-2 border-t border-slate-100 dark:border-white/5">
                 <span class="text-[#1A1A1A] dark:text-white">Grand Total</span>
-                <span class="text-[#FFC107]">₹{{ (1 * (order()!.grand_total || 0)).toLocaleString() }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-[#FFC107]">₹</span>
+                  <input type="number" [(ngModel)]="grandTotalAmount" class="w-24 bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <button (click)="updateGrandTotal()" class="text-[#FFC107] hover:text-[#FFA000]">
+                    <mat-icon>save</mat-icon>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -109,6 +121,8 @@ export class OrderDetails implements OnInit {
   toast = inject(ToastService);
   order = signal<Order | null>(null);
   pendingAmount = 0;
+  grandTotalAmount = 0;
+  shippingFeeAmount = 0;
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -118,6 +132,8 @@ export class OrderDetails implements OnInit {
           next: (order: Order) => {
             this.order.set(order);
             this.pendingAmount = order.balance_pending || 0;
+            this.grandTotalAmount = order.grand_total || 0;
+            this.shippingFeeAmount = order.shipping_fee || 0;
           },
           error: (err: unknown) => {
             console.error('Failed to fetch order:', err);
@@ -125,6 +141,8 @@ export class OrderDetails implements OnInit {
             if (foundOrder) {
               this.order.set(foundOrder);
               this.pendingAmount = foundOrder.balance_pending || 0;
+              this.grandTotalAmount = foundOrder.grand_total || 0;
+              this.shippingFeeAmount = foundOrder.shipping_fee || 0;
             } else {
               this.toast.error('Order not found');
               this.router.navigate(['/app/orders']);
@@ -140,16 +158,33 @@ export class OrderDetails implements OnInit {
     if (order && order.id) {
       const grandTotal = order.grand_total || 0;
       const amountReceived = grandTotal - this.pendingAmount;
-      this.api.updateOrder(order.id, { balance_pending: this.pendingAmount, amount_received: amountReceived }).subscribe({
-        next: (updatedOrder) => {
-          this.order.set(updatedOrder);
-          this.toast.success('Pending amount updated successfully');
-        },
-        error: (err) => {
-          console.error('Failed to update pending amount:', err);
-          this.toast.error('Failed to update pending amount');
-        }
-      });
+      this.orderService.updateOrder(order.id, { balance_pending: this.pendingAmount, amount_received: amountReceived });
+      this.order.update(o => o ? { ...o, balance_pending: this.pendingAmount, amount_received: amountReceived } : o);
+    }
+  }
+
+  updateGrandTotal() {
+    const order = this.order();
+    if (order && order.id) {
+      const amountReceived = order.amount_received || 0;
+      const newPending = Math.max(0, this.grandTotalAmount - amountReceived);
+      this.pendingAmount = newPending;
+      this.orderService.updateOrder(order.id, { grand_total: this.grandTotalAmount, balance_pending: newPending });
+      this.order.update(o => o ? { ...o, grand_total: this.grandTotalAmount, balance_pending: newPending } : o);
+    }
+  }
+
+  updateShippingFee() {
+    const order = this.order();
+    if (order && order.id) {
+      const subtotal = order.subtotal || 0;
+      const newGrandTotal = (1 * subtotal) + (1 * this.shippingFeeAmount);
+      this.grandTotalAmount = newGrandTotal;
+      const amountReceived = order.amount_received || 0;
+      const newPending = Math.max(0, newGrandTotal - amountReceived);
+      this.pendingAmount = newPending;
+      this.orderService.updateOrder(order.id, { shipping_fee: this.shippingFeeAmount, grand_total: newGrandTotal, balance_pending: newPending });
+      this.order.update(o => o ? { ...o, shipping_fee: this.shippingFeeAmount, grand_total: newGrandTotal, balance_pending: newPending } : o);
     }
   }
 

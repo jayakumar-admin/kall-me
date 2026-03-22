@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../services/toast.service';
-import { SettingsService } from '../../../services/settings.service';
+import { SettingsService, ShippingRange } from '../../../services/settings.service';
 
 @Component({
   selector: 'app-general-settings',
@@ -107,6 +107,24 @@ import { SettingsService } from '../../../services/settings.service';
                 <span class="text-[#FFC107]">15km</span>
                 <span>50km</span>
               </div>
+            </div>
+
+            <!-- Shipping Ranges -->
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="text-xs font-bold text-slate-500 block mb-2">Shipping Ranges</div>
+                <button (click)="addShippingRange()" class="text-xs font-bold text-[#FFC107] hover:text-[#FFA000]">Add Range</button>
+              </div>
+              @for (range of shippingRanges; track $index) {
+                <div class="grid grid-cols-4 gap-4 items-center">
+                  <input type="number" [(ngModel)]="range.min_amount" placeholder="Min" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <input type="number" [(ngModel)]="range.max_amount" placeholder="Max" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <input type="number" [(ngModel)]="range.price" placeholder="Price" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <button (click)="removeShippingRange($index)" class="text-red-500 hover:text-red-700">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              }
             </div>
           </div>
           <!-- Feature Configuration -->
@@ -256,6 +274,8 @@ export class GeneralSettings implements OnInit {
     enabled: false
   };
 
+  shippingRanges: ShippingRange[] = [];
+
   ngOnInit() {
     const settings = this.settingsService.settings();
     this.taxes = { ...settings.taxes };
@@ -263,6 +283,7 @@ export class GeneralSettings implements OnInit {
     this.logistics = { ...settings.logistics };
     this.features = { ...settings.features };
     this.whatsapp = { ...settings.whatsapp };
+    this.shippingRanges = [...this.settingsService.shippingRanges()];
   }
 
   save() {
@@ -273,12 +294,21 @@ export class GeneralSettings implements OnInit {
       features: this.features,
       whatsapp: this.whatsapp
     });
+    this.settingsService.updateShippingRanges(this.shippingRanges);
     this.toast.success('Settings saved successfully');
   }
 
   discard() {
     this.ngOnInit();
     this.toast.info('Changes discarded');
+  }
+
+  addShippingRange() {
+    this.shippingRanges.push({ min_amount: 0, max_amount: 0, price: 0 });
+  }
+
+  removeShippingRange(index: number) {
+    this.shippingRanges.splice(index, 1);
   }
 
   contactSupport() {

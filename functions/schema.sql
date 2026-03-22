@@ -108,13 +108,24 @@ CREATE TABLE IF NOT EXISTS settings (
     value JSONB NOT NULL
 );
 
+-- Shipping Ranges table
+CREATE TABLE IF NOT EXISTS shipping_ranges (
+    id SERIAL PRIMARY KEY,
+    min_amount DECIMAL(10,2) NOT NULL,
+    max_amount DECIMAL(10,2) NOT NULL,
+    price DECIMAL(10,2) NOT NULL
+);
+
 -- WhatsApp Logs table
 CREATE TABLE IF NOT EXISTS whatsapp_logs (
     id SERIAL PRIMARY KEY,
-    recipient VARCHAR(20) NOT NULL,
-    template_name VARCHAR(50) NOT NULL,
-    message TEXT NOT NULL,
+    recipient_number VARCHAR(20) NOT NULL,
+    message_content TEXT NOT NULL,
     status VARCHAR(20) DEFAULT 'sent',
+    reason TEXT,
+    order_id INTEGER,
+    user_id INTEGER,
+    message_type VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

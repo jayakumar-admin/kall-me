@@ -24,7 +24,7 @@ export class AuthService {
   public permissionsSignal = signal<Record<string, boolean>>({});
    // private baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
   // public baseUrl = 'http://localhost:3000/api';
-  public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+ public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
 
   user = computed(() => this.userSignal());
   isLoggedIn = computed(() => !!this.userSignal());

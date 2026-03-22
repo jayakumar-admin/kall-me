@@ -96,66 +96,136 @@ import autoTable from 'jspdf-autotable';
       </div>
 
       <!-- Metrics -->
-      @if (orders().length === 0) {
-        <div class="py-12 text-center text-slate-500">
+      @if (loading()) {
+        <div class="py-12 text-center text-slate-500 flex flex-col items-center">
           <mat-icon class="animate-spin text-4xl mb-2">refresh</mat-icon>
           <p>Loading reports...</p>
         </div>
-      } @else {
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          @for (item of metrics().items; track item.label) {
-            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ item.label }}</p>
-              <p class="text-2xl font-black text-[#1A1A1A] dark:text-white">{{ item.value }}</p>
-            </div>
-          }
+      } @else if (orders().length === 0) {
+        <div class="py-12 text-center text-slate-500 flex flex-col items-center">
+          <mat-icon class="text-4xl mb-4 opacity-50">search_off</mat-icon>
+          <p>No orders found.</p>
         </div>
-        
-        @if (currentSubTab() === 'Chart') {
-          <!-- Charts -->
-          <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="font-bold text-[#1A1A1A] dark:text-white">{{ currentTab() }} Analytics</h3>
-              <button (click)="downloadChart()" class="text-xs font-bold text-[#FFC107] hover:text-[#E6AE06] transition-colors flex items-center gap-1">
-                <mat-icon class="text-sm">download</mat-icon>
-                Download Chart
-              </button>
+      } @else {
+        @if (currentTab() === 'Master Chart View') {
+          <div class="flex justify-end mb-4">
+            <select [ngModel]="chartType()" (ngModelChange)="chartType.set($event)" class="input-field py-1 px-2 text-xs appearance-none w-32">
+              <option value="bar">Bar Chart</option>
+              <option value="line">Line Chart</option>
+              <option value="pie">Pie Chart</option>
+              <option value="area">Area Chart</option>
+              <option value="scatter">Scatter Chart</option>
+              <option value="doughnut">Doughnut Chart</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Overview Analytics</h3>
+              <div echarts [options]="getChartOptions('Overview')" class="h-80"></div>
             </div>
-            <div echarts [options]="chartOptions()" class="h-80" (chartInit)="onChartInit($event)"></div>
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Hotel-wise Analytics</h3>
+              <div echarts [options]="getChartOptions('Hotel-wise')" class="h-80"></div>
+            </div>
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Delivery Person-wise Analytics</h3>
+              <div echarts [options]="getChartOptions('Delivery Man-wise')" class="h-80"></div>
+            </div>
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Menu-wise Analytics</h3>
+              <div echarts [options]="getChartOptions('Menu-wise')" class="h-80"></div>
+            </div>
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Orders Analytics</h3>
+              <div echarts [options]="getChartOptions('Orders')" class="h-80"></div>
+            </div>
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Commission / Earnings Analytics</h3>
+              <div echarts [options]="getChartOptions('Commission / Earnings')" class="h-80"></div>
+            </div>
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Top Performing Hotels</h3>
+              <div echarts [options]="getChartOptions('Top Performing Hotels')" class="h-80"></div>
+            </div>
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Top Selling Menus</h3>
+              <div echarts [options]="getChartOptions('Top Selling Menus')" class="h-80"></div>
+            </div>
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Time-of-Day Analytics</h3>
+              <div echarts [options]="getChartOptions('Time-of-Day')" class="h-80"></div>
+            </div>
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Status-wise Analytics</h3>
+              <div echarts [options]="getChartOptions('Status-wise')" class="h-80"></div>
+            </div>
           </div>
         } @else {
-          <!-- Filtered Data Table -->
-          <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 !p-0 overflow-hidden">
-            <div class="p-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50 dark:bg-white/5">
-              <h3 class="font-bold text-[#1A1A1A] dark:text-white">{{ currentTab() }} Data</h3>
-              <span class="text-xs font-bold text-slate-500 bg-white dark:bg-[#1E293B] px-2 py-1 rounded-md border border-slate-200 dark:border-white/10">{{ filteredOrders().length }} Records</span>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            @for (item of metrics().items; track item.label) {
+              <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ item.label }}</p>
+                <p class="text-2xl font-black text-[#1A1A1A] dark:text-white">{{ item.value }}</p>
+              </div>
+            }
+          </div>
+          
+          @if (currentSubTab() === 'Chart') {
+            <!-- Charts -->
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-[#1A1A1A] dark:text-white">{{ currentTab() }} Analytics</h3>
+                <div class="flex gap-2">
+                  <select [ngModel]="chartType()" (ngModelChange)="chartType.set($event)" class="input-field py-1 px-2 text-xs appearance-none">
+                    <option value="bar">Bar Chart</option>
+                    <option value="line">Line Chart</option>
+                    <option value="pie">Pie Chart</option>
+                    <option value="area">Area Chart</option>
+                    <option value="scatter">Scatter Chart</option>
+                    <option value="doughnut">Doughnut Chart</option>
+                  </select>
+                  <button (click)="downloadChart()" class="text-xs font-bold text-[#FFC107] hover:text-[#E6AE06] transition-colors flex items-center gap-1">
+                    <mat-icon class="text-sm">download</mat-icon>
+                    Download Chart
+                  </button>
+                </div>
+              </div>
+              <div echarts [options]="chartOptions()" class="h-80" (chartInit)="onChartInit($event)"></div>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr [class]="tableConfig().headerColor" class="border-b border-slate-100 dark:border-white/5">
-                    @for (header of tableConfig().headers; track header) {
-                      <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" [class.text-right]="header === 'Amount' || header === 'Earnings'">{{ header }}</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-white/5 bg-white dark:bg-[#1E293B]">
-                  @for (row of tableConfig().rows; track row) {
-                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                      @for (cell of row; track cell) {
-                        <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white" [class.text-right]="cell.toString().startsWith('₹')">{{ cell }}</td>
+          } @else {
+            <!-- Filtered Data Table -->
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 !p-0 overflow-hidden">
+              <div class="p-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50 dark:bg-white/5">
+                <h3 class="font-bold text-[#1A1A1A] dark:text-white">{{ currentTab() }} Data</h3>
+                <span class="text-xs font-bold text-slate-500 bg-white dark:bg-[#1E293B] px-2 py-1 rounded-md border border-slate-200 dark:border-white/10">{{ filteredOrders().length }} Records</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr [class]="tableConfig().headerColor" class="border-b border-slate-100 dark:border-white/5">
+                      @for (header of tableConfig().headers; track header) {
+                        <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" [class.text-right]="header === 'Amount' || header === 'Earnings'">{{ header }}</th>
                       }
                     </tr>
-                  }
-                  @if (tableConfig().rows.length === 0) {
-                    <tr>
-                      <td [attr.colspan]="tableConfig().headers.length" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">No records match the selected filters.</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-white/5 bg-white dark:bg-[#1E293B]">
+                    @for (row of tableConfig().rows; track row) {
+                      <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                        @for (cell of row; track cell) {
+                          <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white" [class.text-right]="cell.toString().startsWith('₹')">{{ cell }}</td>
+                        }
+                      </tr>
+                    }
+                    @if (tableConfig().rows.length === 0) {
+                      <tr>
+                        <td [attr.colspan]="tableConfig().headers.length" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">No records match the selected filters.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          }
         }
       }
     </div>
@@ -168,21 +238,26 @@ export class Reports implements OnInit {
   private catalog = inject(CatalogService);
   
   orders = signal<Order[]>([]);
+  loading = signal(true);
   
   // Tabs
   tabs = [
     'Overview', 
+    'Master Chart View',
     'Hotel-wise', 
     'Delivery Person-wise', 
     'Menu-wise', 
     'Orders', 
     'Commission / Earnings', 
     'Top Performing Hotels', 
-    'Top Selling Menus'
+    'Top Selling Menus',
+    'Time-of-Day',
+    'Status-wise'
   ];
   currentTab = signal('Overview');
   subTabs = ['Chart', 'Table'];
   currentSubTab = signal('Table');
+  chartType = signal<'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'doughnut'>('bar');
 
   // Reset sub-tab when main tab changes
   constructor() {
@@ -252,6 +327,32 @@ export class Reports implements OnInit {
         headers: ['Menu Item', 'Quantity', 'Revenue'],
         rows: Object.values(this.groupedByMenu()).map(g => [g.name, g.quantity, `₹${g.revenue.toLocaleString()}`]),
         headerColor: 'bg-amber-50 dark:bg-amber-900/20'
+      };
+    } else if (tab === 'Time-of-Day') {
+      const grouped: Record<string, number> = {};
+      this.filteredOrders().forEach(o => {
+        if (o.created_at) {
+          const hour = new Date(o.created_at).getHours();
+          const label = `${hour}:00 - ${hour + 1}:00`;
+          grouped[label] = (grouped[label] || 0) + 1;
+        }
+      });
+      const sorted = Object.entries(grouped).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+      return {
+        headers: ['Time of Day', 'Orders'],
+        rows: sorted.map(g => [g[0], g[1]]),
+        headerColor: 'bg-blue-50 dark:bg-blue-900/20'
+      };
+    } else if (tab === 'Status-wise') {
+      const grouped: Record<string, number> = {};
+      this.filteredOrders().forEach(o => {
+        const status = o.status || 'Unknown';
+        grouped[status] = (grouped[status] || 0) + (Number(o.grand_total) || 0);
+      });
+      return {
+        headers: ['Order Status', 'Revenue'],
+        rows: Object.entries(grouped).map(g => [g[0], `₹${g[1].toLocaleString()}`]),
+        headerColor: 'bg-purple-50 dark:bg-purple-900/20'
       };
     } else {
       return {
@@ -421,13 +522,46 @@ export class Reports implements OnInit {
           .slice(0, 5)
           .map(g => ({ label: g.name, value: `Qty: ${g.quantity}` }))
       };
+    } else if (tab === 'Time-of-Day') {
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        if (o.created_at) {
+          const hour = new Date(o.created_at).getHours();
+          const label = `${hour}:00 - ${hour + 1}:00`;
+          grouped[label] = (grouped[label] || 0) + 1;
+        }
+      });
+      return {
+        type: 'Time-of-Day',
+        items: Object.entries(grouped).map(g => ({
+          label: g[0],
+          value: `Orders: ${g[1]}`
+        }))
+      };
+    } else if (tab === 'Status-wise') {
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        const status = o.status || 'Unknown';
+        grouped[status] = (grouped[status] || 0) + (Number(o.grand_total) || 0);
+      });
+      return {
+        type: 'Status-wise',
+        items: Object.entries(grouped).map(g => ({
+          label: g[0],
+          value: `Rev: ₹${g[1].toLocaleString()}`
+        }))
+      };
     }
     return { type: 'Other', items: [] };
   });
 
   chartOptions = computed(() => {
+    return this.getChartOptions(this.currentTab());
+  });
+
+  getChartOptions(tab: string): EChartsOption {
     const data = this.filteredOrders();
-    const tab = this.currentTab();
+    const type = this.chartType();
     
     let xAxisData: string[] = [];
     let seriesData: number[] = [];
@@ -508,16 +642,68 @@ export class Reports implements OnInit {
       const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
       xAxisData = sorted.map(e => e[0]);
       seriesData = sorted.map(e => e[1]);
+    } else if (tab === 'Time-of-Day') {
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        if (o.created_at) {
+          const hour = new Date(o.created_at).getHours();
+          const label = `${hour}:00 - ${hour + 1}:00`;
+          grouped[label] = (grouped[label] || 0) + 1;
+        }
+      });
+      const sorted = Object.entries(grouped).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+      xAxisData = sorted.map(e => e[0]);
+      seriesData = sorted.map(e => e[1]);
+    } else if (tab === 'Status-wise') {
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        const status = o.status || 'Unknown';
+        grouped[status] = (grouped[status] || 0) + (Number(o.grand_total) || 0);
+      });
+      xAxisData = Object.keys(grouped);
+      seriesData = Object.values(grouped);
     }
 
-    return {
-      title: { text: `${this.currentTab()} Report`, left: 'center' },
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      xAxis: { type: 'category' as const, data: xAxisData, axisLabel: { rotate: 45 } },
-      yAxis: { type: 'value' },
-      series: [{ data: seriesData, type: 'bar', itemStyle: { color: '#FFC107' } }]
-    } as EChartsOption;
-  });
+    if (type === 'pie') {
+      const pieData = xAxisData.map((name, index) => ({ name, value: seriesData[index] }));
+      return {
+        title: { text: `${tab} Report`, left: 'center' },
+        tooltip: { trigger: 'item' as const },
+        series: [{ data: pieData, type: 'pie', radius: '50%' }]
+      };
+    } else if (type === 'doughnut') {
+      const pieData = xAxisData.map((name, index) => ({ name, value: seriesData[index] }));
+      return {
+        title: { text: `${tab} Report`, left: 'center' },
+        tooltip: { trigger: 'item' as const },
+        series: [{ data: pieData, type: 'pie', radius: ['40%', '70%'] }]
+      };
+    } else if (type === 'area') {
+      return {
+        title: { text: `${tab} Report`, left: 'center' },
+        tooltip: { trigger: 'axis' as const, axisPointer: { type: 'shadow' } },
+        xAxis: { type: 'category' as const, data: xAxisData, axisLabel: { rotate: 45 } },
+        yAxis: { type: 'value' },
+        series: [{ data: seriesData, type: 'line', areaStyle: {}, itemStyle: { color: '#FFC107' }, smooth: true }]
+      };
+    } else if (type === 'scatter') {
+      return {
+        title: { text: `${tab} Report`, left: 'center' },
+        tooltip: { trigger: 'item' as const },
+        xAxis: { type: 'category' as const, data: xAxisData, axisLabel: { rotate: 45 } },
+        yAxis: { type: 'value' },
+        series: [{ data: seriesData, type: 'scatter', itemStyle: { color: '#FFC107' } }]
+      };
+    } else {
+      return {
+        title: { text: `${tab} Report`, left: 'center' },
+        tooltip: { trigger: 'axis' as const, axisPointer: { type: 'shadow' } },
+        xAxis: { type: 'category' as const, data: xAxisData, axisLabel: { rotate: 45 } },
+        yAxis: { type: 'value' },
+        series: [{ data: seriesData, type: type, itemStyle: { color: '#FFC107' }, smooth: true }]
+      };
+    }
+  }
 
   private chartInstance: ECharts | null = null;
 
@@ -541,12 +727,17 @@ export class Reports implements OnInit {
   }
 
   ngOnInit() {
+    this.loading.set(true);
     this.api.getOrders().subscribe({
       next: (d) => {
         console.log('Orders fetched:', d);
         this.orders.set(d);
+        this.loading.set(false);
       },
-      error: (err) => console.error('Failed to fetch orders:', err)
+      error: (err) => {
+        console.error('Failed to fetch orders:', err);
+        this.loading.set(false);
+      }
     });
   }
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const authenticateToken = require('./authMiddleware');
+const { sendWhatsAppMessage } = require('./whatsapp');
 const router = express.Router();
 
 // Get all orders
@@ -36,9 +37,20 @@ router.post('/', authenticateToken, async (req, res) => {
     
     const { 
       order_number, hotel_id, hotel_name, delivery_person_id, customer_name, customer_phone, 
-      customer_type, delivery_address, subtotal, shipping_fee, grand_total, amount_received, 
+      customer_type, delivery_address, subtotal, amount_received, 
       balance_pending, status, items 
     } = req.body;
+
+    // Calculate shipping fee
+    let shipping_fee = req.body.shipping_fee;
+    if (shipping_fee === undefined || shipping_fee === null) {
+      const shippingRange = await client.query(
+        'SELECT price FROM shipping_ranges WHERE $1 >= min_amount AND $1 < max_amount',
+        [subtotal]
+      );
+      shipping_fee = shippingRange.rows.length > 0 ? shippingRange.rows[0].price : 0;
+    }
+    const grand_total = Number(subtotal) + Number(shipping_fee);
 
     const orderResult = await client.query(
       `INSERT INTO orders (
@@ -82,7 +94,28 @@ router.post('/', authenticateToken, async (req, res) => {
         'INSERT INTO notifications (role, user_id, title, message, link) VALUES ($1, $2, $3, $4, $5)',
         ['delivery', delivery_person_id, 'New Order Assigned', `You have been assigned order ${order.order_number}.`, deliveryLink]
       );
+      
+      // Send WhatsApp to delivery person
+      const deliveryPerson = await client.query('SELECT name, mobile FROM delivery_persons WHERE id = $1', [delivery_person_id]);
+      if (deliveryPerson.rows.length > 0) {
+        const dp = deliveryPerson.rows[0];
+        await sendWhatsAppMessage(dp.mobile, 'ORDER_ASSIGNED', {
+          DeliveryPersonName: dp.name,
+          OrderDate: new Date().toLocaleDateString(),
+          Restaurant: hotel_name,
+          MenuItems: items.map(i => i.menu_name).join(', '),
+          DeliveryCharge: shipping_fee
+        });
+      }
     }
+
+    // Send WhatsApp to customer
+    await sendWhatsAppMessage(customer_phone, 'CUSTOMER_INVOICE', {
+      CustomerName: customer_name,
+      OrderID: order.order_number,
+      OrderDate: new Date().toLocaleDateString(),
+      AmountPaid: grand_total
+    });
 
     await client.query('COMMIT');
     res.status(201).json(order);

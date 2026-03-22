@@ -1,5 +1,14 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { ToastService } from './toast.service';
+import { ApiService } from './api.service';
+
+export interface ShippingRange {
+  id?: number;
+  min_amount: number;
+  max_amount: number;
+  price: number;
+}
 
 export interface AppSettings {
   taxes: {
@@ -38,9 +47,13 @@ export interface AppSettings {
 })
 export class SettingsService {
   private http = inject(HttpClient);
+  private api = inject(ApiService);
   // private baseUrls = 'http://localhost:3000/api';
   private baseUrls = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
-  private baseUrl = `${this.baseUrls}/settings`;
+  // private baseUrl = `${this.baseUrls}/settings`;
+  private get baseUrl() { return `${this.api.baseUrl}/settings`; }
+  private get shippingUrl() { return `${this.api.baseUrl}/shipping`; }
+  private toast = inject(ToastService);
 
   private defaultSettings: AppSettings = {
     taxes: {
@@ -75,9 +88,11 @@ export class SettingsService {
   };
 
   settings = signal<AppSettings>(this.defaultSettings);
+  shippingRanges = signal<ShippingRange[]>([]);
 
   constructor() {
     this.loadSettings();
+    this.loadShippingRanges();
   }
 
   private loadSettings() {
@@ -105,6 +120,26 @@ export class SettingsService {
         error: (err) => console.error('Failed to save settings', err)
       });
       return updated;
+    });
+  }
+
+  loadShippingRanges() {
+    this.http.get<ShippingRange[]>(this.shippingUrl).subscribe({
+      next: (ranges) => this.shippingRanges.set(ranges),
+      error: (err) => console.error('Failed to load shipping ranges', err)
+    });
+  }
+
+  updateShippingRanges(ranges: ShippingRange[]) {
+    this.http.post(this.shippingUrl, ranges).subscribe({
+      next: () => {
+        this.shippingRanges.set(ranges);
+        this.toast.success('Shipping ranges updated successfully');
+      },
+      error: (err: unknown) => {
+        console.error('Failed to update shipping ranges', err);
+        this.toast.error('Failed to update shipping ranges');
+      }
     });
   }
 }

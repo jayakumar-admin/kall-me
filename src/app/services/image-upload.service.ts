@@ -7,7 +7,7 @@ import { Observable, catchError, map, of } from 'rxjs';
 })
 export class ImageUploadService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:3000/api';
+  public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
   uploadImage(file: File): Observable<string | null> {
     const formData = new FormData();
     formData.append('file', file);

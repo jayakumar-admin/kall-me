@@ -46,10 +46,20 @@ export class OrderService {
   updateStatus(id: number, status: string) {
     this.api.updateOrderStatus(id, status).subscribe({
       next: (updated) => {
-        this.orders.update(current => current.map(o => o.id === id ? updated : o));
+        this.orders.update(current => current.map(o => o.id == id ? { ...o, ...updated } : o));
         this.toast.success(`Order #${updated.order_number} status updated to ${status}`);
       },
       error: () => this.toast.error('Failed to update order status')
+    });
+  }
+
+  updateOrder(id: number, data: Partial<Order>) {
+    return this.api.updateOrder(id, data).subscribe({
+      next: (updated) => {
+        this.orders.update(current => current.map(o => o.id == id ? { ...o, ...updated } : o));
+        this.toast.success('Order updated successfully');
+      },
+      error: () => this.toast.error('Failed to update order')
     });
   }
 }

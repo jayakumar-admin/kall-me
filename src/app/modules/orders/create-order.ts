@@ -10,6 +10,7 @@ import { ApiService } from '../../services/api.service';
 import { Hotel, DeliveryPerson, Order } from '../../models';
 
 import { OrderService } from '../../services/order.service';
+import { SettingsService } from '../../services/settings.service';
 
 @Component({
   selector: 'app-create-order',
@@ -253,9 +254,12 @@ import { OrderService } from '../../services/order.service';
                 <span class="text-slate-500">Food Subtotal</span>
                 <span class="text-[#1A1A1A] dark:text-white">₹{{ (subtotal() || 0).toLocaleString() }}.00</span>
               </div>
-              <div class="flex justify-between text-xs font-medium">
-                <span class="text-slate-500 flex items-center gap-1">Shipping Fee <mat-icon class="text-[10px] h-3 w-3">edit</mat-icon></span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ (shippingFee() || 0).toLocaleString() }}.00</span>
+              <div class="flex justify-between items-center text-xs font-medium">
+                <span class="text-slate-500 flex items-center gap-1">Shipping Fee</span>
+                <div class="relative w-24">
+                  <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                  <input type="number" [ngModel]="shippingFee()" (ngModelChange)="onShippingFeeChange($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-6 pr-2 py-1 text-right text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                </div>
               </div>
               
               <div class="bg-[#FFF9E6] p-4 rounded-xl flex justify-between items-center mt-3 border border-[#FFC107]/10">
@@ -375,6 +379,7 @@ export class CreateOrder implements OnInit {
   catalog = inject(CatalogService);
   api = inject(ApiService);
   orderService = inject(OrderService);
+  settingsService = inject(SettingsService);
   
   drivers = signal<DeliveryPerson[]>([]);
   selectedHotel = signal<Hotel | null>(null);
@@ -417,7 +422,13 @@ export class CreateOrder implements OnInit {
   }
 
   amountReceived = signal<number>(0);
-  shippingFee = signal<number>(80);
+  shippingFee = signal<number>(0);
+  isShippingManuallyEdited = signal<boolean>(false);
+
+  onShippingFeeChange(value: number) {
+    this.shippingFee.set(value);
+    this.isShippingManuallyEdited.set(true);
+  }
 
   subtotal = computed(() => this.cart().reduce((acc, entry) => acc + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0));
   grandTotal = computed(() => Number(this.subtotal()) + Number(this.shippingFee() || 0));
@@ -463,6 +474,19 @@ export class CreateOrder implements OnInit {
   route = inject(ActivatedRoute);
 
   constructor() {
+    effect(() => {
+      const sub = this.subtotal();
+      const ranges = this.settingsService.shippingRanges();
+      if (!this.isShippingManuallyEdited()) {
+        let fee = 0;
+        if (ranges && ranges.length > 0) {
+          const range = ranges.find(r => sub >= r.min_amount && sub < r.max_amount);
+          if (range) fee = range.price;
+        }
+        this.shippingFee.set(fee);
+      }
+    }, { allowSignalWrites: true });
+
     effect(() => {
       const hotels = this.catalog.hotels();
       const hotelId = this.route.snapshot.queryParams['hotelId'];

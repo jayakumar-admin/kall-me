@@ -12,6 +12,7 @@ const whatsappRoutes = require('./whatsapp.js');
 const notificationsRoutes = require('./notifications.js');
 
 const settingsRoutes = require('./settings.js');
+const shippingRoutes = require('./shipping.js');
 
 const router = express.Router();
 
@@ -27,5 +28,6 @@ router.use('/pricing', pricingRoutes);
 router.use('/whatsapp', whatsappRoutes.router);
 router.use('/notifications', notificationsRoutes);
 router.use('/settings', settingsRoutes);
+router.use('/shipping', shippingRoutes);
 
 module.exports = router;

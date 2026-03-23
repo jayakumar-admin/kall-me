@@ -35,10 +35,10 @@ export class DeliveryDashboard implements OnInit {
     this.api.getDeliveryOrders().subscribe({
       next: (orders: Order[]) => {
         const total = orders.length;
-        const pending = orders.filter(o => o.status !== 'delivered').length;
-        const completed = orders.filter(o => o.status === 'delivered').length;
+        const pending = orders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length;
+        const completed = orders.filter(o => o.status === 'Delivered').length;
         const earnings = orders
-          .filter(o => o.status === 'delivered')
+          .filter(o => o.status === 'Delivered')
           .reduce((acc, curr) => acc + (curr.grand_total || 0), 0);
 
         this.stats.set({ total, pending, completed, earnings });

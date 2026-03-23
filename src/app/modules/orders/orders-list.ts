@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
@@ -17,12 +17,16 @@ import { MainSkeletonComponent } from '../../components/main-skeleton';
   templateUrl: './orders-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class OrdersList {
+export class OrdersList implements OnInit {
   search = inject(SearchService);
   toast = inject(ToastService);
   orderService = inject(OrderService);
   router = inject(Router);
   statusFilter = signal<string>('all');
+
+  ngOnInit() {
+    this.orderService.loadOrders();
+  }
 
   filteredOrders = computed(() => {
     const term = this.search.searchTerm().toLowerCase();
@@ -37,11 +41,26 @@ export class OrdersList {
     });
   });
 
+  stats = computed(() => {
+    const allOrders = this.filteredOrders();
+    const getNumber = (value: number | string | undefined) => Math.round(Number(value) || 0);
+
+    return {
+      total: allOrders.length,
+      revenue: allOrders.reduce((acc, o) => acc + getNumber(o.grand_total), 0),
+      received: allOrders.reduce((acc, o) => acc + getNumber(o.amount_received), 0),
+      pending: allOrders.reduce((acc, o) => acc + getNumber(o.balance_pending), 0)
+    };
+  });
+
   getStatusClass(status: string): string {
-    switch (status) {
+    const s = (status || '').toLowerCase();
+    switch (s) {
       case 'delivered': return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400';
+      case 'in transit':
       case 'in-transit': return 'bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400';
-      case 'live': return 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400';
+      case 'live': return 'bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400';
+      case 'order placed': return 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400';
       case 'cancelled': return 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400';
       default: return 'bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400';
     }

@@ -49,7 +49,7 @@ export interface Order {
   grand_total: number;
   amount_received: number;
   balance_pending: number;
-  status?: 'placed' | 'in-progress' | 'in-transit' | 'delivered' | 'cancelled' | 'pending' | 'accepted' | 'picked-up' | 'preparing';
+  status?: 'Order Placed' | 'Live' | 'In Transit' | 'Delivered' | 'Cancelled';
   items: OrderItem[];
   created_at?: string;
   invoice_url?: string;

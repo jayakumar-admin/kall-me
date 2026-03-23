@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal, effect } from '@angular/core';
+import { Component, inject, computed, signal, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -57,12 +57,12 @@ import { MenuItem } from '../../models';
     </div>
   `
 })
-export class HotelDetails {
+export class HotelDetails implements OnInit {
   private route = inject(ActivatedRoute);
   private catalog = inject(CatalogService);
   private orderService = inject(OrderService);
   
-  hotelId = computed(() => Number(this.route.snapshot.paramMap.get('id')));
+  hotelId = signal<number>(0);
   
   hotel = computed(() => this.catalog.hotels().find(m => m.id === this.hotelId()));
   
@@ -79,6 +79,17 @@ export class HotelDetails {
   totalRevenue = computed(() => this.hotelOrders().reduce((acc, o) => acc + (Number(o.grand_total) || 0), 0));
 
   editingPrices: Record<number, number> = {};
+
+  ngOnInit() {
+    this.orderService.loadOrders();
+    this.route.paramMap.subscribe(params => {
+      const id = Number(params.get('id'));
+      if (id) {
+        this.hotelId.set(id);
+        this.catalog.loadHotelMenu(id);
+      }
+    });
+  }
 
   constructor() {
     effect(() => {

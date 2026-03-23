@@ -579,7 +579,7 @@ export class CreateOrder implements OnInit {
       grand_total: this.grandTotal(),
       amount_received: this.amountReceived(),
       balance_pending: this.balancePending(),
-      status: 'placed',
+      status: 'Order Placed',
       items: this.cart().map(c => {
         const price = c.item.hotelPrice ?? c.item.price;
         return {

@@ -9,10 +9,10 @@ router.get('/', async (req, res) => {
     let result;
     if (hotel_id) {
       result = await db.query(`
-        SELECT m.*, COALESCE(mm.price, m.price) as price
+        SELECT m.*, mm.price as price
         FROM menus m
-        LEFT JOIN merchant_menus mm ON m.id = mm.menu_id AND mm.hotel_id = $1
-        WHERE m.hotel_id = $1 OR m.hotel_id IS NULL
+        INNER JOIN merchant_menus mm ON m.id = mm.menu_id
+        WHERE mm.hotel_id = $1
         ORDER BY m.id ASC
       `, [hotel_id]);
     } else {
@@ -40,33 +40,65 @@ router.get('/:id', async (req, res) => {
 
 // Create menu item
 router.post('/', async (req, res) => {
+  const client = await db.pool.connect();
   try {
+    await client.query('BEGIN');
     const { hotel_id, name, description, price, category, image_url } = req.body;
-    const result = await db.query(
+    const result = await client.query(
       'INSERT INTO menus (hotel_id, name, description, price, category, image_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [hotel_id, name, description, price, category, image_url]
     );
-    res.status(201).json(result.rows[0]);
+    const newItem = result.rows[0];
+    
+    if (hotel_id) {
+      await client.query(
+        'INSERT INTO merchant_menus (hotel_id, menu_id, price) VALUES ($1, $2, $3)',
+        [hotel_id, newItem.id, price]
+      );
+    }
+    
+    await client.query('COMMIT');
+    res.status(201).json(newItem);
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
   }
 });
 
 // Update menu item
 router.put('/:id', async (req, res) => {
+  const client = await db.pool.connect();
   try {
+    await client.query('BEGIN');
     const { id } = req.params;
     const { hotel_id, name, description, price, category, image_url } = req.body;
-    const result = await db.query(
+    const result = await client.query(
       'UPDATE menus SET hotel_id = $1, name = $2, description = $3, price = $4, category = $5, image_url = $6 WHERE id = $7 RETURNING *',
       [hotel_id, name, description, price, category, image_url, id]
     );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Menu item not found' });
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
+    
+    if (hotel_id) {
+      await client.query(
+        'UPDATE merchant_menus SET price = $1 WHERE hotel_id = $2 AND menu_id = $3',
+        [price, hotel_id, id]
+      );
+    }
+    
+    await client.query('COMMIT');
     res.json(result.rows[0]);
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
   }
 });
 

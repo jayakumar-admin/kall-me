@@ -61,7 +61,7 @@ router.post('/', authenticateToken, async (req, res) => {
       [
         order_number, hotel_id, hotel_name, delivery_person_id, customer_name, customer_phone, 
         customer_type, delivery_address, subtotal, shipping_fee, grand_total, amount_received, 
-        balance_pending, status || 'placed'
+        balance_pending, status || 'Order Placed'
       ]
     );
 

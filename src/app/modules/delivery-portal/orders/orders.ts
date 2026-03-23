@@ -24,7 +24,7 @@ export class DeliveryOrders implements OnInit {
   orders = signal<Order[]>([]);
   selectedOrder = signal<Order | null>(null);
   
-  statusOptions = ['placed', 'preparing', 'accepted', 'picked-up', 'in-transit', 'delivered'];
+  statusOptions = ['Live', 'In Transit', 'Delivered'];
 
   ngOnInit() {
     this.loadOrders();

@@ -34,6 +34,7 @@ export class Dashboard implements OnInit {
   });
 
   ngOnInit() {
+    this.orderService.loadOrders();
     this.api.getDeliveryTeam().subscribe(team => {
       this.activeDrivers.set(team.length);
     });

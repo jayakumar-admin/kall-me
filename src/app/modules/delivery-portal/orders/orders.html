@@ -21,10 +21,11 @@
           </div>
           <span class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
                 [ngClass]="{
-                  'bg-amber-50 text-amber-600': order.status === 'placed' || order.status === 'preparing',
-                  'bg-blue-50 text-blue-600': order.status === 'accepted' || order.status === 'picked-up',
-                  'bg-indigo-50 text-indigo-600': order.status === 'in-transit',
-                  'bg-emerald-50 text-emerald-600': order.status === 'delivered'
+                  'bg-amber-50 text-amber-600': order.status === 'Order Placed',
+                  'bg-blue-50 text-blue-600': order.status === 'Live',
+                  'bg-indigo-50 text-indigo-600': order.status === 'In Transit',
+                  'bg-emerald-50 text-emerald-600': order.status === 'Delivered',
+                  'bg-red-50 text-red-600': order.status === 'Cancelled'
                 }">
             {{ order.status }}
           </span>
@@ -74,7 +75,7 @@
           </button>
         </div>
 
-        @if (order.status !== 'delivered') {
+        @if (order.status !== 'Delivered' && order.status !== 'Cancelled') {
           <button (click)="selectOrder(order)" 
                   class="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200">
             Update Status

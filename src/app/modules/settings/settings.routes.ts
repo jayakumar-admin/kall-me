@@ -23,6 +23,10 @@ export const SETTINGS_ROUTES: Routes = [
     loadComponent: () => import('./hotel-menu-editor/hotel-menu-editor').then(m => m.HotelMenuEditor)
   },
   {
+    path: 'menu-editor',
+    loadComponent: () => import('./menu-editor/menu-editor').then(m => m.MenuEditor)
+  },
+  {
     path: 'whatsapp-logs',
     loadComponent: () => import('./whatsapp-logs/whatsapp-logs').then(m => m.WhatsAppLogs)
   },

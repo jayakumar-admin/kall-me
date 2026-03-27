@@ -53,9 +53,8 @@
             <div class="p-8 grid grid-cols-2 gap-8 border-b border-slate-200 dark:border-white/10 print:text-black">
               <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 print:text-black">Billed To:</p>
-                <p class="font-bold text-[#1A1A1A] dark:text-white print:text-black">{{ selectedOrder()!.customer_name }}</p>
-                <p class="text-sm text-slate-500 print:text-black">{{ selectedOrder()!.customer_phone }}</p>
-                <p class="text-sm text-slate-500 print:text-black">{{ selectedOrder()!.delivery_address }}</p>
+                <p class="font-bold text-[#1A1A1A] dark:text-white print:text-black">{{ selectedOrder()!.customer_phone }}</p>
+                <p class="text-sm text-slate-500 print:text-black">{{ selectedOrder()!.delivery_description }}</p>
               </div>
               <div class="text-right">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 print:text-black">Restaurant:</p>

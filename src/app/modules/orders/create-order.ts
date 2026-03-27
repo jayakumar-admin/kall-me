@@ -112,49 +112,56 @@ import { SettingsService } from '../../services/settings.service';
         </div>
 
         <div class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
-          @for (item of filteredMenu(); track item.id) {
-            <div 
-              class="bg-white dark:bg-[#1E293B] rounded-xl border border-slate-100 dark:border-white/5 p-3 flex gap-4 items-center group transition-all hover:border-[#FFC107]/30"
-              [class.border-[#FFC107]]="getQuantity(item) > 0"
-              [class.bg-[#FFF9E6]/20]="getQuantity(item) > 0"
-            >
-              <div class="relative">
-                <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0">
-                  <img [src]="item.image_url || 'https://picsum.photos/seed/' + item.name + '/100/100'" [alt]="item.name" class="w-full h-full object-cover">
-                </div>
-                @if (getQuantity(item) > 0) {
-                  <div class="absolute -top-1 -left-1 w-5 h-5 bg-[#FFC107] rounded-full flex items-center justify-center shadow-sm">
-                    <mat-icon class="text-black text-xs font-bold">check</mat-icon>
-                  </div>
-                }
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex justify-between items-start">
-                  <h4 class="font-bold text-sm text-[#1A1A1A] dark:text-white truncate">{{ item.name }}</h4>
-                  <span class="font-bold text-[#FFC107]">₹{{ ((item.hotelPrice ?? item.price) || 0).toLocaleString() }}</span>
-                </div>
-                <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{{ item.description }}</p>
-                
-                <div class="flex items-center justify-between mt-2">
-                  <div class="flex items-center bg-slate-100 dark:bg-[#0F172A] rounded-lg p-0.5">
-                    <button (click)="updateQuantity(item, -1)" class="w-7 h-7 flex items-center justify-center hover:bg-white dark:hover:bg-[#1E293B] rounded-md transition-colors text-slate-500">
-                      <mat-icon class="text-sm">remove</mat-icon>
-                    </button>
-                    <span class="w-8 text-center text-xs font-bold text-[#1A1A1A] dark:text-white">{{ getQuantity(item) }}</span>
-                    <button (click)="updateQuantity(item, 1)" class="w-7 h-7 flex items-center justify-center bg-[#FFC107] text-black rounded-md shadow-sm transition-transform active:scale-90">
-                      <mat-icon class="text-sm">add</mat-icon>
-                    </button>
+          @if (selectedHotel()?.id !== -1) {
+            @for (item of filteredMenu(); track item.id) {
+              <div 
+                class="bg-white dark:bg-[#1E293B] rounded-xl border border-slate-100 dark:border-white/5 p-3 flex gap-4 items-center group transition-all hover:border-[#FFC107]/30"
+                [class.border-[#FFC107]]="getQuantity(item) > 0"
+                [class.bg-[#FFF9E6]/20]="getQuantity(item) > 0"
+              >
+                <div class="relative">
+                  <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0">
+                    <img [src]="item.image_url || 'https://picsum.photos/seed/' + item.name + '/100/100'" [alt]="item.name" class="w-full h-full object-cover">
                   </div>
                   @if (getQuantity(item) > 0) {
-                    <span class="text-[10px] font-bold text-slate-400">₹{{ ((getQuantity(item) * (item.hotelPrice ?? item.price)) || 0).toLocaleString() }}</span>
+                    <div class="absolute -top-1 -left-1 w-5 h-5 bg-[#FFC107] rounded-full flex items-center justify-center shadow-sm">
+                      <mat-icon class="text-black text-xs font-bold">check</mat-icon>
+                    </div>
                   }
                 </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex justify-between items-start">
+                    <h4 class="font-bold text-sm text-[#1A1A1A] dark:text-white truncate">{{ item.name }}</h4>
+                    <span class="font-bold text-[#FFC107]">₹{{ ((item.hotelPrice ?? item.price) || 0).toLocaleString() }}</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{{ item.description }}</p>
+                  
+                  <div class="flex items-center justify-between mt-2">
+                    <div class="flex items-center bg-slate-100 dark:bg-[#0F172A] rounded-lg p-0.5">
+                      <button (click)="updateQuantity(item, -1)" class="w-7 h-7 flex items-center justify-center hover:bg-white dark:hover:bg-[#1E293B] rounded-md transition-colors text-slate-500">
+                        <mat-icon class="text-sm">remove</mat-icon>
+                      </button>
+                      <span class="w-8 text-center text-xs font-bold text-[#1A1A1A] dark:text-white">{{ getQuantity(item) }}</span>
+                      <button (click)="updateQuantity(item, 1)" class="w-7 h-7 flex items-center justify-center bg-[#FFC107] text-black rounded-md shadow-sm transition-transform active:scale-90">
+                        <mat-icon class="text-sm">add</mat-icon>
+                      </button>
+                    </div>
+                    @if (getQuantity(item) > 0) {
+                      <span class="text-[10px] font-bold text-slate-400">₹{{ ((getQuantity(item) * (item.hotelPrice ?? item.price)) || 0).toLocaleString() }}</span>
+                    }
+                  </div>
+                </div>
               </div>
-            </div>
-          } @empty {
+            } @empty {
+              <div class="py-12 text-center">
+                <mat-icon class="text-4xl text-slate-300 mb-2">restaurant_menu</mat-icon>
+                <p class="text-slate-500">No items found for this category.</p>
+              </div>
+            }
+          } @else {
             <div class="py-12 text-center">
-              <mat-icon class="text-4xl text-slate-300 mb-2">restaurant_menu</mat-icon>
-              <p class="text-slate-500">No items found for this category.</p>
+              <mat-icon class="text-4xl text-slate-300 mb-2">info</mat-icon>
+              <p class="text-slate-500">Menu selection is disabled for 'Others'.</p>
             </div>
           }
         </div>
@@ -171,12 +178,12 @@ import { SettingsService } from '../../services/settings.service';
 
         <div class="bg-white dark:bg-[#1E293B] rounded-2xl border border-slate-200 dark:border-white/5 flex-1 flex flex-col overflow-hidden shadow-sm">
           <div class="p-5 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
-            <!-- Customer Details -->
+            <!-- Order Details -->
             <div class="space-y-3">
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Customer Details</p>
-              <div>
-                <label for="customerName" class="text-[10px] font-bold text-slate-500 mb-1 block">Full Name <span class="text-red-500">*</span></label>
-                <input id="customerName" type="text" [(ngModel)]="customer.name" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order Details</p>
+              <div class="bg-slate-50 dark:bg-[#0F172A] p-3 rounded-lg border border-slate-100 dark:border-white/5">
+                <span class="text-[10px] font-bold text-slate-500 block">OrderID</span>
+                <span class="text-sm font-bold text-[#1A1A1A] dark:text-white">{{ orderId() }}</span>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -195,9 +202,15 @@ import { SettingsService } from '../../services/settings.service';
                 </div>
               </div>
               <div>
-                <label for="deliveryAddress" class="text-[10px] font-bold text-slate-500 mb-1 block">Delivery Address <span class="text-red-500">*</span></label>
-                <textarea id="deliveryAddress" [(ngModel)]="customer.address" rows="2" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] resize-none dark:text-white"></textarea>
+                <label for="deliveryDescription" class="text-[10px] font-bold text-slate-500 mb-1 block">Description / Notes <span class="text-red-500">*</span></label>
+                <textarea id="deliveryDescription" [(ngModel)]="customer.description" rows="4" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] resize-none dark:text-white"></textarea>
               </div>
+              @if (selectedHotel()?.id === -1) {
+                <div>
+                  <label for="manualPrice" class="text-[10px] font-bold text-slate-500 mb-1 block">Manual Price <span class="text-red-500">*</span></label>
+                  <input id="manualPrice" type="number" [ngModel]="manualPrice()" (ngModelChange)="manualPrice.set($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                </div>
+              }
             </div>
 
             <!-- Logistics -->
@@ -255,7 +268,7 @@ import { SettingsService } from '../../services/settings.service';
                 <span class="text-[#1A1A1A] dark:text-white">₹{{ (subtotal() || 0).toLocaleString() }}.00</span>
               </div>
               <div class="flex justify-between items-center text-xs font-medium">
-                <span class="text-slate-500 flex items-center gap-1">Shipping Fee</span>
+                <span class="text-slate-500 flex items-center gap-1">Delivery Charges (DC)</span>
                 <div class="relative w-24">
                   <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
                   <input type="number" [ngModel]="shippingFee()" (ngModelChange)="onShippingFeeChange($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-6 pr-2 py-1 text-right text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
@@ -390,11 +403,11 @@ export class CreateOrder implements OnInit {
   
   cart = signal<{ item: HotelMenuItem; quantity: number }[]>([]);
   customer = { 
-    name: '', 
     phone: '', 
     type: 'Regular' as const, 
-    address: '' 
+    description: '' 
   };
+  orderId = signal<string>('');
   selectedDriverId = signal<string>('');
   showDriverModal = signal(false);
   driverSearchTerm = signal('');
@@ -423,6 +436,7 @@ export class CreateOrder implements OnInit {
 
   amountReceived = signal<number>(0);
   shippingFee = signal<number>(0);
+  manualPrice = signal<number>(0);
   isShippingManuallyEdited = signal<boolean>(false);
 
   onShippingFeeChange(value: number) {
@@ -430,14 +444,28 @@ export class CreateOrder implements OnInit {
     this.isShippingManuallyEdited.set(true);
   }
 
-  subtotal = computed(() => this.cart().reduce((acc, entry) => acc + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0));
+  subtotal = computed(() => {
+    if (this.selectedHotel()?.id === -1) return this.manualPrice();
+    return this.cart().reduce((acc, entry) => acc + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0);
+  });
   grandTotal = computed(() => Number(this.subtotal()) + Number(this.shippingFee() || 0));
   balancePending = computed(() => Math.max(0, Number(this.grandTotal()) - Number(this.amountReceived() || 0)));
 
   filteredHotels = computed(() => {
     const filter = this.hotelFilter().toLowerCase();
     const globalSearch = this.search.searchTerm().toLowerCase();
-    return this.catalog.hotels().filter(h => 
+    const othersHotel: Hotel = { 
+      id: -1, 
+      name: 'Others', 
+      address: '', 
+      category: 'Others', 
+      rating: 0, 
+      commission_rate: 0, 
+      image_url: '', 
+      status: 'active' 
+    };
+    const hotels = [othersHotel, ...this.catalog.hotels()];
+    return hotels.filter(h => 
       h.name.toLowerCase().includes(filter) && 
       h.name.toLowerCase().includes(globalSearch)
     );
@@ -506,11 +534,14 @@ export class CreateOrder implements OnInit {
 
   ngOnInit() {
     this.api.getDeliveryTeam().subscribe(d => this.drivers.set(d));
+    this.orderId.set(`ORD-${Math.floor(100000 + Math.random() * 900000)}`);
   }
 
   selectHotel(hotel: Hotel) {
     this.selectedHotel.set(hotel);
-    this.catalog.loadHotelMenu(hotel.id);
+    if (hotel.id !== -1) {
+      this.catalog.loadHotelMenu(hotel.id);
+    }
     this.cart.set([]);
   }
 
@@ -539,8 +570,7 @@ export class CreateOrder implements OnInit {
 
   sendCustomerInvoice(phone: string) {
     const params = {
-      CustomerName: this.customer.name,
-      OrderNumber: `ORD-${Date.now()}`,
+      OrderNumber: this.orderId(),
       HotelName: this.selectedHotel()?.name || 'Unknown',
       MenuItems: this.cart().map(c => c.item.name).join(', '),
       GrandTotal: this.grandTotal(),
@@ -553,12 +583,12 @@ export class CreateOrder implements OnInit {
   }
 
   canConfirm(): boolean {
-    return this.cart().length > 0 && 
+    const isOthers = this.selectedHotel()?.id === -1;
+    return (this.cart().length > 0 || isOthers) && 
            !!this.selectedHotel() && 
-           !!this.customer.name?.trim() && 
            !!this.customer.phone?.trim() && 
-           !!this.customer.address?.trim() && 
-           !!this.selectedDriverId();
+           !!this.selectedDriverId() &&
+           (!isOthers || (!!this.customer.description?.trim() && this.manualPrice() > 0));
   }
 
   confirmOrder() {
@@ -566,14 +596,13 @@ export class CreateOrder implements OnInit {
     
     const hotel = this.selectedHotel()!;
     const orderData: Partial<Order> = {
-      order_number: `ORD-${Date.now()}`,
+      order_number: this.orderId(),
       hotel_id: hotel.id,
       hotel_name: hotel.name,
       delivery_person_id: Number(this.selectedDriverId()) || 1, // Default driver
-      customer_name: this.customer.name,
       customer_phone: this.customer.phone,
       customer_type: 'regular',
-      delivery_address: this.customer.address || 'Pickup',
+      delivery_description: this.customer.description,
       subtotal: this.subtotal(),
       shipping_fee: this.shippingFee(),
       grand_total: this.grandTotal(),

@@ -61,6 +61,16 @@ CREATE TABLE IF NOT EXISTS delivery_persons (
     status VARCHAR(20) DEFAULT 'active'
 );
 
+-- Admin Commission Config table
+CREATE TABLE IF NOT EXISTS admin_commission_config (
+    id SERIAL PRIMARY KEY,
+    min_range DECIMAL(10,2) NOT NULL,
+    max_range DECIMAL(10,2) NOT NULL,
+    commission_percentage DECIMAL(5,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Orders table
 CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
@@ -68,12 +78,14 @@ CREATE TABLE IF NOT EXISTS orders (
     hotel_id INTEGER REFERENCES hotels(id),
     hotel_name VARCHAR(255),
     delivery_person_id INTEGER REFERENCES delivery_persons(id),
-    customer_name VARCHAR(255) NOT NULL,
     customer_phone VARCHAR(20),
     customer_type VARCHAR(20),
-    delivery_address TEXT,
+    delivery_description TEXT,
     subtotal DECIMAL(10,2),
     shipping_fee DECIMAL(10,2),
+    delivery_charge DECIMAL(10,2),
+    admin_commission_amount DECIMAL(10,2),
+    commission_percentage_applied DECIMAL(5,2),
     grand_total DECIMAL(10,2),
     amount_received DECIMAL(10,2),
     balance_pending DECIMAL(10,2),

@@ -2,18 +2,18 @@ import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
 import { Order } from '../../models';
-import { jsPDF } from 'jspdf';
+import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 @Component({
   selector: 'app-invoice-generation',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, RouterLink],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './invoice-generation.html'
 })
 export class InvoiceGeneration implements OnInit {
@@ -157,18 +157,17 @@ export class InvoiceGeneration implements OnInit {
       // Billed To & Restaurant
       doc.setTextColor(100, 116, 139);
       doc.setFontSize(9);
-      doc.text('BILLED TO:', 14, 65);
+      doc.text('NOTES:', 14, 65);
       doc.text('RESTAURANT:', 120, 65);
       
       doc.setTextColor(26, 26, 26);
       doc.setFontSize(11);
-      doc.text(order.customer_name, 14, 72);
+      doc.text(order.delivery_description || 'N/A', 14, 72);
       doc.text(order.hotel_name || 'Restaurant', 120, 72);
       
       doc.setTextColor(100, 116, 139);
       doc.setFontSize(10);
       doc.text(order.customer_phone, 14, 78);
-      doc.text(order.delivery_address, 14, 84, { maxWidth: 80 });
       
       // Items Table
       const tableData = (order.items || []).map(item => [
@@ -204,8 +203,8 @@ export class InvoiceGeneration implements OnInit {
       doc.text(`Subtotal (${this.totalProducts()} items):`, totalsX, finalY + 15);
       doc.text(`INR ${this.subtotal().toLocaleString()}`, 196, finalY + 15, { align: 'right' });
       
-      doc.text(`Delivery Fee:`, totalsX, finalY + 22);
-      doc.text(`INR ${(order.shipping_fee || 0).toLocaleString()}`, 196, finalY + 22, { align: 'right' });
+      doc.text(`Delivery Charges (DC):`, totalsX, finalY + 22);
+      doc.text(`INR ${(order.delivery_charge || 0).toLocaleString()}`, 196, finalY + 22, { align: 'right' });
       
       doc.text(`GST (${this.gstPercent()}%):`, totalsX, finalY + 29);
       doc.text(`INR ${this.calculatedGst().toLocaleString()}`, 196, finalY + 29, { align: 'right' });

@@ -31,7 +31,7 @@ import { Order } from '../../models';
             <thead>
               <tr class="border-b border-slate-200 dark:border-white/10">
                 <th class="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Order ID</th>
-                <th class="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Customer</th>
+                <th class="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Phone</th>
                 <th class="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Total</th>
                 <th class="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Action</th>
               </tr>
@@ -40,7 +40,7 @@ import { Order } from '../../models';
               @for (order of selectedOrders(); track order.id) {
                 <tr class="border-b border-slate-100 dark:border-white/5">
                   <td class="py-4 text-[#1A1A1A] dark:text-white">{{ order.order_number }}</td>
-                  <td class="py-4 text-slate-500">{{ order.customer_name }}</td>
+                  <td class="py-4 text-slate-500">{{ order.customer_phone }}</td>
                   <td class="py-4 text-slate-500">{{ order.grand_total | currency:'INR' }}</td>
                   <td class="py-4">
                     <button (click)="removeOrder(order.id!)" class="text-red-500 hover:text-red-700">

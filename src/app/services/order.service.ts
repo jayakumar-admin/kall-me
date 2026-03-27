@@ -25,10 +25,6 @@ export class OrderService {
     };
   });
 
-  constructor() {
-    this.loadOrders();
-  }
-
   loadOrders() {
     this.loading.set(true);
     this.api.getOrders().subscribe({

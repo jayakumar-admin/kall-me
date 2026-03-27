@@ -40,12 +40,16 @@ export interface Order {
   hotel_name?: string;
   delivery_person_id: number;
   delivery_person_name?: string;
-  customer_name: string;
+  customer_name?: string;
   customer_phone: string;
   customer_type: 'regular' | 'premium';
-  delivery_address: string;
+  delivery_address?: string;
+  delivery_description: string;
   subtotal: number;
   shipping_fee: number;
+  delivery_charge: number;
+  admin_commission_amount: number;
+  commission_percentage_applied: number;
   grand_total: number;
   amount_received: number;
   balance_pending: number;

@@ -34,7 +34,7 @@ export class OrdersList implements OnInit {
     
     return this.orderService.orders().filter(o => {
       const matchesSearch = (o.order_number?.toLowerCase().includes(term) || false) || 
-                           o.customer_name.toLowerCase().includes(term) || 
+                           (o.customer_phone?.toLowerCase().includes(term) || false) || 
                            (o.hotel_name?.toLowerCase().includes(term) || false);
       const matchesStatus = status === 'all' || o.status === status;
       return matchesSearch && matchesStatus;

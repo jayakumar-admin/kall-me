@@ -36,8 +36,8 @@ router.post('/', authenticateToken, async (req, res) => {
     await client.query('BEGIN');
     
     const { 
-      order_number, hotel_id, hotel_name, delivery_person_id, customer_name, customer_phone, 
-      customer_type, delivery_address, subtotal, amount_received, 
+      order_number, hotel_id, hotel_name, delivery_person_id, customer_phone, 
+      customer_type, delivery_description, subtotal, amount_received, 
       balance_pending, status, items 
     } = req.body;
 
@@ -50,17 +50,32 @@ router.post('/', authenticateToken, async (req, res) => {
       );
       shipping_fee = shippingRange.rows.length > 0 ? shippingRange.rows[0].price : 0;
     }
+    
+    // Calculate admin commission
+    let admin_commission_amount = 0;
+    let commission_percentage_applied = 0;
+    const commissionConfig = await client.query(
+      'SELECT commission_percentage FROM admin_commission_config WHERE $1 >= min_range AND $1 <= max_range',
+      [shipping_fee]
+    );
+    if (commissionConfig.rows.length > 0) {
+      commission_percentage_applied = commissionConfig.rows[0].commission_percentage;
+      admin_commission_amount = (shipping_fee * commission_percentage_applied) / 100;
+    }
+
     const grand_total = Number(subtotal) + Number(shipping_fee);
 
     const orderResult = await client.query(
       `INSERT INTO orders (
-        order_number, hotel_id, hotel_name, delivery_person_id, customer_name, customer_phone, 
-        customer_type, delivery_address, subtotal, shipping_fee, grand_total, amount_received, 
+        order_number, hotel_id, hotel_name, delivery_person_id, customer_phone, 
+        customer_type, delivery_description, subtotal, shipping_fee, delivery_charge, 
+        admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
         balance_pending, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
       [
-        order_number, hotel_id, hotel_name, delivery_person_id, customer_name, customer_phone, 
-        customer_type, delivery_address, subtotal, shipping_fee, grand_total, amount_received, 
+        order_number, hotel_id, hotel_name, delivery_person_id, customer_phone, 
+        customer_type, delivery_description, subtotal, shipping_fee, shipping_fee, 
+        admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
         balance_pending, status || 'Order Placed'
       ]
     );
@@ -111,7 +126,6 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // Send WhatsApp to customer
     await sendWhatsAppMessage(customer_phone, 'CUSTOMER_INVOICE', {
-      CustomerName: customer_name,
       OrderID: order.order_number,
       OrderDate: new Date().toLocaleDateString(),
       AmountPaid: grand_total

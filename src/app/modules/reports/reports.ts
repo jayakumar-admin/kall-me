@@ -360,7 +360,7 @@ export class Reports implements OnInit {
         rows: this.filteredOrders().map(o => [
           o.order_number || '',
           o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
-          o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || ''),
+          (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || ''),
           o.status || '',
           `₹${(o.grand_total || 0).toLocaleString()}`
         ]),
@@ -372,9 +372,10 @@ export class Reports implements OnInit {
   groupedByHotel = computed(() => {
     const grouped: Record<number, { name: string, orders: number, revenue: number }> = {};
     this.filteredOrders().forEach(o => {
-      if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), orders: 0, revenue: 0 };
-      grouped[o.hotel_id].orders++;
-      grouped[o.hotel_id].revenue += Number(o.grand_total) || 0;
+      const hId = o.hotel_id === null ? -1 : o.hotel_id;
+      if (!grouped[hId]) grouped[hId] = { name: hId === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), orders: 0, revenue: 0 };
+      grouped[hId].orders++;
+      grouped[hId].revenue += Number(o.grand_total) || 0;
     });
     return grouped;
   });
@@ -431,9 +432,10 @@ export class Reports implements OnInit {
     } else if (tab === 'Hotel-wise') {
       const grouped: Record<number, { name: string, orders: number, revenue: number }> = {};
       data.forEach(o => {
-        if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), orders: 0, revenue: 0 };
-        grouped[o.hotel_id].orders++;
-        grouped[o.hotel_id].revenue += Number(o.grand_total) || 0;
+        const hId = o.hotel_id === null ? -1 : o.hotel_id;
+        if (!grouped[hId]) grouped[hId] = { name: hId === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), orders: 0, revenue: 0 };
+        grouped[hId].orders++;
+        grouped[hId].revenue += Number(o.grand_total) || 0;
       });
       return {
         type: 'Hotel-wise',
@@ -495,8 +497,9 @@ export class Reports implements OnInit {
     } else if (tab === 'Top Performing Hotels') {
       const grouped: Record<number, { name: string, revenue: number }> = {};
       data.forEach(o => {
-        if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), revenue: 0 };
-        grouped[o.hotel_id].revenue += Number(o.grand_total) || 0;
+        const hId = o.hotel_id === null ? -1 : o.hotel_id;
+        if (!grouped[hId]) grouped[hId] = { name: hId === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), revenue: 0 };
+        grouped[hId].revenue += Number(o.grand_total) || 0;
       });
       return {
         type: 'Top Performing Hotels',
@@ -577,7 +580,7 @@ export class Reports implements OnInit {
       // Group by hotel
       const grouped: Record<string, number> = {};
       data.forEach(o => {
-        const hotel = o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown');
+        const hotel = (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || 'Unknown');
         grouped[hotel] = (grouped[hotel] || 0) + (Number(o.grand_total) || 0);
       });
       xAxisData = Object.keys(grouped);
@@ -621,7 +624,7 @@ export class Reports implements OnInit {
     } else if (tab === 'Top Performing Hotels') {
       const grouped: Record<string, number> = {};
       data.forEach(o => {
-        const hotel = o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown');
+        const hotel = (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || 'Unknown');
         grouped[hotel] = (grouped[hotel] || 0) + (Number(o.grand_total) || 0);
       });
       const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -816,7 +819,7 @@ export class Reports implements OnInit {
     const rows = data.map(o => [
       o.order_number || '',
       o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
-      o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || ''),
+          (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || ''),
       o.status || '',
       `Rs. ${(o.grand_total || 0).toLocaleString()}`
     ]);

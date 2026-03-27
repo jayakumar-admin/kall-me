@@ -217,7 +217,7 @@ async function sendWelcomeMessage(user) {
 async function sendOrderConfirmation(order, customer, adminPhone) {
   const settings = await getSettings();
   const whatsappSettings = settings.whatsapp || {};
-  
+
   const clientTemplate = whatsappSettings?.orderConfirmationClientTemplate || 'order_confirmation_client';
   const adminTemplate = whatsappSettings?.orderConfirmationAdminTemplate || 'order_confirmation_admin';
 
@@ -269,7 +269,7 @@ async function sendOrderConfirmation(order, customer, adminPhone) {
 async function sendOrderStatusUpdate(order, customer, newStatus) {
   const settings = await getSettings();
   const whatsappSettings = settings.whatsapp || {};
-  
+
   // You might want different templates based on the status
   // e.g., 'order_shipped', 'order_delivered', etc.
   // For simplicity, assuming one generic status update template here
@@ -332,6 +332,18 @@ async function sendCustomerInvoiceMessage(customerPhone, order, grandTotal) {
     languageCode: 'en',
     components: [
       {
+        type: 'header',
+        parameters: [
+          {
+            type: 'document',
+            document: {
+              link: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', // Placeholder
+              filename: `Invoice_${order.order_number}.pdf`
+            }
+          }
+        ]
+      },
+      {
         type: 'body',
         parameters: [
           { type: 'text', text: "Dear Customer" },
@@ -345,7 +357,6 @@ async function sendCustomerInvoiceMessage(customerPhone, order, grandTotal) {
     messageType: 'customer_invoice',
   });
 }
-
 async function sendOfferCampaignMessage(campaign, users) {
   const settings = await getSettings();
   const whatsappSettings = settings.whatsapp || {};
@@ -441,7 +452,7 @@ router.get('/logs', async (req, res) => {
 
 router.post('/send', async (req, res) => {
   const { to, templateName, parameters } = req.body;
-  
+
   try {
     await sendWhatsAppMessage(to, templateName, parameters);
     res.status(200).json({ success: true });

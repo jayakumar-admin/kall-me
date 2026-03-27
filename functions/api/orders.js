@@ -65,6 +65,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const grand_total = Number(subtotal) + Number(shipping_fee);
 
+    const hotel_id_to_use = Number(hotel_id) === -1 ? null : hotel_id;
     let order_number_to_use = order_number;
     let orderResult;
     let inserted = false;
@@ -79,7 +80,7 @@ router.post('/', authenticateToken, async (req, res) => {
             balance_pending, status
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
           [
-            order_number_to_use, hotel_id, hotel_name, delivery_person_id, customer_phone, 
+            order_number_to_use, hotel_id_to_use, hotel_name, delivery_person_id, customer_phone, 
             customer_type, delivery_description, subtotal, shipping_fee, shipping_fee, 
             admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
             balance_pending, status || 'Order Placed'

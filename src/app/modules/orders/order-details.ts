@@ -52,7 +52,7 @@ import { Order } from '../../models';
               </div>
               <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Hotel</p>
-                <p class="font-bold text-[#1A1A1A] dark:text-white">{{ order()!.hotel_id === -1 ? 'Manual Order' : order()!.hotel_name }}</p>
+                <p class="font-bold text-[#1A1A1A] dark:text-white">{{ (order()!.hotel_id === -1 || order()!.hotel_id === null) ? 'Manual Order' : order()!.hotel_name }}</p>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2">Delivery Person</p>
                 <p class="font-bold text-[#1A1A1A] dark:text-white">{{ order()!.delivery_person_name || 'Not Assigned' }}</p>
               </div>

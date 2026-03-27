@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, e
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SearchService } from '../../services/search.service';
 import { ToastService } from '../../services/toast.service';
 import { CatalogService, HotelMenuItem } from '../../services/catalog.service';
@@ -393,6 +393,7 @@ export class CreateOrder implements OnInit {
   api = inject(ApiService);
   orderService = inject(OrderService);
   settingsService = inject(SettingsService);
+  router = inject(Router);
   
   drivers = signal<DeliveryPerson[]>([]);
   selectedHotel = signal<Hotel | null>(null);
@@ -629,6 +630,7 @@ export class CreateOrder implements OnInit {
         this.cart.set([]);
         this.amountReceived.set(0);
         this.orderService.loadOrders();
+        this.router.navigate(['/app/orders']);
       },
       error: (err) => {
         console.error('Order creation failed:', err);

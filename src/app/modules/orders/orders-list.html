@@ -170,7 +170,7 @@
                 class="flex items-center gap-2 text-slate-600 dark:text-slate-400"
               >
                 <mat-icon class="text-[#FFC107] text-sm">storefront</mat-icon>
-                <span class="text-sm font-medium">{{ order.hotel_id === -1 ? 'Manual Order' : order.hotel_name }}</span>
+                <span class="text-sm font-medium">{{ (order.hotel_id === -1 || order.hotel_id === null) ? 'Manual Order' : order.hotel_name }}</span>
               </div>
             </td>
             <td class="px-6 py-4 font-bold text-[#1A1A1A] dark:text-white">

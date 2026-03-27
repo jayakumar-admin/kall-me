@@ -167,7 +167,7 @@ export class InvoiceGeneration implements OnInit {
       doc.setTextColor(26, 26, 26);
       doc.setFontSize(11);
       doc.text(order.delivery_description || 'N/A', 14, 72);
-      doc.text(order.hotel_id === -1 ? 'Manual Order' : (order.hotel_name || 'Restaurant'), 120, 72);
+      doc.text((order.hotel_id === -1 || order.hotel_id === null) ? 'Manual Order' : (order.hotel_name || 'Restaurant'), 120, 72);
       
       doc.setTextColor(100, 116, 139);
       doc.setFontSize(10);

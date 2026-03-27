@@ -58,7 +58,7 @@
               </div>
               <div class="text-right">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 print:text-black">Restaurant:</p>
-                <p class="font-bold text-[#1A1A1A] dark:text-white print:text-black">{{ selectedOrder()!.hotel_id === -1 ? 'Manual Order' : (selectedOrder()!.hotel_name || 'Restaurant') }}</p>
+                <p class="font-bold text-[#1A1A1A] dark:text-white print:text-black">{{ (selectedOrder()!.hotel_id === -1 || selectedOrder()!.hotel_id === null) ? 'Manual Order' : (selectedOrder()!.hotel_name || 'Restaurant') }}</p>
               </div>
             </div>
 

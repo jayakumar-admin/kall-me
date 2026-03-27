@@ -91,3 +91,9 @@ export interface DeliveryPermission {
   userName: string;
   permissions: Record<string, boolean>;
 }
+
+export interface CommissionRange {
+  min_range: number;
+  max_range: number;
+  commission_percentage: number;
+}

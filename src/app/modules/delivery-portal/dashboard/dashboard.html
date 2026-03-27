@@ -70,7 +70,7 @@
           <div class="flex items-start justify-between mb-2">
             <div>
               <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">{{ order.order_number }}</span>
-              <h3 class="font-bold text-gray-900">{{ order.hotel_name }}</h3>
+              <h3 class="font-bold text-gray-900">{{ order.hotel_id === -1 ? 'Manual Order' : order.hotel_name }}</h3>
             </div>
             <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
                   [ngClass]="{

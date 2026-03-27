@@ -7,8 +7,8 @@ import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsService } from '../../services/settings.service';
 import { Order } from '../../models';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-invoice-generation',
@@ -116,6 +116,10 @@ export class InvoiceGeneration implements OnInit {
     return `BILL-${order.id || Math.floor(Math.random() * 10000)}-${new Date().getFullYear()}`;
   }
 
+  toNumber(value: unknown): number {
+    return Number(value) || 0;
+  }
+
   printInvoice() {
     window.print();
   }
@@ -163,7 +167,7 @@ export class InvoiceGeneration implements OnInit {
       doc.setTextColor(26, 26, 26);
       doc.setFontSize(11);
       doc.text(order.delivery_description || 'N/A', 14, 72);
-      doc.text(order.hotel_name || 'Restaurant', 120, 72);
+      doc.text(order.hotel_id === -1 ? 'Manual Order' : (order.hotel_name || 'Restaurant'), 120, 72);
       
       doc.setTextColor(100, 116, 139);
       doc.setFontSize(10);
@@ -177,8 +181,7 @@ export class InvoiceGeneration implements OnInit {
         `INR ${(item.total || (item.price * item.quantity)).toLocaleString()}`
       ]);
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (doc as any).autoTable({
+      autoTable(doc, {
         startY: 100,
         head: [['Item', 'Qty', 'Price', 'Total']],
         body: tableData,

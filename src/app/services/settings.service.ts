@@ -2,6 +2,7 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ToastService } from './toast.service';
 import { ApiService } from './api.service';
+import { CommissionRange } from '../models';
 
 export interface ShippingRange {
   id?: number;
@@ -50,6 +51,7 @@ export class SettingsService {
   private api = inject(ApiService);
   private get baseUrl() { return `${this.api.baseUrl}/settings`; }
   private get shippingUrl() { return `${this.api.baseUrl}/shipping`; }
+  private get commissionUrl() { return `${this.api.baseUrl}/commission`; }
   private toast = inject(ToastService);
 
   private defaultSettings: AppSettings = {
@@ -86,10 +88,12 @@ export class SettingsService {
 
   settings = signal<AppSettings>(this.defaultSettings);
   shippingRanges = signal<ShippingRange[]>([]);
+  commissionRanges = signal<CommissionRange[]>([]);
 
   constructor() {
     this.loadSettings();
     this.loadShippingRanges();
+    this.loadCommissionRanges();
   }
 
   private loadSettings() {
@@ -136,6 +140,26 @@ export class SettingsService {
       error: (err: unknown) => {
         console.error('Failed to update shipping ranges', err);
         this.toast.error('Failed to update shipping ranges');
+      }
+    });
+  }
+
+  loadCommissionRanges() {
+    this.http.get<CommissionRange[]>(this.commissionUrl).subscribe({
+      next: (ranges) => this.commissionRanges.set(ranges),
+      error: (err) => console.error('Failed to load commission ranges', err)
+    });
+  }
+
+  updateCommissionRanges(ranges: CommissionRange[]) {
+    this.http.post(this.commissionUrl, ranges).subscribe({
+      next: () => {
+        this.commissionRanges.set(ranges);
+        this.toast.success('Commission ranges updated successfully');
+      },
+      error: (err: unknown) => {
+        console.error('Failed to update commission ranges', err);
+        this.toast.error('Failed to update commission ranges');
       }
     });
   }

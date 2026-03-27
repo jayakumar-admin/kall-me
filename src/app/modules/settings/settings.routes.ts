@@ -11,6 +11,10 @@ export const SETTINGS_ROUTES: Routes = [
     loadComponent: () => import('./general-settings/general-settings').then(m => m.GeneralSettings)
   },
   {
+    path: 'commission-management',
+    loadComponent: () => import('./commission-management/commission-management').then(m => m.CommissionManagement)
+  },
+  {
     path: 'hotel-management',
     loadComponent: () => import('./hotel-management/hotel-management').then(m => m.HotelManagement)
   },

@@ -161,7 +161,7 @@ import { SettingsService } from '../../services/settings.service';
           } @else {
             <div class="py-12 text-center">
               <mat-icon class="text-4xl text-slate-300 mb-2">info</mat-icon>
-              <p class="text-slate-500">Menu selection is disabled for 'Others'.</p>
+              <p class="text-slate-500">Menu selection is disabled for 'Manual Order'.</p>
             </div>
           }
         </div>
@@ -456,9 +456,9 @@ export class CreateOrder implements OnInit {
     const globalSearch = this.search.searchTerm().toLowerCase();
     const othersHotel: Hotel = { 
       id: -1, 
-      name: 'Others', 
+      name: 'Manual Order', 
       address: '', 
-      category: 'Others', 
+      category: 'Manual Order', 
       rating: 0, 
       commission_rate: 0, 
       image_url: '', 

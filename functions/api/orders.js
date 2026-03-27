@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const authenticateToken = require('./authMiddleware');
-const { sendWhatsAppMessage } = require('./whatsapp');
+const { sendOrderAssignedMessage, sendCustomerInvoiceMessage } = require('./whatsapp');
 const router = express.Router();
 
 // Get all orders
@@ -65,20 +65,35 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const grand_total = Number(subtotal) + Number(shipping_fee);
 
-    const orderResult = await client.query(
-      `INSERT INTO orders (
-        order_number, hotel_id, hotel_name, delivery_person_id, customer_phone, 
-        customer_type, delivery_description, subtotal, shipping_fee, delivery_charge, 
-        admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
-        balance_pending, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
-      [
-        order_number, hotel_id, hotel_name, delivery_person_id, customer_phone, 
-        customer_type, delivery_description, subtotal, shipping_fee, shipping_fee, 
-        admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
-        balance_pending, status || 'Order Placed'
-      ]
-    );
+    let order_number_to_use = order_number;
+    let orderResult;
+    let inserted = false;
+    
+    while (!inserted) {
+      try {
+        orderResult = await client.query(
+          `INSERT INTO orders (
+            order_number, hotel_id, hotel_name, delivery_person_id, customer_phone, 
+            customer_type, delivery_description, subtotal, shipping_fee, delivery_charge, 
+            admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
+            balance_pending, status
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
+          [
+            order_number_to_use, hotel_id, hotel_name, delivery_person_id, customer_phone, 
+            customer_type, delivery_description, subtotal, shipping_fee, shipping_fee, 
+            admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
+            balance_pending, status || 'Order Placed'
+          ]
+        );
+        inserted = true;
+      } catch (err) {
+        if (err.code === '23505') { // Unique constraint violation
+          order_number_to_use = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
+        } else {
+          throw err;
+        }
+      }
+    }
 
     const order = orderResult.rows[0];
     order.items = [];
@@ -114,22 +129,12 @@ router.post('/', authenticateToken, async (req, res) => {
       const deliveryPerson = await client.query('SELECT name, mobile FROM delivery_persons WHERE id = $1', [delivery_person_id]);
       if (deliveryPerson.rows.length > 0) {
         const dp = deliveryPerson.rows[0];
-        await sendWhatsAppMessage(dp.mobile, 'ORDER_ASSIGNED', {
-          DeliveryPersonName: dp.name,
-          OrderDate: new Date().toLocaleDateString(),
-          Restaurant: hotel_name,
-          MenuItems: items.map(i => i.menu_name).join(', '),
-          DeliveryCharge: shipping_fee
-        });
+        await sendOrderAssignedMessage(dp, order, hotel_name, items, shipping_fee);
       }
     }
 
     // Send WhatsApp to customer
-    await sendWhatsAppMessage(customer_phone, 'CUSTOMER_INVOICE', {
-      OrderID: order.order_number,
-      OrderDate: new Date().toLocaleDateString(),
-      AmountPaid: grand_total
-    });
+    await sendCustomerInvoiceMessage(customer_phone, order, grand_total);
 
     await client.query('COMMIT');
     res.status(201).json(order);

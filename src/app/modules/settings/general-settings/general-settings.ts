@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
@@ -62,6 +62,8 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
                 </div>
               </div>
             </div>
+
+            <!-- Admin Commission Ranges moved to separate route -->
 
             <div class="p-4 bg-[#FFC107]/5 rounded-xl flex items-center justify-between border border-[#FFC107]/10">
               <div>
@@ -276,6 +278,12 @@ export class GeneralSettings implements OnInit {
 
   shippingRanges: ShippingRange[] = [];
 
+  constructor() {
+    effect(() => {
+      this.shippingRanges = [...this.settingsService.shippingRanges()];
+    });
+  }
+
   ngOnInit() {
     const settings = this.settingsService.settings();
     this.taxes = { ...settings.taxes };
@@ -283,7 +291,6 @@ export class GeneralSettings implements OnInit {
     this.logistics = { ...settings.logistics };
     this.features = { ...settings.features };
     this.whatsapp = { ...settings.whatsapp };
-    this.shippingRanges = [...this.settingsService.shippingRanges()];
   }
 
   save() {

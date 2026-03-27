@@ -295,6 +295,57 @@ async function sendOrderStatusUpdate(order, customer, newStatus) {
   });
 }
 
+async function sendOrderAssignedMessage(dp, order, hotelName, items, shippingFee) {
+  const settings = await getSettings();
+  const whatsappSettings = settings.whatsapp || {};
+  const templateName = whatsappSettings?.orderAssignedTemplateName || 'kall_me_deliveryalert';
+
+  return sendWhatsappMessage({
+    recipientNumber: dp.mobile,
+    templateName: templateName,
+    languageCode: 'en',
+    components: [
+      {
+        type: 'body',
+        parameters: [
+          { type: 'text', text: dp.name },
+          { type: 'text', text: new Date().toLocaleDateString() },
+          { type: 'text', text: hotelName },
+          { type: 'text', text: items.map(i => i.menu_name + ' - ' + i.quantity).join(', ') },
+          { type: 'text', text: shippingFee.toString() },
+        ],
+      },
+    ],
+    orderId: order.id,
+    messageType: 'order_assigned',
+  });
+}
+
+async function sendCustomerInvoiceMessage(customerPhone, order, grandTotal) {
+  const settings = await getSettings();
+  const whatsappSettings = settings.whatsapp || {};
+  const templateName = whatsappSettings?.customerInvoiceTemplateName || 'kall_me_attach ';
+
+  return sendWhatsappMessage({
+    recipientNumber: customerPhone,
+    templateName: templateName,
+    languageCode: 'en',
+    components: [
+      {
+        type: 'body',
+        parameters: [
+          { type: 'text', text: "Dear Customer" },
+          { type: 'text', text: order.order_number },
+          { type: 'text', text: new Date().toLocaleDateString() },
+          { type: 'text', text: grandTotal.toString() },
+        ],
+      },
+    ],
+    orderId: order.id,
+    messageType: 'customer_invoice',
+  });
+}
+
 async function sendOfferCampaignMessage(campaign, users) {
   const settings = await getSettings();
   const whatsappSettings = settings.whatsapp || {};
@@ -407,6 +458,8 @@ module.exports = {
   sendWelcomeMessage,
   sendOrderConfirmation,
   sendOrderStatusUpdate,
+  sendOrderAssignedMessage,
+  sendCustomerInvoiceMessage,
   sendOfferCampaignMessage,
   testWhatsapp,
   templates,

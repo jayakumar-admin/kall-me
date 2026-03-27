@@ -360,7 +360,7 @@ export class Reports implements OnInit {
         rows: this.filteredOrders().map(o => [
           o.order_number || '',
           o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
-          o.hotel_name || '',
+          o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || ''),
           o.status || '',
           `₹${(o.grand_total || 0).toLocaleString()}`
         ]),
@@ -372,7 +372,7 @@ export class Reports implements OnInit {
   groupedByHotel = computed(() => {
     const grouped: Record<number, { name: string, orders: number, revenue: number }> = {};
     this.filteredOrders().forEach(o => {
-      if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_name || 'Unknown', orders: 0, revenue: 0 };
+      if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), orders: 0, revenue: 0 };
       grouped[o.hotel_id].orders++;
       grouped[o.hotel_id].revenue += Number(o.grand_total) || 0;
     });
@@ -406,20 +406,18 @@ export class Reports implements OnInit {
     const tab = this.currentTab();
     
     if (tab === 'Overview') {
-      const hotels = this.catalog.hotels();
       let totalHotelEarnings = 0;
       let totalDeliverySalary = 0;
       let totalAdminCommission = 0;
       
       data.forEach(o => {
-        const hotel = hotels.find(h => h.id === o.hotel_id);
-        const commissionRate = hotel?.commission_rate || 15;
-        const adminComm = Math.round((Number(o.subtotal) || 0) * (commissionRate / 100));
+        const adminComm = Number(o.admin_commission_amount) || 0;
         const deliveryFee = Number(o.shipping_fee) || 0;
-        const hotelEarn = (Number(o.subtotal) || 0) - adminComm;
+        const hotelEarn = Number(o.subtotal) || 0; // Hotel gets full subtotal
+        const deliveryEarn = deliveryFee - adminComm; // Delivery person gets delivery fee minus admin commission
         
         totalHotelEarnings += hotelEarn;
-        totalDeliverySalary += deliveryFee;
+        totalDeliverySalary += deliveryEarn;
         totalAdminCommission += adminComm;
       });
       return {
@@ -433,7 +431,7 @@ export class Reports implements OnInit {
     } else if (tab === 'Hotel-wise') {
       const grouped: Record<number, { name: string, orders: number, revenue: number }> = {};
       data.forEach(o => {
-        if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_name || 'Unknown', orders: 0, revenue: 0 };
+        if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), orders: 0, revenue: 0 };
         grouped[o.hotel_id].orders++;
         grouped[o.hotel_id].revenue += Number(o.grand_total) || 0;
       });
@@ -449,7 +447,9 @@ export class Reports implements OnInit {
       data.forEach(o => {
         if (!grouped[o.delivery_person_id]) grouped[o.delivery_person_id] = { name: o.delivery_person_name || 'Unknown', orders: 0, earnings: 0 };
         grouped[o.delivery_person_id].orders++;
-        grouped[o.delivery_person_id].earnings += Number(o.shipping_fee) || 0;
+        const adminComm = Number(o.admin_commission_amount) || 0;
+        const deliveryFee = Number(o.shipping_fee) || 0;
+        grouped[o.delivery_person_id].earnings += (deliveryFee - adminComm);
       });
       return {
         type: 'Delivery Man-wise',
@@ -484,9 +484,7 @@ export class Reports implements OnInit {
       };
     } else if (tab === 'Commission / Earnings') {
       const totalComm = data.reduce((sum, o) => {
-        const hotel = this.catalog.hotels().find(h => h.id === o.hotel_id);
-        const rate = hotel?.commission_rate || 15;
-        return sum + Math.round((Number(o.subtotal) || 0) * (rate / 100));
+        return sum + (Number(o.admin_commission_amount) || 0);
       }, 0);
       return {
         type: 'Commission / Earnings',
@@ -497,7 +495,7 @@ export class Reports implements OnInit {
     } else if (tab === 'Top Performing Hotels') {
       const grouped: Record<number, { name: string, revenue: number }> = {};
       data.forEach(o => {
-        if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_name || 'Unknown', revenue: 0 };
+        if (!grouped[o.hotel_id]) grouped[o.hotel_id] = { name: o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), revenue: 0 };
         grouped[o.hotel_id].revenue += Number(o.grand_total) || 0;
       });
       return {
@@ -579,7 +577,7 @@ export class Reports implements OnInit {
       // Group by hotel
       const grouped: Record<string, number> = {};
       data.forEach(o => {
-        const hotel = o.hotel_name || 'Unknown';
+        const hotel = o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown');
         grouped[hotel] = (grouped[hotel] || 0) + (Number(o.grand_total) || 0);
       });
       xAxisData = Object.keys(grouped);
@@ -614,9 +612,7 @@ export class Reports implements OnInit {
     } else if (tab === 'Commission / Earnings') {
       const grouped: Record<string, number> = {};
       data.forEach(o => {
-        const hotel = this.catalog.hotels().find(h => h.id === o.hotel_id);
-        const rate = hotel?.commission_rate || 15;
-        const comm = Math.round((Number(o.subtotal) || 0) * (rate / 100));
+        const comm = Number(o.admin_commission_amount) || 0;
         const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
         grouped[date] = (grouped[date] || 0) + comm;
       });
@@ -625,7 +621,7 @@ export class Reports implements OnInit {
     } else if (tab === 'Top Performing Hotels') {
       const grouped: Record<string, number> = {};
       data.forEach(o => {
-        const hotel = o.hotel_name || 'Unknown';
+        const hotel = o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown');
         grouped[hotel] = (grouped[hotel] || 0) + (Number(o.grand_total) || 0);
       });
       const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -820,7 +816,7 @@ export class Reports implements OnInit {
     const rows = data.map(o => [
       o.order_number || '',
       o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
-      o.hotel_name || '',
+      o.hotel_id === -1 ? 'Manual Order' : (o.hotel_name || ''),
       o.status || '',
       `Rs. ${(o.grand_total || 0).toLocaleString()}`
     ]);

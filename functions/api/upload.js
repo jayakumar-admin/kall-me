@@ -1,7 +1,7 @@
 const express = require('express');
 const Busboy = require('busboy');
 const path = require('path');
-const { bucket } = require('../firebaseAdmin');
+const { bucket } = require('../firebase');
 const router = express.Router();
 
 router.post('/', (req, res) => {

@@ -324,41 +324,71 @@ async function sendOrderAssignedMessage(dp, order, hotelName, items, shippingFee
   });
 }
 
-async function sendCustomerInvoiceMessage(customerPhone, order, grandTotal) {
+const { generateInvoicePdf } = require('../utils/pdf');
+
+async function sendCustomerInvoiceMessage(customerPhone, order, grandTotal, items) {
   const settings = await getSettings();
   const whatsappSettings = settings.whatsapp || {};
   const templateName = whatsappSettings?.customerInvoiceTemplateName || 'kall_me_attach ';
 
-  return sendWhatsappMessage({
-    recipientNumber: customerPhone,
-    templateName: templateName,
-    languageCode: 'en',
-    components: [
-      {
-        type: 'header',
-        parameters: [
-          {
-            type: 'document',
-            document: {
-              link: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', // Placeholder
-              filename: `Invoice_${order.order_number}.pdf`
+  try {
+    // Generate PDF on the fly
+    const { filename } = await generateInvoicePdf(order, items || []);
+    const appUrl = process.env.APP_URL || 'https://ais-dev-f3fksxpa42otfaktsfukux-7606161411.asia-southeast1.run.app';
+    const invoiceUrl = `${appUrl}/invoices/${filename}`;
+
+    return sendWhatsappMessage({
+      recipientNumber: customerPhone,
+      templateName: templateName,
+      languageCode: 'en',
+      components: [
+        {
+          type: 'header',
+          parameters: [
+            {
+              type: 'document',
+              document: {
+                link: invoiceUrl,
+                filename: `Invoice_${order.order_number}.pdf`
+              }
             }
-          }
-        ]
-      },
-      {
-        type: 'body',
-        parameters: [
-          { type: 'text', text: "Dear Customer" },
-          { type: 'text', text: order.order_number },
-          { type: 'text', text: new Date().toLocaleDateString() },
-          { type: 'text', text: grandTotal.toString() },
-        ],
-      },
-    ],
-    orderId: order.id,
-    messageType: 'customer_invoice',
-  });
+          ]
+        },
+        {
+          type: 'body',
+          parameters: [
+            { type: 'text', text: "Dear Customer" },
+            { type: 'text', text: order.order_number },
+            { type: 'text', text: new Date().toLocaleDateString() },
+            { type: 'text', text: grandTotal.toString() },
+          ],
+        },
+      ],
+      orderId: order.id,
+      messageType: 'customer_invoice',
+    });
+  } catch (error) {
+    console.error('Error generating/sending invoice PDF:', error);
+    // Fallback to sending without PDF if generation fails
+    return sendWhatsappMessage({
+      recipientNumber: customerPhone,
+      templateName: templateName,
+      languageCode: 'en',
+      components: [
+        {
+          type: 'body',
+          parameters: [
+            { type: 'text', text: "Dear Customer" },
+            { type: 'text', text: order.order_number },
+            { type: 'text', text: new Date().toLocaleDateString() },
+            { type: 'text', text: grandTotal.toString() },
+          ],
+        },
+      ],
+      orderId: order.id,
+      messageType: 'customer_invoice',
+    });
+  }
 }
 async function sendOfferCampaignMessage(campaign, users) {
   const settings = await getSettings();

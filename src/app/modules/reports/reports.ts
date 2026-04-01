@@ -354,6 +354,18 @@ export class Reports implements OnInit {
         rows: Object.entries(grouped).map(g => [g[0], `₹${g[1].toLocaleString()}`]),
         headerColor: 'bg-purple-50 dark:bg-purple-900/20'
       };
+    } else if (tab === 'Commission / Earnings') {
+      return {
+        headers: ['Order ID', 'Hotel', 'DC (₹)', 'Comm %', 'Comm Amt (₹)'],
+        rows: this.filteredOrders().map(o => [
+          o.order_number || '',
+          (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || ''),
+          `₹${(o.shipping_fee || 0).toLocaleString()}`,
+          `${o.commission_percentage_applied || 0}%`,
+          `₹${(o.admin_commission_amount || 0).toLocaleString()}`
+        ]),
+        headerColor: 'bg-emerald-50 dark:bg-emerald-900/20'
+      };
     } else {
       return {
         headers: ['Order ID', 'Date', 'Hotel', 'Address', 'Status', 'Amount'],
@@ -384,9 +396,12 @@ export class Reports implements OnInit {
   groupedByDelivery = computed(() => {
     const grouped: Record<number, { name: string, orders: number, earnings: number }> = {};
     this.filteredOrders().forEach(o => {
-      if (!grouped[o.delivery_person_id]) grouped[o.delivery_person_id] = { name: o.delivery_person_name || 'Unknown', orders: 0, earnings: 0 };
-      grouped[o.delivery_person_id].orders++;
-      grouped[o.delivery_person_id].earnings += Number(o.shipping_fee) || 0;
+      const dpId = o.delivery_person_id || 0;
+      if (!grouped[dpId]) grouped[dpId] = { name: o.delivery_person_name || 'Unassigned', orders: 0, earnings: 0 };
+      grouped[dpId].orders++;
+      const deliveryFee = Number(o.shipping_fee) || 0;
+      const adminComm = Number(o.admin_commission_amount) || 0;
+      grouped[dpId].earnings += (deliveryFee - adminComm);
     });
     return grouped;
   });
@@ -486,13 +501,14 @@ export class Reports implements OnInit {
         ]
       };
     } else if (tab === 'Commission / Earnings') {
-      const totalComm = data.reduce((sum, o) => {
-        return sum + (Number(o.admin_commission_amount) || 0);
-      }, 0);
+      const totalComm = data.reduce((sum, o) => sum + (Number(o.admin_commission_amount) || 0), 0);
+      const totalDC = data.reduce((sum, o) => sum + (Number(o.shipping_fee) || 0), 0);
       return {
         type: 'Commission / Earnings',
         items: [
-          { label: 'Total Commission', value: `₹${totalComm.toLocaleString()}` }
+          { label: 'Total Delivery Charges (DC)', value: `₹${totalDC.toLocaleString()}` },
+          { label: 'Total Admin Commission', value: `₹${totalComm.toLocaleString()}` },
+          { label: 'Net Delivery Earnings', value: `₹${(totalDC - totalComm).toLocaleString()}` }
         ]
       };
     } else if (tab === 'Top Performing Hotels') {
@@ -590,8 +606,11 @@ export class Reports implements OnInit {
       // Group by delivery person
       const grouped: Record<string, number> = {};
       data.forEach(o => {
-        const person = o.delivery_person_name || 'Unknown';
-        grouped[person] = (grouped[person] || 0) + (Number(o.grand_total) || 0);
+        const person = o.delivery_person_name || 'Unassigned';
+        const deliveryFee = Number(o.shipping_fee) || 0;
+        const adminComm = Number(o.admin_commission_amount) || 0;
+        const earnings = deliveryFee - adminComm;
+        grouped[person] = (grouped[person] || 0) + earnings;
       });
       xAxisData = Object.keys(grouped);
       seriesData = Object.values(grouped);

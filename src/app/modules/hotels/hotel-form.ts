@@ -83,11 +83,23 @@ export class HotelForm implements OnInit {
     }
     
     if (this.isEditMode() && this.hotelId()) {
-      this.catalog.updateHotel(this.hotelId()!, this.hotel);
+      this.catalog.updateHotel(this.hotelId()!, this.hotel).subscribe({
+        next: (updated) => {
+          this.catalog.hotels.update(current => current.map(m => m.id === this.hotelId() ? updated : m));
+          this.toast.success(`${updated.name} updated successfully`);
+          this.router.navigate(['/app/hotels']);
+        },
+        error: () => this.toast.error('Failed to update hotel')
+      });
     } else {
-      this.catalog.addHotel(this.hotel);
+      this.catalog.addHotel(this.hotel).subscribe({
+        next: (newHotel) => {
+          this.catalog.hotels.update(current => [...current, newHotel]);
+          this.toast.success(`${newHotel.name} added successfully`);
+          this.router.navigate(['/app/hotels']);
+        },
+        error: () => this.toast.error('Failed to add hotel')
+      });
     }
-    
-    this.router.navigate(['/app/hotels']);
   }
 }

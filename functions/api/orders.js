@@ -136,7 +136,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     // Send WhatsApp to customer
-    await sendCustomerInvoiceMessage(customer_phone, order, grand_total);
+    await sendCustomerInvoiceMessage(customer_phone, order, grand_total, order.items);
 
     await client.query('COMMIT');
     res.status(201).json(order);

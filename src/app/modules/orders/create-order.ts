@@ -190,15 +190,7 @@ import { SettingsService } from '../../services/settings.service';
                   <label for="customerPhone" class="text-[10px] font-bold text-slate-500 mb-1 block">Phone Number <span class="text-red-500">*</span></label>
                   <div class="relative">
                     <input id="customerPhone" type="text" [(ngModel)]="customer.phone" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-                    <mat-icon (click)="sendCustomerInvoice(customer.phone)" class="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-sm cursor-pointer">chat</mat-icon>
                   </div>
-                </div>
-                <div>
-                  <label for="customerType" class="text-[10px] font-bold text-slate-500 mb-1 block">Customer Type</label>
-                  <select id="customerType" [(ngModel)]="customer.type" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-                    <option value="Regular">Regular Member</option>
-                    <option value="Premium">Premium Member</option>
-                  </select>
                 </div>
               </div>
               <div>
@@ -206,7 +198,7 @@ import { SettingsService } from '../../services/settings.service';
                 <textarea id="customerAddress" [(ngModel)]="customer.address" rows="2" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] resize-none dark:text-white"></textarea>
               </div>
               <div>
-                <label for="deliveryDescription" class="text-[10px] font-bold text-slate-500 mb-1 block">Description / Notes <span class="text-red-500">*</span></label>
+                <label for="deliveryDescription" class="text-[10px] font-bold text-slate-500 mb-1 block">Description / Notes @if (selectedHotel()?.id === -1) { <span class="text-red-500">*</span> }</label>
                 <textarea id="deliveryDescription" [(ngModel)]="customer.description" rows="4" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] resize-none dark:text-white"></textarea>
               </div>
               @if (selectedHotel()?.id === -1) {
@@ -247,19 +239,12 @@ import { SettingsService } from '../../services/settings.service';
                   <mat-icon class="text-slate-400 text-sm">chevron_right</mat-icon>
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 gap-3">
                 <div>
-                  <label for="amountReceived" class="text-[10px] font-bold text-slate-500 mb-1 block">Amount Received</label>
+                  <label for="amountReceived" class="text-[10px] font-bold text-slate-500 mb-1 block">Advance Amount</label>
                   <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">₹</span>
                     <input id="amountReceived" type="number" [ngModel]="amountReceived()" (ngModelChange)="amountReceived.set($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-7 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-                  </div>
-                </div>
-                <div>
-                  <label for="balanceReceived" class="text-[10px] font-bold text-slate-500 mb-1 block">Balance Received</label>
-                  <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">₹</span>
-                    <input id="balanceReceived" type="number" [value]="0" disabled class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-7 pr-3 py-2 text-sm outline-none opacity-50 dark:text-white">
                   </div>
                 </div>
               </div>
@@ -286,7 +271,7 @@ import { SettingsService } from '../../services/settings.service';
 
               <div class="flex flex-col gap-1 pt-3">
                 <div class="flex justify-between items-center">
-                  <span class="text-[10px] font-bold text-slate-500">Amount Received</span>
+                  <span class="text-[10px] font-bold text-slate-500">Advance Amount</span>
                   <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ (amountReceived() || 0).toLocaleString() }}.00</span>
                 </div>
                 <div class="h-px bg-slate-100 border-dashed border-t w-full my-1"></div>
@@ -410,7 +395,6 @@ export class CreateOrder implements OnInit {
   customer = { 
     name: '',
     phone: '', 
-    type: 'Regular' as const, 
     address: '',
     description: '' 
   };
@@ -591,29 +575,42 @@ export class CreateOrder implements OnInit {
 
   canConfirm(): boolean {
     const isOthers = this.selectedHotel()?.id === -1;
+    const isDescriptionValid = isOthers ? !!this.customer.description?.trim() : true;
     return (this.cart().length > 0 || isOthers) && 
            !!this.selectedHotel() && 
            !!this.customer.phone?.trim() && 
            !!this.customer.address?.trim() &&
            !!this.selectedDriverId() &&
-           (!isOthers || (!!this.customer.description?.trim() && this.manualPrice() > 0));
+           isDescriptionValid &&
+           (!isOthers || this.manualPrice() > 0);
   }
 
   confirmOrder() {
     if (!this.canConfirm()) return;
     
     const hotel = this.selectedHotel()!;
+    const dc = this.shippingFee();
+    const ranges = this.settingsService.commissionRanges();
+    let commissionPercentage = 0;
+    if (ranges && ranges.length > 0) {
+      const range = ranges.find(r => dc >= r.min_range && dc <= r.max_range);
+      if (range) commissionPercentage = range.commission_percentage;
+    }
+    const commissionAmount = (dc * commissionPercentage) / 100;
+
     const orderData: Partial<Order> = {
       order_number: this.orderId(),
       hotel_id: hotel.id,
       hotel_name: hotel.name,
       delivery_person_id: Number(this.selectedDriverId()) || 1, // Default driver
       customer_phone: this.customer.phone,
-      customer_type: 'regular',
       delivery_address: this.customer.address,
       delivery_description: this.customer.description,
       subtotal: this.subtotal(),
-      shipping_fee: this.shippingFee(),
+      shipping_fee: dc,
+      delivery_charge: dc,
+      admin_commission_amount: commissionAmount,
+      commission_percentage_applied: commissionPercentage,
       grand_total: this.grandTotal(),
       amount_received: this.amountReceived(),
       balance_pending: this.balancePending(),

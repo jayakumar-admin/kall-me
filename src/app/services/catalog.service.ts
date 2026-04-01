@@ -67,24 +67,12 @@ export class CatalogService {
 
   // Add a new hotel
   addHotel(hotel: Partial<Hotel>) {
-    this.api.createHotel(hotel).subscribe({
-      next: (newHotel) => {
-        this.hotels.update(current => [...current, newHotel]);
-        this.toast.success(`${newHotel.name} added successfully`);
-      },
-      error: () => this.toast.error('Failed to add hotel')
-    });
+    return this.api.createHotel(hotel);
   }
 
   // Update hotel
   updateHotel(id: number, hotel: Partial<Hotel>) {
-    this.api.updateHotel(id, hotel).subscribe({
-      next: (updated) => {
-        this.hotels.update(current => current.map(m => m.id === id ? updated : m));
-        this.toast.success(`${updated.name} updated successfully`);
-      },
-      error: () => this.toast.error('Failed to update hotel')
-    });
+    return this.api.updateHotel(id, hotel);
   }
 
   // Delete hotel

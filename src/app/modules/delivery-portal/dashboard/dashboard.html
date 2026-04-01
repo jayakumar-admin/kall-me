@@ -86,12 +86,16 @@
           
           <div class="space-y-1 text-sm text-gray-500">
             <div class="flex items-center gap-2">
-              <mat-icon class="!text-base">person</mat-icon>
-              <span>{{ order.customer_phone }}</span>
+              <mat-icon class="!text-base text-emerald-600">person</mat-icon>
+              <span class="font-bold text-gray-900">{{ order.customer_phone }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <mat-icon class="!text-base">location_on</mat-icon>
-              <span class="truncate">{{ order.delivery_description }}</span>
+              <mat-icon class="!text-base text-indigo-600">location_on</mat-icon>
+              <span class="truncate font-bold text-gray-900">{{ order.delivery_address }}</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <mat-icon class="!text-base text-slate-400">notes</mat-icon>
+              <span class="truncate italic">{{ order.delivery_description }}</span>
             </div>
           </div>
 

@@ -8,9 +8,10 @@ const router = express.Router();
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const result = await db.query(`
-      SELECT o.*, h.name as hotel_name 
+      SELECT o.*, h.name as hotel_name, dp.name as delivery_person_name
       FROM orders o 
       LEFT JOIN hotels h ON o.hotel_id = h.id 
+      LEFT JOIN delivery_persons dp ON o.delivery_person_id = dp.id
       ORDER BY o.created_at DESC
     `);
     
@@ -36,8 +37,8 @@ router.post('/', authenticateToken, async (req, res) => {
     await client.query('BEGIN');
     
     const { 
-      order_number, hotel_id, hotel_name, delivery_person_id, customer_phone, 
-      customer_type, delivery_description, subtotal, amount_received, 
+      order_number, hotel_id, hotel_name, delivery_person_id, customer_name, customer_phone, 
+      customer_type, delivery_address, delivery_description, subtotal, amount_received, 
       balance_pending, status, items 
     } = req.body;
 
@@ -65,7 +66,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const grand_total = Number(subtotal) + Number(shipping_fee);
 
-    const hotel_id_to_use = Number(hotel_id) === -1 ? null : hotel_id;
+    const hotel_id_to_use = (hotel_id === -1 || hotel_id === '-1' || !hotel_id) ? null : hotel_id;
     let order_number_to_use = order_number;
     let orderResult;
     let inserted = false;
@@ -74,14 +75,14 @@ router.post('/', authenticateToken, async (req, res) => {
       try {
         orderResult = await client.query(
           `INSERT INTO orders (
-            order_number, hotel_id, hotel_name, delivery_person_id, customer_phone, 
-            customer_type, delivery_description, subtotal, shipping_fee, delivery_charge, 
+            order_number, hotel_id, hotel_name, delivery_person_id, customer_name, customer_phone, 
+            customer_type, delivery_address, delivery_description, subtotal, shipping_fee, delivery_charge, 
             admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
             balance_pending, status
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING *`,
           [
-            order_number_to_use, hotel_id_to_use, hotel_name, delivery_person_id, customer_phone, 
-            customer_type, delivery_description, subtotal, shipping_fee, shipping_fee, 
+            order_number_to_use, hotel_id_to_use, hotel_name, delivery_person_id, customer_name, customer_phone, 
+            customer_type, delivery_address, delivery_description, subtotal, shipping_fee, shipping_fee, 
             admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
             balance_pending, status || 'Order Placed'
           ]
@@ -153,9 +154,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query(`
-      SELECT o.*, h.name as hotel_name 
+      SELECT o.*, h.name as hotel_name, dp.name as delivery_person_name
       FROM orders o 
       LEFT JOIN hotels h ON o.hotel_id = h.id 
+      LEFT JOIN delivery_persons dp ON o.delivery_person_id = dp.id
       WHERE o.id = $1 OR o.order_number = $1
     `, [id]);
     

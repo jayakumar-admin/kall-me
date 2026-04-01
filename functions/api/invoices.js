@@ -31,7 +31,7 @@ router.get('/:orderId', async (req, res) => {
     doc.fontSize(12).text(`Order Number: ${order.order_number}`);
     doc.text(`Date: ${new Date(order.created_at).toLocaleDateString()}`);
     doc.moveDown();
-    doc.text(`Customer: ${order.customer_name}`);
+    doc.text(`Customer Phone: ${order.customer_phone}`);
     doc.moveDown();
     doc.text(`Hotel: ${order.hotel_name}`);
     doc.text(`Address: ${order.hotel_address}`);

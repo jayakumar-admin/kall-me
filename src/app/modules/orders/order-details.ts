@@ -46,8 +46,7 @@ import { Order } from '../../models';
             <div class="grid grid-cols-2 gap-6">
               <div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Customer</p>
-                <p class="font-bold text-[#1A1A1A] dark:text-white">{{ order()!.customer_name }}</p>
-                <p class="text-sm text-slate-500">{{ order()!.customer_phone }}</p>
+                <p class="font-bold text-[#1A1A1A] dark:text-white">{{ order()!.customer_phone }}</p>
                 <p class="text-sm text-slate-500">{{ order()!.delivery_address }}</p>
               </div>
               <div>
@@ -57,6 +56,13 @@ import { Order } from '../../models';
                 <p class="font-bold text-[#1A1A1A] dark:text-white">{{ order()!.delivery_person_name || 'Not Assigned' }}</p>
               </div>
             </div>
+
+            @if (order()!.delivery_description) {
+              <div class="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Manual Order Description</p>
+                <p class="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{{ order()!.delivery_description }}</p>
+              </div>
+            }
 
             <div class="border-t border-slate-100 dark:border-white/5 pt-6">
               <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Items</p>

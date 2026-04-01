@@ -356,11 +356,12 @@ export class Reports implements OnInit {
       };
     } else {
       return {
-        headers: ['Order ID', 'Date', 'Hotel', 'Status', 'Amount'],
+        headers: ['Order ID', 'Date', 'Hotel', 'Address', 'Status', 'Amount'],
         rows: this.filteredOrders().map(o => [
           o.order_number || '',
           o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
           (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || ''),
+          o.delivery_address || '',
           o.status || '',
           `₹${(o.grand_total || 0).toLocaleString()}`
         ]),

@@ -43,7 +43,7 @@ export interface Order {
   customer_name?: string;
   customer_phone: string;
   customer_type: 'regular' | 'premium';
-  delivery_address?: string;
+  delivery_address: string;
   delivery_description: string;
   subtotal: number;
   shipping_fee: number;

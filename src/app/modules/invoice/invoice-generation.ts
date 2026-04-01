@@ -131,109 +131,154 @@ export class InvoiceGeneration implements OnInit {
     this.toast.success('Generating PDF...');
 
     try {
-      const doc = new jsPDF();
-      
-      // Add header
-      doc.setFontSize(22);
-      doc.setTextColor(26, 26, 26); // #1A1A1A
-      doc.text('INVOICE', 14, 25);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100, 116, 139); // slate-500
-      doc.text(`Bill ID: ${this.generateBillId(order)}`, 14, 35);
-      doc.text(`Order ID: ${order.order_number || order.id}`, 14, 40);
-      doc.text(`Date: ${new Date(order.created_at || Date.now()).toLocaleString()}`, 14, 45);
-      
-      // Hotel Info (Right Aligned)
-      doc.setTextColor(26, 26, 26);
-      doc.setFontSize(14);
-      doc.text('KALL ME Delivery', 196, 25, { align: 'right' });
-      doc.setFontSize(10);
-      doc.setTextColor(100, 116, 139);
-      doc.text('123 Delivery Street', 196, 32, { align: 'right' });
-      doc.text('Food City, FC 12345', 196, 37, { align: 'right' });
-      doc.text('GSTIN: TAX-KALL-99201', 196, 42, { align: 'right' });
-      
-      // Divider
-      doc.setDrawColor(241, 245, 249); // slate-100
-      doc.line(14, 55, 196, 55);
-      
-      // Billed To & Restaurant
-      doc.setTextColor(100, 116, 139);
-      doc.setFontSize(9);
-      doc.text('NOTES:', 14, 65);
-      doc.text('RESTAURANT:', 120, 65);
-      
-      doc.setTextColor(26, 26, 26);
-      doc.setFontSize(11);
-      doc.text(order.delivery_description || 'N/A', 14, 72);
-      doc.text((order.hotel_id === -1 || order.hotel_id === null) ? 'Manual Order' : (order.hotel_name || 'Restaurant'), 120, 72);
-      
-      doc.setTextColor(100, 116, 139);
-      doc.setFontSize(10);
-      doc.text(order.customer_phone, 14, 78);
-      
-      // Items Table
-      const tableData = (order.items || []).map(item => [
-        item.menu_name || 'Menu Item',
-        item.quantity.toString(),
-        `INR ${item.price.toLocaleString()}`,
-        `INR ${(item.total || (item.price * item.quantity)).toLocaleString()}`
-      ]);
-      
-      autoTable(doc, {
-        startY: 100,
-        head: [['Item', 'Qty', 'Price', 'Total']],
-        body: tableData,
-        theme: 'striped',
-        headStyles: { 
-          fillColor: [255, 193, 7], // #FFC107
-          textColor: [0, 0, 0],
-          fontStyle: 'bold'
-        },
-        alternateRowStyles: { fillColor: [250, 250, 250] },
-        margin: { left: 14, right: 14 }
-      });
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const finalY = (doc as any).lastAutoTable.finalY || 150;
-      
-      // Totals
-      const totalsX = 140;
-      doc.setFontSize(10);
-      doc.setTextColor(100, 116, 139);
-      
-      doc.text(`Subtotal (${this.totalProducts()} items):`, totalsX, finalY + 15);
-      doc.text(`INR ${this.subtotal().toLocaleString()}`, 196, finalY + 15, { align: 'right' });
-      
-      doc.text(`Delivery Charges (DC):`, totalsX, finalY + 22);
-      doc.text(`INR ${(order.delivery_charge || 0).toLocaleString()}`, 196, finalY + 22, { align: 'right' });
-      
-      doc.text(`GST (${this.gstPercent()}%):`, totalsX, finalY + 29);
-      doc.text(`INR ${this.calculatedGst().toLocaleString()}`, 196, finalY + 29, { align: 'right' });
-      
-      doc.text(`IGST (${this.igstPercent()}%):`, totalsX, finalY + 36);
-      doc.text(`INR ${this.calculatedIgst().toLocaleString()}`, 196, finalY + 36, { align: 'right' });
-      
-      // Grand Total
-      doc.setDrawColor(241, 245, 249);
-      doc.line(totalsX, finalY + 42, 196, finalY + 42);
-      
-      doc.setFontSize(14);
-      doc.setTextColor(255, 193, 7); // #FFC107
-      doc.text(`Grand Total:`, totalsX, finalY + 52);
-      doc.text(`INR ${this.grandTotal().toLocaleString()}`, 196, finalY + 52, { align: 'right' });
-      
-      // Footer
-      doc.setFontSize(8);
-      doc.setTextColor(148, 163, 184); // slate-400
-      doc.text('Thank you for choosing KALL ME Delivery!', 105, 285, { align: 'center' });
-      
+      const doc = await this.createInvoicePdf(order);
       doc.save(`invoice_${order.order_number || order.id}.pdf`);
       this.toast.success('Invoice downloaded successfully');
     } catch (error) {
       console.error('PDF Generation Error:', error);
       this.toast.error('Failed to generate PDF. Please try again.');
     }
+  }
+
+  async sendViaWhatsApp() {
+    const order = this.selectedOrder();
+    if (!order) return;
+
+    if (!order.customer_phone) {
+      this.toast.error('Customer phone number is missing');
+      return;
+    }
+
+    this.isLoading.set(true);
+    try {
+      const doc = await this.createInvoicePdf(order);
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+      
+      this.api.sendInvoicePdf(
+        order.customer_phone, 
+        order.order_number || order.id?.toString() || '0', 
+        pdfBase64,
+        order.id!,
+        this.grandTotal()
+      ).subscribe({
+        next: () => {
+          this.toast.success('Invoice sent via WhatsApp');
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Failed to send WhatsApp:', err);
+          this.toast.error('Failed to send invoice via WhatsApp');
+          this.isLoading.set(false);
+        }
+      });
+    } catch (error) {
+      console.error('WhatsApp Send Error:', error);
+      this.toast.error('Failed to prepare invoice for WhatsApp');
+      this.isLoading.set(false);
+    }
+  }
+
+  private async createInvoicePdf(order: Order): Promise<jsPDF> {
+    const doc = new jsPDF();
+    
+    // Add header
+    doc.setFontSize(22);
+    doc.setTextColor(26, 26, 26); // #1A1A1A
+    doc.text('INVOICE', 14, 25);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139); // slate-500
+    doc.text(`Bill ID: ${this.generateBillId(order)}`, 14, 35);
+    doc.text(`Order ID: ${order.order_number || order.id}`, 14, 40);
+    doc.text(`Date: ${new Date(order.created_at || Date.now()).toLocaleString()}`, 14, 45);
+    
+    // Hotel Info (Right Aligned)
+    doc.setTextColor(26, 26, 26);
+    doc.setFontSize(14);
+    doc.text('KALL ME Delivery', 196, 25, { align: 'right' });
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.text('123 Delivery Street', 196, 32, { align: 'right' });
+    doc.text('Food City, FC 12345', 196, 37, { align: 'right' });
+    doc.text('GSTIN: TAX-KALL-99201', 196, 42, { align: 'right' });
+    
+    // Divider
+    doc.setDrawColor(241, 245, 249); // slate-100
+    doc.line(14, 55, 196, 55);
+    
+    // Billed To & Restaurant
+    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(9);
+    doc.text('BILLED TO:', 14, 65);
+    doc.text('RESTAURANT:', 120, 65);
+    
+    doc.setTextColor(26, 26, 26);
+    doc.setFontSize(11);
+    doc.text(order.customer_phone, 14, 72);
+    doc.text((order.hotel_id === -1 || order.hotel_id === null) ? 'Manual Order' : (order.hotel_name || 'Restaurant'), 120, 72);
+    
+    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(10);
+    doc.text(order.delivery_address || 'No Address', 14, 78);
+    doc.setFontSize(9);
+    doc.text(`Notes: ${order.delivery_description || 'N/A'}`, 14, 84);
+    
+    // Items Table
+    const tableData = (order.items || []).map(item => [
+      item.menu_name || 'Menu Item',
+      item.quantity.toString(),
+      `INR ${item.price.toLocaleString()}`,
+      `INR ${(item.total || (item.price * item.quantity)).toLocaleString()}`
+    ]);
+    
+    autoTable(doc, {
+      startY: 100,
+      head: [['Item', 'Qty', 'Price', 'Total']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: { 
+        fillColor: [255, 193, 7], // #FFC107
+        textColor: [0, 0, 0],
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: { fillColor: [250, 250, 250] },
+      margin: { left: 14, right: 14 }
+    });
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const finalY = (doc as any).lastAutoTable.finalY || 150;
+    
+    // Totals
+    const totalsX = 140;
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    
+    doc.text(`Subtotal (${this.totalProducts()} items):`, totalsX, finalY + 15);
+    doc.text(`INR ${this.subtotal().toLocaleString()}`, 196, finalY + 15, { align: 'right' });
+    
+    doc.text(`Delivery Charges (DC):`, totalsX, finalY + 22);
+    doc.text(`INR ${(order.delivery_charge || 0).toLocaleString()}`, 196, finalY + 22, { align: 'right' });
+    
+    doc.text(`GST (${this.gstPercent()}%):`, totalsX, finalY + 29);
+    doc.text(`INR ${this.calculatedGst().toLocaleString()}`, 196, finalY + 29, { align: 'right' });
+    
+    doc.text(`IGST (${this.igstPercent()}%):`, totalsX, finalY + 36);
+    doc.text(`INR ${this.calculatedIgst().toLocaleString()}`, 196, finalY + 36, { align: 'right' });
+    
+    // Grand Total
+    doc.setDrawColor(241, 245, 249);
+    doc.line(totalsX, finalY + 42, 196, finalY + 42);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(255, 193, 7); // #FFC107
+    doc.text(`Grand Total:`, totalsX, finalY + 52);
+    doc.text(`INR ${this.grandTotal().toLocaleString()}`, 196, finalY + 52, { align: 'right' });
+    
+    // Footer
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184); // slate-400
+    doc.text('Thank you for choosing KALL ME Delivery!', 105, 285, { align: 'center' });
+    
+    return doc;
   }
 }

@@ -202,6 +202,10 @@ import { SettingsService } from '../../services/settings.service';
                 </div>
               </div>
               <div>
+                <label for="customerAddress" class="text-[10px] font-bold text-slate-500 mb-1 block">Delivery Address <span class="text-red-500">*</span></label>
+                <textarea id="customerAddress" [(ngModel)]="customer.address" rows="2" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] resize-none dark:text-white"></textarea>
+              </div>
+              <div>
                 <label for="deliveryDescription" class="text-[10px] font-bold text-slate-500 mb-1 block">Description / Notes <span class="text-red-500">*</span></label>
                 <textarea id="deliveryDescription" [(ngModel)]="customer.description" rows="4" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] resize-none dark:text-white"></textarea>
               </div>
@@ -404,8 +408,10 @@ export class CreateOrder implements OnInit {
   
   cart = signal<{ item: HotelMenuItem; quantity: number }[]>([]);
   customer = { 
+    name: '',
     phone: '', 
     type: 'Regular' as const, 
+    address: '',
     description: '' 
   };
   orderId = signal<string>('');
@@ -588,6 +594,7 @@ export class CreateOrder implements OnInit {
     return (this.cart().length > 0 || isOthers) && 
            !!this.selectedHotel() && 
            !!this.customer.phone?.trim() && 
+           !!this.customer.address?.trim() &&
            !!this.selectedDriverId() &&
            (!isOthers || (!!this.customer.description?.trim() && this.manualPrice() > 0));
   }
@@ -603,6 +610,7 @@ export class CreateOrder implements OnInit {
       delivery_person_id: Number(this.selectedDriverId()) || 1, // Default driver
       customer_phone: this.customer.phone,
       customer_type: 'regular',
+      delivery_address: this.customer.address,
       delivery_description: this.customer.description,
       subtotal: this.subtotal(),
       shipping_fee: this.shippingFee(),

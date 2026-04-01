@@ -1,6 +1,9 @@
 const express = require('express');
 const db = require('../db');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+
 const router = express.Router();
 
 const templates = {
@@ -459,6 +462,71 @@ router.post('/send', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to send message' });
+  }
+});
+
+router.post('/send-invoice-pdf', async (req, res) => {
+  const { to, orderNumber, pdfBase64, orderId, grandTotal } = req.body;
+
+  if (!to || !pdfBase64 || !orderNumber) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const settings = await getSettings();
+    const whatsappSettings = settings.whatsapp || {};
+    const templateName = whatsappSettings?.customerInvoiceTemplateName || 'kall_me_attach ';
+
+    // Save PDF to public folder
+    const filename = `invoice_${orderNumber}_${Date.now()}.pdf`;
+    const publicDir = path.join(__dirname, '../../public/invoices');
+    
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+
+    const filePath = path.join(publicDir, filename);
+    const buffer = Buffer.from(pdfBase64, 'base64');
+    fs.writeFileSync(filePath, buffer);
+
+    const appUrl = process.env.APP_URL || `https://${req.get('host')}`;
+    const invoiceUrl = `${appUrl}/invoices/${filename}`;
+
+    const result = await sendWhatsappMessage({
+      recipientNumber: to,
+      templateName: templateName,
+      languageCode: 'en',
+      components: [
+        {
+          type: 'header',
+          parameters: [
+            {
+              type: 'document',
+              document: {
+                link: invoiceUrl,
+                filename: `Invoice_${orderNumber}.pdf`
+              }
+            }
+          ]
+        },
+        {
+          type: 'body',
+          parameters: [
+            { type: 'text', text: "Dear Customer" },
+            { type: 'text', text: orderNumber },
+            { type: 'text', text: new Date().toLocaleDateString() },
+            { type: 'text', text: (grandTotal || '0').toString() },
+          ],
+        },
+      ],
+      orderId: orderId,
+      messageType: 'customer_invoice',
+    });
+
+    res.status(200).json({ success: true, result });
+  } catch (err) {
+    console.error('Error sending invoice PDF:', err);
+    res.status(500).json({ error: 'Failed to send invoice PDF' });
   }
 });
 

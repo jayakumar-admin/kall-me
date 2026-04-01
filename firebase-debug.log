@@ -1,0 +1,72 @@
+[debug] [2026-03-27T12:27:41.960Z] ----------------------------------------------------------------------
+[debug] [2026-03-27T12:27:41.962Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\acer\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-03-27T12:27:41.962Z] CLI Version:   15.10.1
+[debug] [2026-03-27T12:27:41.963Z] Platform:      win32
+[debug] [2026-03-27T12:27:41.963Z] Node Version:  v20.20.1
+[debug] [2026-03-27T12:27:41.963Z] Time:          Fri Mar 27 2026 17:57:41 GMT+0530 (India Standard Time)
+[debug] [2026-03-27T12:27:41.963Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-03-27T12:27:44.680Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-03-27T12:27:44.680Z] > authorizing via signed-in user (ajrgroupconnect@gmail.com)
+[debug] [2026-03-27T12:27:44.680Z] [iam] checking project kallmee for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-03-27T12:27:44.682Z] Checked if tokens are valid: true, expires at: 1774616876399
+[debug] [2026-03-27T12:27:44.682Z] Checked if tokens are valid: true, expires at: 1774616876399
+[debug] [2026-03-27T12:27:44.683Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions [none]
+[debug] [2026-03-27T12:27:44.683Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions  x-goog-user-project=kallmee
+[debug] [2026-03-27T12:27:44.683Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-03-27T12:27:46.076Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions 200
+[debug] [2026-03-27T12:27:46.077Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-03-27T12:27:46.077Z] Checked if tokens are valid: true, expires at: 1774616876399
+[debug] [2026-03-27T12:27:46.077Z] Checked if tokens are valid: true, expires at: 1774616876399
+[debug] [2026-03-27T12:27:46.078Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/kallmee [none]
+[debug] [2026-03-27T12:27:46.597Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/kallmee 200
+[debug] [2026-03-27T12:27:46.597Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/kallmee {"projectId":"kallmee","projectNumber":"116889419393","displayName":"kallme","name":"projects/kallmee","resources":{"hostingSite":"kallmee"},"state":"ACTIVE","etag":"1_8b9fcaed-8242-4c50-9a54-38ea18d06e17"}
+[info] 
+[info] === Deploying to 'kallmee'...
+[info] 
+[info] i  deploying hosting 
+[info] Running command: npm run build
+[debug] [2026-03-27T12:27:56.434Z] ----------------------------------------------------------------------
+[debug] [2026-03-27T12:27:56.439Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\acer\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-03-27T12:27:56.439Z] CLI Version:   15.10.1
+[debug] [2026-03-27T12:27:56.440Z] Platform:      win32
+[debug] [2026-03-27T12:27:56.440Z] Node Version:  v20.20.1
+[debug] [2026-03-27T12:27:56.440Z] Time:          Fri Mar 27 2026 17:57:56 GMT+0530 (India Standard Time)
+[debug] [2026-03-27T12:27:56.441Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-03-27T12:27:58.861Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-03-27T12:27:58.861Z] > authorizing via signed-in user (ajrgroupconnect@gmail.com)
+[debug] [2026-03-27T12:27:58.861Z] [iam] checking project kallmee for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-03-27T12:27:58.863Z] Checked if tokens are valid: true, expires at: 1774616876399
+[debug] [2026-03-27T12:27:58.863Z] Checked if tokens are valid: true, expires at: 1774616876399
+[debug] [2026-03-27T12:27:58.864Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions [none]
+[debug] [2026-03-27T12:27:58.864Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions  x-goog-user-project=kallmee
+[debug] [2026-03-27T12:27:58.864Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-03-27T12:27:59.257Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions 200
+[debug] [2026-03-27T12:27:59.258Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-03-27T12:27:59.258Z] Checked if tokens are valid: true, expires at: 1774616876399
+[debug] [2026-03-27T12:27:59.258Z] Checked if tokens are valid: true, expires at: 1774616876399
+[debug] [2026-03-27T12:27:59.259Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/kallmee [none]
+[debug] [2026-03-27T12:27:59.706Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/kallmee 200
+[debug] [2026-03-27T12:27:59.706Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/kallmee {"projectId":"kallmee","projectNumber":"116889419393","displayName":"kallme","name":"projects/kallmee","resources":{"hostingSite":"kallmee"},"state":"ACTIVE","etag":"1_8b9fcaed-8242-4c50-9a54-38ea18d06e17"}
+[info] 
+[info] === Deploying to 'kallmee'...
+[info] 
+[info] i  deploying hosting 
+[info] Running command: npm run build
+[debug] [2026-03-27T12:28:00.723Z] ----------------------------------------------------------------------
+[debug] [2026-03-27T12:28:00.726Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\acer\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions
+[debug] [2026-03-27T12:28:00.727Z] CLI Version:   15.10.1
+[debug] [2026-03-27T12:28:00.727Z] Platform:      win32
+[debug] [2026-03-27T12:28:00.727Z] Node Version:  v20.20.1
+[debug] [2026-03-27T12:28:00.727Z] Time:          Fri Mar 27 2026 17:58:00 GMT+0530 (India Standard Time)
+[debug] [2026-03-27T12:28:00.727Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-03-27T12:28:03.158Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-03-27T12:28:03.159Z] > authorizing via signed-in user (ajrgroupconnect@gmail.com)
+[debug] [2026-03-27T12:28:03.159Z] [iam] checking project kallmee for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-03-27T12:28:03.160Z] Checked if tokens are valid: true, expires at: 1774616876399
+[debug] [2026-03-27T12:28:03.161Z] Checked if tokens are valid: true, expires at: 1774616876399
+[debug] [2026-03-27T12:28:03.162Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions [none]
+[debug] [2026-03-27T12:28:03.163Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions  x-goog-user-project=kallmee
+[debug] [2026-03-27T12:28:03.163Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}

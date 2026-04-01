@@ -12,7 +12,7 @@ import { LoaderService } from './loader.service';
 export class ApiService {
   private http = inject(HttpClient);
   private loader = inject(LoaderService);
-  public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
   // public baseUrl = 'http://localhost:3000/api';
 
 
@@ -160,6 +160,13 @@ export class ApiService {
     return this.withLoader(
       this.http.post<void>(`${this.baseUrl}/whatsapp/send`, { to, templateName, parameters }),
       'Sending WhatsApp...'
+    );
+  }
+
+  sendInvoicePdf(to: string, orderNumber: string, pdfBase64: string, orderId?: number, grandTotal?: number): Observable<void> {
+    return this.withLoader(
+      this.http.post<void>(`${this.baseUrl}/whatsapp/send-invoice-pdf`, { to, orderNumber, pdfBase64, orderId, grandTotal }),
+      'Sending Invoice PDF...'
     );
   }
 

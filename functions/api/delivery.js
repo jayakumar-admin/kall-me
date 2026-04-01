@@ -44,7 +44,7 @@ router.get('/orders/:id', authenticateToken, async (req, res) => {
       SELECT o.*, h.name as hotel_name, h.address as hotel_address
       FROM orders o 
       LEFT JOIN hotels h ON o.hotel_id = h.id 
-      WHERE (o.id = $1 OR o.order_number = $1) AND o.delivery_person_id = $2
+      WHERE (o.id::text = $1 OR o.order_number = $1) AND o.delivery_person_id = $2
     `, [id, req.user.id]);
     
     if (result.rows.length === 0) return res.status(404).json({ error: 'Order not found or not assigned to you' });

@@ -246,6 +246,7 @@ export class Reports implements OnInit {
     'Master Chart View',
     'Hotel-wise', 
     'Delivery Person-wise', 
+    'Monthly Salary',
     'Menu-wise', 
     'Orders', 
     'Commission / Earnings', 
@@ -322,6 +323,12 @@ export class Reports implements OnInit {
         rows: Object.values(this.groupedByDelivery()).map(g => [g.name, g.orders, `₹${g.earnings.toLocaleString()}`]),
         headerColor: 'bg-emerald-50 dark:bg-emerald-900/20'
       };
+    } else if (tab === 'Monthly Salary') {
+      return {
+        headers: ['Month', 'Delivery Person', 'Orders', 'Earnings'],
+        rows: Object.values(this.groupedByMonthlyDelivery()).map(g => [g.month, g.name, g.orders, `₹${g.earnings.toLocaleString()}`]),
+        headerColor: 'bg-blue-50 dark:bg-blue-900/20'
+      };
     } else if (tab === 'Menu-wise') {
       return {
         headers: ['Menu Item', 'Quantity', 'Revenue'],
@@ -380,6 +387,33 @@ export class Reports implements OnInit {
         headerColor: 'bg-slate-50 dark:bg-slate-900/20'
       };
     }
+  });
+
+  groupedByMonthlyDelivery = computed(() => {
+    const grouped: Record<string, { month: string, name: string, orders: number, earnings: number }> = {};
+    this.filteredOrders().forEach(o => {
+      if (o.created_at) {
+        const date = new Date(o.created_at);
+        const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        const dpId = o.delivery_person_id || 0;
+        const key = `${monthYear}_${dpId}`;
+        
+        if (!grouped[key]) {
+          grouped[key] = { 
+            month: monthYear, 
+            name: o.delivery_person_name || 'Unassigned', 
+            orders: 0, 
+            earnings: 0 
+          };
+        }
+        
+        grouped[key].orders++;
+        const shippingFee = Number(o.shipping_fee) || 0;
+        const adminComm = Number(o.admin_commission_amount) || 0;
+        grouped[key].earnings += (shippingFee - adminComm);
+      }
+    });
+    return grouped;
   });
 
   groupedByHotel = computed(() => {

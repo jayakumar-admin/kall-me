@@ -120,6 +120,7 @@
 
           <!-- Actions -->
           <div class="flex items-center gap-2 md:gap-4 pl-4">
+            <app-calculator />
             <button (click)="theme.toggleDarkMode()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 transition-colors">
               <mat-icon>{{ theme.darkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
             </button>

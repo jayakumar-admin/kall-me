@@ -64,3 +64,11 @@ exports.api = functions.https.onRequest(app);
 
 // Export the Express app for local development / testing
 exports.app = app;
+
+// Start the server if not running as a function
+if (require.main === module) {
+  const serverPort = 3001;
+  app.listen(serverPort, '0.0.0.0', () => {
+    console.log(`Backend server running on http://0.0.0.0:${serverPort}`);
+  });
+}

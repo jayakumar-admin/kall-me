@@ -6,12 +6,13 @@ import { ThemeService } from '../../services/theme.service';
 import { AuthService } from '../../services/auth.service';
 import { SearchService } from '../../services/search.service';
 import { NotificationService, Notification } from '../../services/notification.service';
+import { CalculatorComponent } from '../../components/calculator/calculator';
 import { Subscription, interval } from 'rxjs';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, MatIconModule],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, MatIconModule, CalculatorComponent],
   templateUrl: './layout.html',
   styles: [`
     :host { display: block; }

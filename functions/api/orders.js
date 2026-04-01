@@ -135,8 +135,8 @@ router.post('/', authenticateToken, async (req, res) => {
       }
     }
 
-    // Send WhatsApp to customer
-    await sendCustomerInvoiceMessage(customer_phone, order, grand_total, order.items);
+    // WhatsApp invoice will be triggered manually from UI action
+    // await sendCustomerInvoiceMessage(customer_phone, order, grand_total, order.items);
 
     await client.query('COMMIT');
     res.status(201).json(order);
@@ -158,7 +158,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
       FROM orders o 
       LEFT JOIN hotels h ON o.hotel_id = h.id 
       LEFT JOIN delivery_persons dp ON o.delivery_person_id = dp.id
-      WHERE o.id = $1 OR o.order_number = $1
+      WHERE o.id::text = $1 OR o.order_number = $1
     `, [id]);
     
     if (result.rows.length === 0) return res.status(404).json({ error: 'Order not found' });

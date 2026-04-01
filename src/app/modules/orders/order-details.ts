@@ -26,9 +26,11 @@ import { Order } from '../../models';
                   Cancel Order
                 </button>
               }
-              <a [routerLink]="['/app/invoice']" [queryParams]="{orderId: order()!.order_number || order()!.id}" class="px-4 py-2 rounded-xl bg-[#FFC107] text-black font-bold text-sm hover:bg-[#FFA000] transition-colors flex items-center gap-2">
-                <mat-icon class="text-sm">receipt_long</mat-icon> Generate Invoice
-              </a>
+              @if (order()!.status !== 'Cancelled') {
+                <a [routerLink]="['/app/invoice']" [queryParams]="{orderId: order()!.order_number || order()!.id}" class="px-4 py-2 rounded-xl bg-[#FFC107] text-black font-bold text-sm hover:bg-[#FFA000] transition-colors flex items-center gap-2">
+                  <mat-icon class="text-sm">receipt_long</mat-icon> Generate Invoice
+                </a>
+              }
             </div>
           </div>
 
@@ -38,9 +40,28 @@ import { Order } from '../../models';
                 <h1 class="text-2xl font-black text-[#1A1A1A] dark:text-white">Order #{{ order()!.order_number }}</h1>
                 <p class="text-slate-500">{{ order()!.created_at | date:'medium' }}</p>
               </div>
-              <span [class]="getStatusClass(order()!.status || 'Order Placed')" class="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider">
-                {{ order()!.status }}
-              </span>
+              <div class="relative">
+                <select
+                  [ngModel]="order()!.status"
+                  (ngModelChange)="updateStatus($event)"
+                  [class]="getStatusClass(order()!.status || 'Order Placed')"
+                  class="appearance-none px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider outline-none cursor-pointer pr-8"
+                  [disabled]="order()!.status === 'Cancelled'"
+                >
+                  @if (order()!.status === 'Order Placed') {
+                    <option value="Order Placed">Order Placed</option>
+                  }
+                  <option value="Live">Live</option>
+                  <option value="In Transit">In Transit</option>
+                  <option value="Delivered">Delivered</option>
+                  @if (order()!.status === 'Cancelled') {
+                    <option value="Cancelled">Cancelled</option>
+                  } @else {
+                    <option value="Cancelled" [disabled]="order()!.status === 'Delivered'">Cancelled</option>
+                  }
+                </select>
+                <mat-icon class="absolute right-2 top-1/2 -translate-y-1/2 text-sm opacity-50 pointer-events-none">expand_more</mat-icon>
+              </div>
             </div>
 
             <div class="grid grid-cols-2 gap-6">
@@ -229,6 +250,15 @@ export class OrderDetails implements OnInit {
       this.orderService.updateOrder(order.id, { shipping_fee: this.shippingFeeAmount, grand_total: newGrandTotal, balance_pending: newPending });
       this.order.update(o => o ? { ...o, shipping_fee: this.shippingFeeAmount, grand_total: newGrandTotal, balance_pending: newPending } : o);
       this.toast.success('Shipping fee updated');
+    }
+  }
+
+  updateStatus(newStatus: string) {
+    const order = this.order();
+    if (order && order.id) {
+      this.orderService.updateStatus(order.id, newStatus);
+      this.order.update(o => o ? { ...o, status: newStatus as Order['status'] } : o);
+      this.toast.success(`Order status updated to ${newStatus}`);
     }
   }
 

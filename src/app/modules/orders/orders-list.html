@@ -170,12 +170,19 @@
                   (ngModelChange)="updateStatus(order, $event)"
                   [class]="getStatusClass(order.status || 'Order Placed')"
                   class="appearance-none px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider outline-none cursor-pointer pr-6"
+                  [disabled]="order.status === 'Cancelled'"
                 >
-                  <option value="Order Placed">Order Placed</option>
+                  @if (order.status === 'Order Placed') {
+                    <option value="Order Placed">Order Placed</option>
+                  }
                   <option value="Live">Live</option>
                   <option value="In Transit">In Transit</option>
                   <option value="Delivered">Delivered</option>
-                  <option value="Cancelled" [disabled]="order.status === 'Delivered'">Cancelled</option>
+                  @if (order.status === 'Cancelled') {
+                    <option value="Cancelled">Cancelled</option>
+                  } @else {
+                    <option value="Cancelled" [disabled]="order.status === 'Delivered'">Cancelled</option>
+                  }
                 </select>
                 <mat-icon
                   class="absolute right-1 top-1/2 -translate-y-1/2 text-[12px] opacity-50 pointer-events-none"
@@ -185,21 +192,23 @@
             </td>
             <td class="px-6 py-4 text-center">
               <div class="flex items-center justify-center gap-2">
-                <button
-                  (click)="viewOrderDetails(order)"
-                  class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 transition-colors"
-                  title="View Details"
-                >
-                  <mat-icon>visibility</mat-icon>
-                </button>
-                <a
-                  [routerLink]="['/app/invoice']"
-                  [queryParams]="{orderId: order.order_number || order.id}"
-                  class="p-2 rounded-lg hover:bg-[#FFC107]/10 text-slate-400 hover:text-[#FFC107] transition-colors"
-                  title="Generate Invoice"
-                >
-                  <mat-icon>receipt_long</mat-icon>
-                </a>
+                @if (order.status !== 'Cancelled') {
+                  <button
+                    (click)="viewOrderDetails(order)"
+                    class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 transition-colors"
+                    title="View Details"
+                  >
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <a
+                    [routerLink]="['/app/invoice']"
+                    [queryParams]="{orderId: order.order_number || order.id}"
+                    class="p-2 rounded-lg hover:bg-[#FFC107]/10 text-slate-400 hover:text-[#FFC107] transition-colors"
+                    title="Generate Invoice"
+                  >
+                    <mat-icon>receipt_long</mat-icon>
+                  </a>
+                }
               </div>
             </td>
           </tr>

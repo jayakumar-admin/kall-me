@@ -185,7 +185,7 @@ import { SettingsService } from '../../services/settings.service';
                 <span class="text-[10px] font-bold text-slate-500 block">OrderID</span>
                 <span class="text-sm font-bold text-[#1A1A1A] dark:text-white">{{ orderId() }}</span>
               </div>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid gap-3">
                 <div>
                   <label for="customerPhone" class="text-[10px] font-bold text-slate-500 mb-1 block">Phone Number <span class="text-red-500">*</span></label>
                   <div class="relative">

@@ -33,7 +33,7 @@ export interface AppSettings {
   };
   supportNumber: string;
   whatsapp: {
-  apiUrl: string;
+    apiUrl: string;
     apiKey: string;
     welcomeMessageTemplate: string;
     orderConfirmationClientTemplate: string;

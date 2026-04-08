@@ -115,13 +115,18 @@
 
             <!-- Actions -->
             <div class="p-8 border-t border-slate-200 dark:border-white/10 flex justify-end gap-4 bg-white dark:bg-[#1E293B] print:hidden">
+              <input type="file" #fileInput class="hidden" accept="application/pdf" (change)="onFileSelected($event)">
+              <!-- <button (click)="fileInput.click()" class="px-6 py-2 rounded-xl bg-blue-500 text-white font-bold text-sm hover:bg-blue-600 transition-colors flex items-center gap-2">
+                <mat-icon class="text-sm">attach_file</mat-icon>
+                Attach & Send
+              </button> -->
               <button (click)="printInvoice()" class="px-6 py-2 rounded-xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors flex items-center gap-2">
                 <mat-icon class="text-sm">print</mat-icon>
                 Print
               </button>
               <button (click)="sendViaWhatsApp()" class="px-6 py-2 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-600 transition-colors flex items-center gap-2">
                 <mat-icon class="text-sm">send</mat-icon>
-                Send via WhatsApp
+                Send Invoice via WhatsApp
               </button>
               <button (click)="downloadPdf()" class="btn-primary flex items-center gap-2">
                 <mat-icon class="text-sm">download</mat-icon>

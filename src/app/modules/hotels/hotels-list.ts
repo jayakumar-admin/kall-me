@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CatalogService } from '../../services/catalog.service';
 import { ToastService } from '../../services/toast.service';
+import { ImageUploadService } from '../../services/image-upload.service';
 import { Hotel, MenuItem } from '../../models';
 import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.component';
 
@@ -20,12 +21,14 @@ import { MainSkeletonComponent } from '../../components/main-skeleton';
 export class HotelsList {
   catalog = inject(CatalogService);
   toast = inject(ToastService);
+  imageUpload = inject(ImageUploadService);
   
   // Menu Management
   showMenuModal = signal(false);
   showMenuItemModal = signal(false);
   selectedHotel = signal<Hotel | null>(null);
   editingMenuItemId = signal<number | null>(null);
+  isUploading = signal(false);
   
   showDeleteConfirm = signal(false);
   itemToDelete = signal<{ type: 'hotel' | 'menu', data: Hotel | MenuItem } | null>(null);
@@ -41,6 +44,7 @@ export class HotelsList {
     price: 0,
     category: 'Veg',
     description: '',
+    image_url: 'https://picsum.photos/seed/food/200/200',
     is_available: true,
     hotel_id: 0
   };
@@ -85,6 +89,7 @@ export class HotelsList {
       price: 0,
       category: 'Veg',
       description: '',
+      image_url: 'https://picsum.photos/seed/food/200/200',
       is_available: true,
       hotel_id: hotel.id
     };
@@ -98,6 +103,7 @@ export class HotelsList {
       price: item.price,
       category: item.category,
       description: item.description,
+      image_url: item.image_url || 'https://picsum.photos/seed/food/200/200',
       is_available: item.is_available ?? true,
       hotel_id: item.hotel_id
     };
@@ -116,5 +122,28 @@ export class HotelsList {
       this.catalog.addMenuItem(this.menuItemForm);
     }
     this.showMenuItemModal.set(false);
+  }
+
+  onMenuItemFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.isUploading.set(true);
+      this.imageUpload.uploadImage(file).subscribe({
+        next: (url) => {
+          if (url) {
+            this.menuItemForm.image_url = url;
+            this.toast.success('Image uploaded successfully');
+          } else {
+            this.toast.error('Failed to upload image');
+          }
+          this.isUploading.set(false);
+        },
+        error: () => {
+          this.toast.error('Failed to upload image');
+          this.isUploading.set(false);
+        }
+      });
+    }
   }
 }

@@ -77,8 +77,8 @@ import { MenuItem } from '../../../data/static-data';
     <!-- Add/Edit Modal -->
     @if (showModal()) {
       <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-[#0F172A] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-100 dark:border-white/5">
-          <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+        <div class="bg-white dark:bg-[#0F172A] rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-100 dark:border-white/5 max-h-[90vh] flex flex-col">
+          <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0">
             <h3 class="text-xl font-display font-bold text-[#1A1A1A] dark:text-white">
               {{ editingItemId() ? 'Edit Menu Item' : 'Add New Menu Item' }}
             </h3>
@@ -87,7 +87,7 @@ import { MenuItem } from '../../../data/static-data';
             </button>
           </div>
 
-          <form [formGroup]="itemForm" (ngSubmit)="saveItem()" class="p-6 space-y-4">
+          <form [formGroup]="itemForm" (ngSubmit)="saveItem()" class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
             <div>
               <label for="item-name" class="text-xs font-bold text-slate-500 mb-1.5 block">Item Name</label>
               <input id="item-name" type="text" formControlName="name" class="input-field" placeholder="e.g. Paneer Tikka">

@@ -164,7 +164,8 @@ export class InvoiceGeneration implements OnInit {
         order.order_number || order.id?.toString() || '0', 
         pdfBase64,
         order.id!,
-        this.grandTotal()
+        this.grandTotal(),
+        order.customer_name
       ).subscribe({
         next: () => {
           this.toast.success('Invoice sent via WhatsApp');
@@ -180,6 +181,57 @@ export class InvoiceGeneration implements OnInit {
       console.error('WhatsApp Send Error:', error);
       this.toast.error('Failed to prepare invoice for WhatsApp');
       this.isLoading.set(false);
+    }
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      if (file.type !== 'application/pdf') {
+        this.toast.error('Please select a PDF file');
+        return;
+      }
+
+      const order = this.selectedOrder();
+      if (!order) return;
+
+      if (!order.customer_phone) {
+        this.toast.error('Customer phone number is missing');
+        return;
+      }
+
+      this.isLoading.set(true);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        
+        this.api.sendInvoicePdf(
+          order.customer_phone!, 
+          order.order_number || order.id?.toString() || '0', 
+          base64String,
+          order.id!,
+          this.grandTotal(),
+          order.customer_name
+        ).subscribe({
+          next: () => {
+            this.toast.success('Attached PDF sent via WhatsApp');
+            this.isLoading.set(false);
+            input.value = ''; // Reset input
+          },
+          error: (err) => {
+            console.error('Failed to send WhatsApp:', err);
+            this.toast.error('Failed to send attached PDF via WhatsApp');
+            this.isLoading.set(false);
+            input.value = ''; // Reset input
+          }
+        });
+      };
+      reader.onerror = () => {
+        this.toast.error('Failed to read file');
+        this.isLoading.set(false);
+      };
+      reader.readAsDataURL(file);
     }
   }
 

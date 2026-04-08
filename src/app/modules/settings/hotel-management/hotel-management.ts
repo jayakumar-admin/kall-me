@@ -73,8 +73,8 @@ import { Hotel } from '../../../models';
       <!-- Add/Edit Modal -->
       @if (isModalOpen()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div class="bg-white dark:bg-[#1E293B] rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+          <div class="bg-white dark:bg-[#1E293B] rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between shrink-0">
               <h2 class="text-xl font-bold text-[#1A1A1A] dark:text-white">
                 {{ editingHotel() ? 'Edit Hotel' : 'Add New Hotel' }}
               </h2>
@@ -83,7 +83,7 @@ import { Hotel } from '../../../models';
               </button>
             </div>
             
-            <div class="p-6 space-y-4">
+            <div class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
               <div>
                 <label for="hotelName" class="text-xs font-bold text-slate-500 mb-2 block">Hotel Name</label>
                 <input id="hotelName" type="text" [(ngModel)]="formData.name" class="input-field py-2 text-sm" placeholder="e.g. Spice Route">
@@ -102,23 +102,26 @@ import { Hotel } from '../../../models';
               </div>
               
               <div>
-                <label for="imagesInput" class="text-xs font-bold text-slate-500 mb-2 block">Images</label>
+                <label for="imagesInput" class="text-xs font-bold text-slate-500 mb-2 block">Hotel Image</label>
                 <div class="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-4 text-center hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer relative">
-                  <input id="imagesInput" type="file" multiple accept="image/*" (change)="onFileSelected($event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                  <mat-icon class="text-slate-400 mb-2">cloud_upload</mat-icon>
-                  <p class="text-xs text-slate-500 font-medium">Click or drag images to upload</p>
+                  <input id="imagesInput" type="file" accept="image/*" (change)="onFileSelected($event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" [disabled]="isUploading()">
+                  @if (isUploading()) {
+                    <mat-icon class="text-[#FFC107] mb-2 animate-spin">refresh</mat-icon>
+                    <p class="text-xs text-slate-500 font-medium">Uploading image...</p>
+                  } @else {
+                    <mat-icon class="text-slate-400 mb-2">cloud_upload</mat-icon>
+                    <p class="text-xs text-slate-500 font-medium">Click or drag image to upload</p>
+                  }
                 </div>
                 
-                @if (formData.images && formData.images.length > 0) {
-                  <div class="flex gap-2 mt-3 overflow-x-auto pb-2 custom-scrollbar">
-                    @for (img of formData.images; track img; let i = $index) {
-                      <div class="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-slate-200 dark:border-white/10 group">
-                        <img [src]="img" alt="Hotel image preview" class="w-full h-full object-cover">
-                        <button (click)="removeImage(i)" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <mat-icon class="text-[12px] w-3 h-3 flex items-center justify-center">close</mat-icon>
-                        </button>
-                      </div>
-                    }
+                @if (formData.image_url) {
+                  <div class="mt-3">
+                    <div class="relative w-24 h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 group">
+                      <img [src]="formData.image_url" alt="Hotel image preview" class="w-full h-full object-cover">
+                      <button (click)="removeImage()" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <mat-icon class="text-[12px] w-3 h-3 flex items-center justify-center">close</mat-icon>
+                      </button>
+                    </div>
                   </div>
                 }
               </div>
@@ -134,7 +137,9 @@ import { Hotel } from '../../../models';
             
             <div class="p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 flex justify-end gap-3">
               <button (click)="closeModal()" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">Cancel</button>
-              <button (click)="saveHotel()" class="btn-primary py-2 text-sm">Save Hotel</button>
+              <button (click)="saveHotel()" [disabled]="isUploading()" class="btn-primary py-2 text-sm disabled:opacity-50">
+                {{ isUploading() ? 'Uploading...' : 'Save Hotel' }}
+              </button>
             </div>
           </div>
         </div>
@@ -153,14 +158,14 @@ export class HotelManagement {
   
   isModalOpen = signal(false);
   editingHotel = signal<Hotel | null>(null);
+  isUploading = signal(false);
   
   formData = {
     name: '',
     category: '',
     address: '',
     status: 'active' as 'active' | 'inactive',
-    image_url: 'https://picsum.photos/seed/hotel/400/300',
-    images: [] as string[]
+    image_url: 'https://picsum.photos/seed/hotel/400/300'
   };
 
   openAddModal() {
@@ -176,8 +181,7 @@ export class HotelManagement {
       category: hotel.category,
       address: hotel.address || '',
       status: hotel.status || 'active',
-      image_url: hotel.image_url,
-      images: hotel.images ? [...hotel.images] : (hotel.image_url ? [hotel.image_url] : [])
+      image_url: hotel.image_url || 'https://picsum.photos/seed/hotel/400/300'
     };
     this.isModalOpen.set(true);
   }
@@ -193,40 +197,36 @@ export class HotelManagement {
       category: '',
       address: '',
       status: 'active',
-      image_url: 'https://picsum.photos/seed/hotel/400/300',
-      images: []
+      image_url: 'https://picsum.photos/seed/hotel/400/300'
     };
   }
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      Array.from(input.files).forEach(file => {
-        this.imageUpload.uploadImage(file).subscribe({
-          next: (url) => {
-            if (url) {
-              this.formData.images.push(url);
-              if (this.formData.images.length === 1) {
-                this.formData.image_url = url;
-              }
-              this.cdr.markForCheck();
-            } else {
-              this.toast.error('Failed to upload image');
-            }
-          },
-          error: () => this.toast.error('Failed to upload image')
-        });
+      const file = input.files[0];
+      this.isUploading.set(true);
+      this.imageUpload.uploadImage(file).subscribe({
+        next: (url) => {
+          if (url) {
+            this.formData.image_url = url;
+            this.toast.success('Image uploaded successfully');
+            this.cdr.markForCheck();
+          } else {
+            this.toast.error('Failed to upload image');
+          }
+          this.isUploading.set(false);
+        },
+        error: () => {
+          this.toast.error('Failed to upload image');
+          this.isUploading.set(false);
+        }
       });
     }
   }
 
-  removeImage(index: number) {
-    this.formData.images.splice(index, 1);
-    if (this.formData.images.length > 0) {
-      this.formData.image_url = this.formData.images[0];
-    } else {
-      this.formData.image_url = 'https://picsum.photos/seed/hotel/400/300';
-    }
+  removeImage() {
+    this.formData.image_url = 'https://picsum.photos/seed/hotel/400/300';
     this.cdr.markForCheck();
   }
 
@@ -243,12 +243,24 @@ export class HotelManagement {
     };
     
     if (this.editingHotel()) {
-      this.catalog.updateHotel(this.editingHotel()!.id, hotelData as Partial<Hotel>);
+      this.catalog.updateHotel(this.editingHotel()!.id, hotelData as Partial<Hotel>).subscribe({
+        next: (updated) => {
+          this.catalog.hotels.update(current => current.map(m => m.id === updated.id ? updated : m));
+          this.toast.success(`${updated.name} updated successfully`);
+          this.closeModal();
+        },
+        error: () => this.toast.error('Failed to update hotel')
+      });
     } else {
-      this.catalog.addHotel(hotelData as Partial<Hotel>);
+      this.catalog.addHotel(hotelData as Partial<Hotel>).subscribe({
+        next: (newHotel) => {
+          this.catalog.hotels.update(current => [...current, newHotel]);
+          this.toast.success(`${newHotel.name} added successfully`);
+          this.closeModal();
+        },
+        error: () => this.toast.error('Failed to add hotel')
+      });
     }
-    
-    this.closeModal();
   }
 
   deleteHotel(hotel: Hotel) {

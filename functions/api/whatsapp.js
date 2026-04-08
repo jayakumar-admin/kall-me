@@ -3,6 +3,7 @@ const db = require('../db');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const FormData = require('form-data');
 
 const router = express.Router();
 
@@ -329,7 +330,7 @@ const { generateInvoicePdf } = require('../utils/pdf');
 async function sendCustomerInvoiceMessage(customerPhone, order, grandTotal, items) {
   const settings = await getSettings();
   const whatsappSettings = settings.whatsapp || {};
-  const templateName = whatsappSettings?.customerInvoiceTemplateName || 'kall_me_attach ';
+  const templateName = whatsappSettings?.customerInvoiceTemplateName || 'kall_me_attach';
 
   try {
     // Generate PDF on the fly
@@ -496,7 +497,7 @@ router.post('/send', async (req, res) => {
 });
 
 router.post('/send-invoice-pdf', async (req, res) => {
-  const { to, orderNumber, pdfBase64, orderId, grandTotal } = req.body;
+  const { to, orderNumber, pdfBase64, orderId, grandTotal, customerName } = req.body;
 
   if (!to || !pdfBase64 || !orderNumber) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -505,22 +506,34 @@ router.post('/send-invoice-pdf', async (req, res) => {
   try {
     const settings = await getSettings();
     const whatsappSettings = settings.whatsapp || {};
-    const templateName = whatsappSettings?.customerInvoiceTemplateName || 'kall_me_attach ';
+    const templateName = whatsappSettings?.customerInvoiceTemplateName || 'kall_me_attach';
 
-    // Save PDF to public folder
-    const filename = `invoice_${orderNumber}_${Date.now()}.pdf`;
-    const publicDir = path.join(__dirname, '../../public/invoices');
-    
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
+    const { apiUrl, apiKey } = whatsappSettings;
+    if (!apiUrl || !apiKey) {
+      return res.status(400).json({ error: 'WhatsApp API not configured' });
     }
 
-    const filePath = path.join(publicDir, filename);
+    // Convert base64 to buffer
     const buffer = Buffer.from(pdfBase64, 'base64');
-    fs.writeFileSync(filePath, buffer);
+    const filename = `Invoice_${orderNumber}.pdf`;
 
-    const appUrl = process.env.APP_URL || `https://${req.get('host')}`;
-    const invoiceUrl = `${appUrl}/invoices/${filename}`;
+    // Upload to WhatsApp Media API
+    const mediaUrl = apiUrl.replace('/messages', '/media');
+    const formData = new FormData();
+    formData.append('file', buffer, { filename, contentType: 'application/pdf' });
+    formData.append('type', 'application/pdf');
+    formData.append('messaging_product', 'whatsapp');
+
+    console.log(`📤 Uploading media to WhatsApp: ${mediaUrl}`);
+    const mediaResponse = await axios.post(mediaUrl, formData, {
+      headers: {
+        ...formData.getHeaders(),
+        Authorization: `Bearer ${apiKey}`
+      }
+    });
+
+    const mediaId = mediaResponse.data.id;
+    console.log(`✅ Media uploaded successfully. Media ID: ${mediaId}`);
 
     const result = await sendWhatsappMessage({
       recipientNumber: to,
@@ -533,8 +546,8 @@ router.post('/send-invoice-pdf', async (req, res) => {
             {
               type: 'document',
               document: {
-                link: invoiceUrl,
-                filename: `Invoice_${orderNumber}.pdf`
+                id: mediaId,
+                filename: filename
               }
             }
           ]
@@ -542,7 +555,7 @@ router.post('/send-invoice-pdf', async (req, res) => {
         {
           type: 'body',
           parameters: [
-            { type: 'text', text: "Dear Customer" },
+            { type: 'text', text: customerName || "Customer" },
             { type: 'text', text: orderNumber },
             { type: 'text', text: new Date().toLocaleDateString() },
             { type: 'text', text: (grandTotal || '0').toString() },
@@ -555,7 +568,7 @@ router.post('/send-invoice-pdf', async (req, res) => {
 
     res.status(200).json({ success: true, result });
   } catch (err) {
-    console.error('Error sending invoice PDF:', err);
+    console.error('Error sending invoice PDF:', err.response?.data || err.message);
     res.status(500).json({ error: 'Failed to send invoice PDF' });
   }
 });

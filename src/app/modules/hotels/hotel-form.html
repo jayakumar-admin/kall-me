@@ -64,7 +64,16 @@
 
           <div class="pt-4 flex gap-3">
             <button routerLink="/app/hotels" class="flex-1 py-3 rounded-xl border border-slate-200 dark:border-white/10 font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
-            <button (click)="saveHotel()" class="flex-1 btn-primary">Save Partner</button>
+            <button (click)="saveHotel()" [disabled]="isUploading()" class="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+              @if (isUploading()) {
+                <span class="flex items-center justify-center gap-2">
+                  <mat-icon class="animate-spin text-sm">refresh</mat-icon>
+                  Uploading...
+                </span>
+              } @else {
+                Save Partner
+              }
+            </button>
           </div>
         </div>
       </div>

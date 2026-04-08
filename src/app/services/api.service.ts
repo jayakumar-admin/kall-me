@@ -15,7 +15,6 @@ export class ApiService {
 public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
   // public baseUrl = 'http://localhost:3000/api';
 
-
   private withLoader<T>(request: Observable<T>, message: string): Observable<T> {
     this.loader.show(message);
     return request.pipe(
@@ -170,9 +169,9 @@ public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
     );
   }
 
-  sendInvoicePdf(to: string, orderNumber: string, pdfBase64: string, orderId?: number, grandTotal?: number): Observable<void> {
+  sendInvoicePdf(to: string, orderNumber: string, pdfBase64: string, orderId?: number, grandTotal?: number, customerName?: string): Observable<void> {
     return this.withLoader(
-      this.http.post<void>(`${this.baseUrl}/whatsapp/send-invoice-pdf`, { to, orderNumber, pdfBase64, orderId, grandTotal }),
+      this.http.post<void>(`${this.baseUrl}/whatsapp/send-invoice-pdf`, { to, orderNumber, pdfBase64, orderId, grandTotal, customerName }),
       'Sending Invoice PDF...'
     );
   }

@@ -10,7 +10,7 @@ async function generateInvoicePdf(order, items) {
     try {
       const doc = new PDFDocument({ margin: 50 });
       const filename = `invoice_${order.order_number || order.id}_${Date.now()}.pdf`;
-      const publicDir = path.join(__dirname, '../public/invoices');
+      const publicDir = path.join(__dirname, '../../public/invoices');
       
       if (!fs.existsSync(publicDir)) {
         fs.mkdirSync(publicDir, { recursive: true });

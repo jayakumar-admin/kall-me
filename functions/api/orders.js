@@ -98,6 +98,11 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     const order = orderResult.rows[0];
+    
+    // Clean up any orphan items that might exist if the ID was reused 
+    // (e.g. after a manual delete of orders without cascade or database reset)
+    await client.query('DELETE FROM order_items WHERE order_id = $1', [order.id]);
+    
     order.items = [];
 
     if (items && items.length > 0) {

@@ -55,11 +55,7 @@ import { Hotel } from '../../../models';
                 <p class="line-clamp-2">{{ hotel.address || 'Address not set' }}</p>
               </div>
 
-              <div class="mt-auto pt-4 flex items-center justify-between border-t border-slate-100 dark:border-white/5">
-                <div class="text-xs">
-                  <span class="text-slate-500 dark:text-slate-400">Commission: </span>
-                  <span class="font-bold text-[#1A1A1A] dark:text-white">{{ hotel.commission_rate || 15 }}%</span>
-                </div>
+              <div class="mt-auto pt-4 flex items-center justify-end border-t border-slate-100 dark:border-white/5">
                 <div class="flex gap-2">
                   <button (click)="editHotel(hotel)" class="p-1.5 text-slate-400 hover:text-[#FFC107] hover:bg-[#FFC107]/10 rounded-lg transition-colors">
                     <mat-icon class="text-sm">edit</mat-icon>
@@ -93,14 +89,10 @@ import { Hotel } from '../../../models';
                 <input id="hotelName" type="text" [(ngModel)]="formData.name" class="input-field py-2 text-sm" placeholder="e.g. Spice Route">
               </div>
               
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 gap-4">
                 <div>
                   <label for="hotelCategory" class="text-xs font-bold text-slate-500 mb-2 block">Category</label>
                   <input id="hotelCategory" type="text" [(ngModel)]="formData.category" class="input-field py-2 text-sm" placeholder="e.g. North Indian">
-                </div>
-                <div>
-                  <label for="hotelCommission" class="text-xs font-bold text-slate-500 mb-2 block">Commission (%)</label>
-                  <input id="hotelCommission" type="number" [(ngModel)]="formData.commission_rate" class="input-field py-2 text-sm" placeholder="15">
                 </div>
               </div>
               
@@ -165,7 +157,6 @@ export class HotelManagement {
   formData = {
     name: '',
     category: '',
-    commission_rate: 15,
     address: '',
     status: 'active' as 'active' | 'inactive',
     image_url: 'https://picsum.photos/seed/hotel/400/300',
@@ -183,7 +174,6 @@ export class HotelManagement {
     this.formData = { 
       name: hotel.name,
       category: hotel.category,
-      commission_rate: hotel.commission_rate || 15,
       address: hotel.address || '',
       status: hotel.status || 'active',
       image_url: hotel.image_url,
@@ -201,7 +191,6 @@ export class HotelManagement {
     this.formData = {
       name: '',
       category: '',
-      commission_rate: 15,
       address: '',
       status: 'active',
       image_url: 'https://picsum.photos/seed/hotel/400/300',

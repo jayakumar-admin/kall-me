@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../services/api.service';
 import { OrderService } from '../../services/order.service';
 import { ToastService } from '../../services/toast.service';
+import { SettingsService } from '../../services/settings.service';
 import { Order } from '../../models';
 
 @Component({
@@ -111,6 +112,14 @@ import { Order } from '../../models';
                 </div>
               </div>
               <div class="flex justify-between text-sm">
+                <span class="text-slate-500">GST ({{ gstPercent }}%)</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ calculatedGst.toLocaleString() }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-slate-500">IGST ({{ igstPercent }}%)</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ calculatedIgst.toLocaleString() }}</span>
+              </div>
+              <div class="flex justify-between text-sm">
                 <span class="text-slate-500">Admin Commission</span>
                 <span class="text-[#1A1A1A] dark:text-white">₹{{ (1 * (order()!.admin_commission_amount || 0)).toLocaleString() }} ({{ order()!.commission_percentage_applied || 0 }}%)</span>
               </div>
@@ -162,12 +171,26 @@ export class OrderDetails implements OnInit {
   router = inject(Router);
   api = inject(ApiService);
   orderService = inject(OrderService);
+  settingsService = inject(SettingsService);
   toast = inject(ToastService);
   order = signal<Order | null>(null);
   pendingAmount = 0;
   grandTotalAmount = 0;
   shippingFeeAmount = 0;
   advanceAmount = 0;
+
+  get gstPercent() { return this.settingsService.settings().taxes.gst; }
+  get igstPercent() { return this.settingsService.settings().taxes.igst; }
+
+  get calculatedGst() {
+    const sub = this.order()?.subtotal || 0;
+    return (sub * this.gstPercent) / 100;
+  }
+
+  get calculatedIgst() {
+    const sub = this.order()?.subtotal || 0;
+    return (sub * this.igstPercent) / 100;
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -240,7 +263,9 @@ export class OrderDetails implements OnInit {
     const order = this.order();
     if (order && order.id) {
       const subtotal = order.subtotal || 0;
-      const newGrandTotal = (1 * subtotal) + (1 * this.shippingFeeAmount);
+      const gst = (subtotal * this.gstPercent) / 100;
+      const igst = (subtotal * this.igstPercent) / 100;
+      const newGrandTotal = (1 * subtotal) + (1 * this.shippingFeeAmount) + gst + igst;
       this.grandTotalAmount = newGrandTotal;
       const amountReceived = order.amount_received || 0;
       const newPending = Math.max(0, newGrandTotal - amountReceived);

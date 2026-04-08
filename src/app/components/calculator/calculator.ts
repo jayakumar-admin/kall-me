@@ -28,41 +28,37 @@ import { MatIconModule } from '@angular/material/icon';
             </div>
 
             <div class="grid grid-cols-4 gap-2">
-              <button (click)="clear()" class="col-span-2 btn-calc bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">AC</button>
-              <button (click)="delete()" class="btn-calc bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400">
+              <button (click)="clear()" class="col-span-2 h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">AC</button>
+              <button (click)="delete()" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-400">
                 <mat-icon class="text-sm">backspace</mat-icon>
               </button>
-              <button (click)="appendOperator('/')" class="btn-calc bg-[#FFC107]/10 text-[#FFC107]">÷</button>
+              <button (click)="appendOperator('/')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white bg-[#FFC107]/10 text-[#FFC107]">÷</button>
 
-              <button (click)="appendNumber('7')" class="btn-calc">7</button>
-              <button (click)="appendNumber('8')" class="btn-calc">8</button>
-              <button (click)="appendNumber('9')" class="btn-calc">9</button>
-              <button (click)="appendOperator('*')" class="btn-calc bg-[#FFC107]/10 text-[#FFC107]">×</button>
+              <button (click)="appendNumber('7')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">7</button>
+              <button (click)="appendNumber('8')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">8</button>
+              <button (click)="appendNumber('9')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">9</button>
+              <button (click)="appendOperator('*')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white bg-[#FFC107]/10 text-[#FFC107]">×</button>
 
-              <button (click)="appendNumber('4')" class="btn-calc">4</button>
-              <button (click)="appendNumber('5')" class="btn-calc">5</button>
-              <button (click)="appendNumber('6')" class="btn-calc">6</button>
-              <button (click)="appendOperator('-')" class="btn-calc bg-[#FFC107]/10 text-[#FFC107]">−</button>
+              <button (click)="appendNumber('4')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">4</button>
+              <button (click)="appendNumber('5')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">5</button>
+              <button (click)="appendNumber('6')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">6</button>
+              <button (click)="appendOperator('-')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white bg-[#FFC107]/10 text-[#FFC107]">−</button>
 
-              <button (click)="appendNumber('1')" class="btn-calc">1</button>
-              <button (click)="appendNumber('2')" class="btn-calc">2</button>
-              <button (click)="appendNumber('3')" class="btn-calc">3</button>
-              <button (click)="appendOperator('+')" class="btn-calc bg-[#FFC107]/10 text-[#FFC107]">+</button>
+              <button (click)="appendNumber('1')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">1</button>
+              <button (click)="appendNumber('2')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">2</button>
+              <button (click)="appendNumber('3')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">3</button>
+              <button (click)="appendOperator('+')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white bg-[#FFC107]/10 text-[#FFC107]">+</button>
 
-              <button (click)="appendNumber('0')" class="col-span-2 btn-calc text-left px-6">0</button>
-              <button (click)="appendNumber('.')" class="btn-calc">.</button>
-              <button (click)="calculate()" class="btn-calc bg-[#FFC107] text-black font-black">=</button>
+              <button (click)="appendNumber('0')" class="col-span-2 h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white text-left px-6">0</button>
+              <button (click)="appendNumber('.')" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white">.</button>
+              <button (click)="calculate()" class="h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white bg-[#FFC107] text-black font-black">=</button>
             </div>
           </div>
         </div>
       }
     </div>
   `,
-  // styles: [`
-  //   .btn-calc {
-  //     @apply h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white;
-  //   }
-  // `]
+  styles: []
 })
 export class CalculatorComponent {
   isOpen = signal(false);

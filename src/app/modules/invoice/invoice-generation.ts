@@ -44,8 +44,11 @@ export class InvoiceGeneration implements OnInit {
 
   subtotal = computed(() => {
     const order = this.selectedOrder();
-    if (!order || !order.items) return 0;
-    return order.items.reduce((sum, item) => sum + (item.total || (item.price * item.quantity)), 0);
+    if (!order) return 0;
+    if (order.items && order.items.length > 0) {
+      return order.items.reduce((sum, item) => sum + (Number(item.total) || (Number(item.price) * Number(item.quantity))), 0);
+    }
+    return Number(order.subtotal) || 0;
   });
 
   totalProducts = computed(() => {
@@ -66,8 +69,10 @@ export class InvoiceGeneration implements OnInit {
     const order = this.selectedOrder();
     if (!order) return 0;
     const shippingFee = Number(order.shipping_fee) || 0;
-    const total = Number(this.subtotal()) + shippingFee + Number(this.calculatedGst()) + Number(this.calculatedIgst());
-    return total;
+    const sub = Number(this.subtotal());
+    const gst = (sub * this.gstPercent()) / 100;
+    const igst = (sub * this.igstPercent()) / 100;
+    return sub + shippingFee + gst + igst;
   });
 
   searchOrder() {

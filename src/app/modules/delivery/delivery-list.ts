@@ -196,10 +196,12 @@ export class DeliveryList implements OnInit {
             this.toast.error('Failed to upload image');
           }
           this.isUploading.set(false);
+          this.showCropper.set(false);
         },
         error: () => {
           this.toast.error('Failed to upload image');
           this.isUploading.set(false);
+          this.showCropper.set(false);
         }
       });
     }

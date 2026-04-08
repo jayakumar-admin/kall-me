@@ -22,6 +22,8 @@ router.post('/', softAuthMiddleware, (req, res) => {
     },
   });
 
+
+
   const tmpdir = os.tmpdir();
   const fields = {};
   const uploads = {};
@@ -106,6 +108,7 @@ router.post('/', softAuthMiddleware, (req, res) => {
       const publicUrl = `https://storage.googleapis.com/${bucket.name}/${gcsPath}`;
       res.json({ url: publicUrl });
     } catch (error) {
+      console.error('Error uploading file to Firebase Storage:', error);
       console.error('Firebase upload failed:', error);
       res.status(500).json({ message: 'Error uploading to Firebase Storage.' });
     } finally {

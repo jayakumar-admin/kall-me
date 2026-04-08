@@ -29,10 +29,10 @@ router.get('/:id', async (req, res) => {
 // Create hotel
 router.post('/', async (req, res) => {
   try {
-    const { name, address, category, rating, commission_rate, image_url, status } = req.body;
+    const { name, address, category, rating, image_url, status } = req.body;
     const result = await db.query(
-      'INSERT INTO hotels (name, address, category, rating, commission_rate, image_url, status) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [name, address, category, rating, commission_rate, image_url, status || 'active']
+      'INSERT INTO hotels (name, address, category, rating, image_url, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [name, address, category, rating, image_url, status || 'active']
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -45,10 +45,10 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, address, category, rating, commission_rate, image_url, status } = req.body;
+    const { name, address, category, rating, image_url, status } = req.body;
     const result = await db.query(
-      'UPDATE hotels SET name = $1, address = $2, category = $3, rating = $4, commission_rate = $5, image_url = $6, status = $7 WHERE id = $8 RETURNING *',
-      [name, address, category, rating, commission_rate, image_url, status, id]
+      'UPDATE hotels SET name = $1, address = $2, category = $3, rating = $4, image_url = $5, status = $6 WHERE id = $7 RETURNING *',
+      [name, address, category, rating, image_url, status, id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Hotel not found' });
     res.json(result.rows[0]);

@@ -31,8 +31,9 @@ export interface AppSettings {
     liveTracking: boolean;
     promoCodes: boolean;
   };
+  supportNumber: string;
   whatsapp: {
-    apiUrl: string;
+  apiUrl: string;
     apiKey: string;
     welcomeMessageTemplate: string;
     orderConfirmationClientTemplate: string;
@@ -74,6 +75,7 @@ export class SettingsService {
       liveTracking: true,
       promoCodes: true
     },
+    supportNumber: '919876543210',
     whatsapp: {
       apiUrl: 'https://graph.facebook.com/v22.0/YOUR_PHONE_NUMBER_ID/messages',
       apiKey: '',
@@ -106,6 +108,7 @@ export class SettingsService {
             financial: data.financial || current.financial,
             logistics: data.logistics || current.logistics,
             features: data.features || current.features,
+            supportNumber: data.supportNumber || current.supportNumber,
             whatsapp: data.whatsapp || current.whatsapp
           }));
         }

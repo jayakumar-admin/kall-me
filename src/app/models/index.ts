@@ -6,7 +6,6 @@ export interface Hotel {
   category: string;
   rating: number;
   reviews?: number;
-  commission_rate: number;
   image_url: string;
   images?: string[];
   status: 'active' | 'inactive';

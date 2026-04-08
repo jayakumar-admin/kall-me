@@ -228,11 +228,17 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
 
         <!-- Sidebar Settings -->
         <div class="space-y-8">
-          <div class="card bg-[#1A1A1A] text-white space-y-6 border-none">
-            <h3 class="font-bold">Need Assistance?</h3>
-            <p class="text-xs text-slate-400">Our system configuration specialists are available 24/7 to help you tune your delivery operations.</p>
-            <button (click)="contactSupport()" class="btn-primary w-full">Contact Support</button>
-          </div>
+              <div class="card bg-[#1A1A1A] text-white space-y-6 border-none">
+                <h3 class="font-bold">Need Assistance?</h3>
+                <p class="text-xs text-slate-400">Our system configuration specialists are available 24/7 to help you tune your delivery operations.</p>
+                
+                <div>
+                  <label for="supportNumber" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Support WhatsApp Number</label>
+                  <input id="supportNumber" type="text" [(ngModel)]="supportNumber" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] text-white mb-4" placeholder="e.g. 919876543210">
+                </div>
+
+                <button (click)="contactSupport()" class="btn-primary w-full">Contact Support</button>
+              </div>
         </div>
       </div>
     </div>
@@ -278,6 +284,7 @@ export class GeneralSettings implements OnInit {
   };
 
   shippingRanges: ShippingRange[] = [];
+  supportNumber = '918903035099';
 
   constructor() {
     effect(() => {
@@ -292,6 +299,7 @@ export class GeneralSettings implements OnInit {
     this.logistics = { ...settings.logistics };
     this.features = { ...settings.features };
     this.whatsapp = { ...settings.whatsapp };
+    this.supportNumber = settings.supportNumber || '919876543210';
   }
 
   save() {
@@ -300,7 +308,8 @@ export class GeneralSettings implements OnInit {
       financial: this.financial,
       logistics: this.logistics,
       features: this.features,
-      whatsapp: this.whatsapp
+      whatsapp: this.whatsapp,
+      supportNumber: this.supportNumber
     });
     this.settingsService.updateShippingRanges(this.shippingRanges);
     this.toast.success('Settings saved successfully');
@@ -320,6 +329,8 @@ export class GeneralSettings implements OnInit {
   }
 
   contactSupport() {
-    this.toast.info('Support request sent. Our team will contact you shortly.');
+    const message = encodeURIComponent('Hi AJR Digital Hub, I need support from you');
+    const url = `https://wa.me/${this.supportNumber}?text=${message}`;
+    window.open(url, '_blank');
   }
 }

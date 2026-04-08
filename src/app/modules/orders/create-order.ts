@@ -263,6 +263,16 @@ import { SettingsService } from '../../services/settings.service';
                   <input type="number" [ngModel]="shippingFee()" (ngModelChange)="onShippingFeeChange($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-6 pr-2 py-1 text-right text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                 </div>
               </div>
+
+              <div class="flex justify-between text-xs font-medium">
+                <span class="text-slate-500">GST ({{ gstPercent() }}%)</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (calculatedGst() || 0).toLocaleString() }}.00</span>
+              </div>
+
+              <div class="flex justify-between text-xs font-medium">
+                <span class="text-slate-500">IGST ({{ igstPercent() }}%)</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (calculatedIgst() || 0).toLocaleString() }}.00</span>
+              </div>
               
               <div class="bg-[#FFF9E6] p-4 rounded-xl flex justify-between items-center mt-3 border border-[#FFC107]/10">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-[#1A1A1A]">Grand Total</span>
@@ -430,6 +440,12 @@ export class CreateOrder implements OnInit {
   manualPrice = signal<number>(0);
   isShippingManuallyEdited = signal<boolean>(false);
 
+  gstPercent = computed(() => this.settingsService.settings().taxes.gst);
+  igstPercent = computed(() => this.settingsService.settings().taxes.igst);
+
+  calculatedGst = computed(() => (this.subtotal() * this.gstPercent()) / 100);
+  calculatedIgst = computed(() => (this.subtotal() * this.igstPercent()) / 100);
+
   onShippingFeeChange(value: number) {
     this.shippingFee.set(value);
     this.isShippingManuallyEdited.set(true);
@@ -439,7 +455,7 @@ export class CreateOrder implements OnInit {
     if (this.selectedHotel()?.id === -1) return this.manualPrice();
     return this.cart().reduce((acc, entry) => acc + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0);
   });
-  grandTotal = computed(() => Number(this.subtotal()) + Number(this.shippingFee() || 0));
+  grandTotal = computed(() => Number(this.subtotal()) + Number(this.shippingFee() || 0) + Number(this.calculatedGst()) + Number(this.calculatedIgst()));
   balancePending = computed(() => Math.max(0, Number(this.grandTotal()) - Number(this.amountReceived() || 0)));
 
   filteredHotels = computed(() => {
@@ -451,7 +467,6 @@ export class CreateOrder implements OnInit {
       address: '', 
       category: 'Manual Order', 
       rating: 0, 
-      commission_rate: 0, 
       image_url: 'assets/manual-logo.png', 
       status: 'active' 
     };

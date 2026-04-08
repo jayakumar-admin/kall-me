@@ -12,7 +12,6 @@ export const HOTELS: Hotel[] = [
     address: 'Mumbai, India',
     image_url: 'https://picsum.photos/seed/hyatt/400/200',
     category: 'Hotel',
-    commission_rate: 15,
     status: 'active'
   },
   {
@@ -23,7 +22,6 @@ export const HOTELS: Hotel[] = [
     address: 'Delhi, India',
     image_url: 'https://picsum.photos/seed/marriott/400/200',
     category: 'Hotel',
-    commission_rate: 12,
     status: 'active'
   },
   {
@@ -34,7 +32,6 @@ export const HOTELS: Hotel[] = [
     address: 'Mumbai, India',
     image_url: 'https://picsum.photos/seed/taj/400/200',
     category: 'Hotel',
-    commission_rate: 18,
     status: 'active'
   }
 ];

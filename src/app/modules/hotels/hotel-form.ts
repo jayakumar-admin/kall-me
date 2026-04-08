@@ -31,7 +31,6 @@ export class HotelForm implements OnInit {
     category: 'Indian',
     address: '',
     rating: 0,
-    commission_rate: 10,
     image_url: 'https://picsum.photos/seed/restaurant/800/600',
     status: 'active'
   };

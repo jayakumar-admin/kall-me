@@ -60,7 +60,7 @@ import { MatIconModule } from '@angular/material/icon';
   `,
   // styles: [`
   //   .btn-calc {
-  //     @apply -xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white;
+  //     @apply h-12 rounded-xl flex items-center justify-center text-sm font-bold transition-all active:scale-95 hover:bg-slate-50 dark:hover:bg-white/10 dark:text-white;
   //   }
   // `]
 })

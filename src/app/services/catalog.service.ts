@@ -75,6 +75,10 @@ export class CatalogService {
     return this.api.updateHotel(id, hotel);
   }
 
+  getHotel(id: number) {
+    return this.api.getHotel(id);
+  }
+
   // Delete hotel
   deleteHotel(id: number) {
     this.api.deleteHotel(id).subscribe({

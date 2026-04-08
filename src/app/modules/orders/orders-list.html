@@ -170,7 +170,7 @@
                   (ngModelChange)="updateStatus(order, $event)"
                   [class]="getStatusClass(order.status || 'Order Placed')"
                   class="appearance-none px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider outline-none cursor-pointer pr-6"
-                  [disabled]="order.status === 'Cancelled'"
+                  [disabled]="order.status === 'Cancelled' || order.status === 'Delivered'"
                 >
                   @if (order.status === 'Order Placed') {
                     <option value="Order Placed">Order Placed</option>
@@ -180,8 +180,6 @@
                   <option value="Delivered">Delivered</option>
                   @if (order.status === 'Cancelled') {
                     <option value="Cancelled">Cancelled</option>
-                  } @else {
-                    <option value="Cancelled" [disabled]="order.status === 'Delivered'">Cancelled</option>
                   }
                 </select>
                 <mat-icon

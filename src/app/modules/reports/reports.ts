@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, e
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ECharts, EChartsOption } from 'echarts';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
-import { Order } from '../../models';
+import { Order, DeliveryPerson } from '../../models';
 import { CatalogService } from '../../services/catalog.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -64,7 +65,7 @@ import autoTable from 'jspdf-autotable';
             Reset Filters
           </button>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label for="startDate" class="text-xs font-bold text-slate-500 mb-2 block">Start Date</label>
             <input id="startDate" type="date" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" class="input-field py-2 text-sm">
@@ -89,6 +90,15 @@ import autoTable from 'jspdf-autotable';
               <option value="all">All Hotels</option>
               @for (hotel of uniqueHotels(); track hotel.id) {
                 <option [value]="hotel.id">{{ hotel.name }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label for="deliveryFilter" class="text-xs font-bold text-slate-500 mb-2 block">Delivery Person</label>
+            <select id="deliveryFilter" [ngModel]="deliveryFilter()" (ngModelChange)="deliveryFilter.set($event)" class="input-field py-2 text-sm appearance-none">
+              <option value="all">All Delivery Persons</option>
+              @for (dp of drivers(); track dp.id) {
+                <option [value]="dp.id">{{ dp.name }}</option>
               }
             </select>
           </div>
@@ -236,8 +246,10 @@ export class Reports implements OnInit {
   private api = inject(ApiService);
   private toast = inject(ToastService);
   private catalog = inject(CatalogService);
+  private route = inject(ActivatedRoute);
   
   orders = signal<Order[]>([]);
+  drivers = signal<DeliveryPerson[]>([]);
   loading = signal(true);
   
   // Tabs
@@ -266,6 +278,16 @@ export class Reports implements OnInit {
       this.currentTab();
       this.currentSubTab.set('Table');
     });
+
+    // Handle query params for navigation from delivery list
+    this.route.queryParams.subscribe(params => {
+      if (params['tab']) {
+        this.currentTab.set(params['tab']);
+      }
+      if (params['deliveryPersonId']) {
+        this.deliveryFilter.set(params['deliveryPersonId']);
+      }
+    });
   }
 
   // Filters
@@ -273,6 +295,7 @@ export class Reports implements OnInit {
   endDate = signal<string>('');
   statusFilter = signal<string>('all');
   hotelFilter = signal<string>('all');
+  deliveryFilter = signal<string>('all');
 
   uniqueHotels = computed(() => {
     return this.catalog.hotels().sort((a, b) => a.name.localeCompare(b.name));
@@ -285,6 +308,7 @@ export class Reports implements OnInit {
     const end = this.endDate();
     const status = this.statusFilter();
     const hotelId = this.hotelFilter();
+    const deliveryId = this.deliveryFilter();
 
     if (start) {
       const startDate = new Date(start).getTime();
@@ -304,6 +328,11 @@ export class Reports implements OnInit {
     if (hotelId !== 'all') {
       const id = parseInt(hotelId);
       result = result.filter(o => o.hotel_id === id);
+    }
+
+    if (deliveryId !== 'all') {
+      const id = parseInt(deliveryId);
+      result = result.filter(o => o.delivery_person_id === id);
     }
 
     return result;
@@ -391,6 +420,8 @@ export class Reports implements OnInit {
 
   groupedByMonthlyDelivery = computed(() => {
     const grouped: Record<string, { month: string, name: string, orders: number, earnings: number }> = {};
+    const drivers = this.drivers();
+    
     this.filteredOrders().forEach(o => {
       if (o.created_at) {
         const date = new Date(o.created_at);
@@ -399,9 +430,16 @@ export class Reports implements OnInit {
         const key = `${monthYear}_${dpId}`;
         
         if (!grouped[key]) {
+          // Try to find name from drivers list if missing in order
+          let name = o.delivery_person_name;
+          if (!name && dpId) {
+            const driver = drivers.find(d => d.id === dpId);
+            if (driver) name = driver.name;
+          }
+          
           grouped[key] = { 
             month: monthYear, 
-            name: o.delivery_person_name || 'Unassigned', 
+            name: name || 'Unassigned', 
             orders: 0, 
             earnings: 0 
           };
@@ -429,9 +467,18 @@ export class Reports implements OnInit {
 
   groupedByDelivery = computed(() => {
     const grouped: Record<number, { name: string, orders: number, earnings: number }> = {};
+    const drivers = this.drivers();
+    
     this.filteredOrders().forEach(o => {
       const dpId = o.delivery_person_id || 0;
-      if (!grouped[dpId]) grouped[dpId] = { name: o.delivery_person_name || 'Unassigned', orders: 0, earnings: 0 };
+      if (!grouped[dpId]) {
+        let name = o.delivery_person_name;
+        if (!name && dpId) {
+          const driver = drivers.find(d => d.id === dpId);
+          if (driver) name = driver.name;
+        }
+        grouped[dpId] = { name: name || 'Unassigned', orders: 0, earnings: 0 };
+      }
       grouped[dpId].orders++;
       const deliveryFee = Number(o.shipping_fee) || 0;
       const adminComm = Number(o.admin_commission_amount) || 0;
@@ -792,6 +839,11 @@ export class Reports implements OnInit {
         this.loading.set(false);
       }
     });
+
+    this.api.getDeliveryTeam().subscribe({
+      next: (d) => this.drivers.set(d),
+      error: () => console.error('Failed to fetch delivery team')
+    });
   }
 
   resetFilters() {
@@ -799,6 +851,7 @@ export class Reports implements OnInit {
     this.endDate.set('');
     this.statusFilter.set('all');
     this.hotelFilter.set('all');
+    this.deliveryFilter.set('all');
     this.toast.info('Filters reset');
   }
 

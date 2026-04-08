@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal, OnInit, computed } 
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
@@ -22,6 +23,8 @@ export class DeliveryList implements OnInit {
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private imageUpload = inject(ImageUploadService);
+
+  private router = inject(Router);
 
   drivers = signal<DeliveryPerson[]>([]);
   filteredDrivers = signal<DeliveryPerson[]>([]);
@@ -58,6 +61,15 @@ export class DeliveryList implements OnInit {
   });
 
   totalPages = computed(() => Math.ceil(this.filteredDrivers().length / this.pageSize));
+
+  viewOrders(driver: DeliveryPerson) {
+    this.router.navigate(['/app/reports'], { 
+      queryParams: { 
+        tab: 'Delivery Man-wise',
+        deliveryPersonId: driver.id
+      } 
+    });
+  }
 
   nextPage() {
     if (this.currentPage() < this.totalPages()) {

@@ -64,7 +64,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
             </div>
 
             <!-- Admin Commission Ranges moved to separate route -->
-
+ <!--
             <div class="p-4 bg-[#FFC107]/5 rounded-xl flex items-center justify-between border border-[#FFC107]/10">
               <div>
                 <p class="text-sm font-bold text-[#1A1A1A] dark:text-white">Auto-settlement to Restaurants</p>
@@ -76,6 +76,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
               </label>
             </div>
           </div>
+          -->
 
           <!-- Logistics -->
           <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">
@@ -83,7 +84,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
               <mat-icon class="text-[#FFC107]">local_shipping</mat-icon>
               <h3 class="font-bold text-[#1A1A1A] dark:text-white">Delivery & Logistics</h3>
             </div>
-
+ <!--
             <div class="grid grid-cols-2 gap-6">
               <div>
                 <label for="deliveryCharge" class="text-xs font-bold text-slate-500 mb-2 block">Default Delivery Charge</label>
@@ -100,8 +101,8 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
                 </div>
               </div>
             </div>
-
-            <div>
+-->
+            <!--  <div>
               <label for="deliveryRadius" class="text-xs font-bold text-slate-500 mb-2 block">Default Delivery Radius (km): {{ logistics.deliveryRadius }}</label>
               <input id="deliveryRadius" type="range" min="1" max="50" [(ngModel)]="logistics.deliveryRadius" class="w-full accent-[#FFC107]">
               <div class="flex justify-between text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-widest">
@@ -109,7 +110,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
                 <span class="text-[#FFC107]">15km</span>
                 <span>50km</span>
               </div>
-            </div>
+            </div> -->
 
             <!-- Shipping Ranges -->
             <div class="space-y-4">
@@ -130,7 +131,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
             </div>
           </div>
           <!-- Feature Configuration -->
-          <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">
+          <!--  <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">
             <div class="flex items-center gap-2">
               <mat-icon class="text-[#FFC107]">toggle_on</mat-icon>
               <h3 class="font-bold text-[#1A1A1A] dark:text-white">Feature Configuration</h3>
@@ -170,7 +171,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
                 </label>
               </div>
             </div>
-          </div>
+          </div> -->
 
           <!-- WhatsApp Configuration -->
           <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">

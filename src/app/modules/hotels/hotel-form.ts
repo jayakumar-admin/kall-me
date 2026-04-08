@@ -44,6 +44,14 @@ export class HotelForm implements OnInit {
       const existingHotel = this.catalog.hotels().find(h => h.id === parseInt(id));
       if (existingHotel) {
         this.hotel = { ...existingHotel };
+      } else {
+        // Fetch from API if not in signal
+        this.catalog.getHotel(parseInt(id)).subscribe({
+          next: (h) => {
+            this.hotel = { ...h };
+          },
+          error: () => this.toast.error('Failed to load restaurant details')
+        });
       }
     }
   }

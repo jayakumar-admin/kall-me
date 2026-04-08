@@ -71,13 +71,13 @@ export const routes: Routes = [
         canActivate: [roleGuard(['admin'])]
       },
       {
-        path: 'hotels/:id',
-        loadComponent: () => import('./modules/hotels/hotel-details').then(m => m.HotelDetails),
+        path: 'hotels/create',
+        loadComponent: () => import('./modules/hotels/hotel-form').then(m => m.HotelForm),
         canActivate: [roleGuard(['admin'])]
       },
       {
-        path: 'hotels/create',
-        loadComponent: () => import('./modules/hotels/hotel-form').then(m => m.HotelForm),
+        path: 'hotels/:id',
+        loadComponent: () => import('./modules/hotels/hotel-details').then(m => m.HotelDetails),
         canActivate: [roleGuard(['admin'])]
       },
       {

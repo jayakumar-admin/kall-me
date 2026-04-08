@@ -12,8 +12,8 @@ import { LoaderService } from './loader.service';
 export class ApiService {
   private http = inject(HttpClient);
   private loader = inject(LoaderService);
-// public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
-  public baseUrl = 'http://localhost:3000/api';
+public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  // public baseUrl = 'http://localhost:3000/api';
 
 
   private withLoader<T>(request: Observable<T>, message: string): Observable<T> {
@@ -28,6 +28,13 @@ export class ApiService {
     return this.withLoader(
       this.http.get<Hotel[]>(`${this.baseUrl}/hotels`),
       'Fetching Hotels...'
+    );
+  }
+
+  getHotel(id: number): Observable<Hotel> {
+    return this.withLoader(
+      this.http.get<Hotel>(`${this.baseUrl}/hotels/${id}`),
+      'Fetching Hotel Details...'
     );
   }
 

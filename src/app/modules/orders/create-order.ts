@@ -452,7 +452,7 @@ export class CreateOrder implements OnInit {
       category: 'Manual Order', 
       rating: 0, 
       commission_rate: 0, 
-      image_url: '', 
+      image_url: 'assets/manual-logo.png', 
       status: 'active' 
     };
     const hotels = [othersHotel, ...this.catalog.hotels()];

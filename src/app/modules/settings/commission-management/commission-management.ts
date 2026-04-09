@@ -11,15 +11,15 @@ import { CommissionRange } from '../../../models';
   standalone: true,
   imports: [CommonModule, MatIconModule, FormsModule],
   template: `
-    <div class="p-8 space-y-8 max-w-4xl mx-auto">
-      <div class="flex items-center justify-between">
+    <div class="p-4 md:p-8 space-y-8 max-w-4xl mx-auto">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Commission Management</h1>
-          <p class="text-slate-500 dark:text-slate-400">Configure admin commission based on delivery charges.</p>
+          <h1 class="text-2xl md:text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Commission Management</h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Configure admin commission based on delivery charges.</p>
         </div>
-        <div class="flex gap-3">
-          <button (click)="discard()" class="px-6 py-2 rounded-xl bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-sm">Discard</button>
-          <button (click)="save()" class="btn-primary">Save Changes</button>
+        <div class="flex gap-3 w-full sm:w-auto">
+          <button (click)="discard()" class="flex-1 sm:flex-none px-6 py-2 rounded-xl bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-sm">Discard</button>
+          <button (click)="save()" class="btn-primary flex-1 sm:flex-none">Save Changes</button>
         </div>
       </div>
 
@@ -41,7 +41,7 @@ import { CommissionRange } from '../../../models';
             </button>
           </div>
           
-          <div class="grid grid-cols-4 gap-4 mb-2 px-4">
+          <div class="hidden sm:grid grid-cols-4 gap-4 mb-2 px-4">
             <div class="text-xs font-bold text-slate-500">Min DC (₹)</div>
             <div class="text-xs font-bold text-slate-500">Max DC (₹)</div>
             <div class="text-xs font-bold text-slate-500">Commission (%)</div>
@@ -49,7 +49,7 @@ import { CommissionRange } from '../../../models';
           </div>
 
           @for (range of ranges; track $index) {
-            <div class="grid grid-cols-4 gap-4 items-center">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
               <input type="number" [(ngModel)]="range.min_range" placeholder="Min DC" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
               <input type="number" [(ngModel)]="range.max_range" placeholder="Max DC" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
               <input type="number" [(ngModel)]="range.commission_percentage" placeholder="%" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">

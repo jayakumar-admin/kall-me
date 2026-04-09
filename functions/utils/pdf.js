@@ -30,8 +30,8 @@ async function generateInvoicePdf(order, items) {
       // Company Info
       doc.fontSize(12).text('KALL ME Delivery', { align: 'right' });
       doc.fontSize(10).text('123 Delivery Street', { align: 'right' });
-      doc.text('Food City, FC 12345', { align: 'right' });
-      doc.text('GSTIN: TAX-KALL-99201', { align: 'right' });
+      doc.text('Amalapuram, Andhra Pradesh', { align: 'right' });
+      doc.text('GSTIN: --', { align: 'right' });
       doc.moveDown();
 
       doc.lineCap('butt').moveTo(50, doc.y).lineTo(550, doc.y).stroke();

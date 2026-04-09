@@ -50,6 +50,8 @@ export interface Order {
   admin_commission_amount: number;
   commission_percentage_applied: number;
   grand_total: number;
+  gst_amount: number;
+  igst_amount: number;
   amount_received: number;
   balance_pending: number;
   status?: 'Order Placed' | 'Live' | 'In Transit' | 'Delivered' | 'Cancelled';

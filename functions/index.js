@@ -36,7 +36,7 @@ const browserIndexHtml = path.join(browserDistFolder, 'index.html');
 const hasBrowserBuild = fs.existsSync(browserIndexHtml);
 
 if (hasBrowserBuild) {
-  app.use(express.static(browserDistFolder));
+app.use(express.static(browserDistFolder));
 } else {
   console.warn(
     `WARNING: Angular build not found at ${browserIndexHtml}. Run 'npm run build' from the repo root to generate it.`

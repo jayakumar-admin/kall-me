@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -112,12 +112,12 @@ import { Order } from '../../models';
                 </div>
               </div>
               <div class="flex justify-between text-sm">
-                <span class="text-slate-500">GST ({{ gstPercent }}%)</span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ calculatedGst.toLocaleString() }}</span>
+                <span class="text-slate-500">GST ({{ gstPercent() }}%)</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ calculatedGst().toLocaleString() }}</span>
               </div>
               <div class="flex justify-between text-sm">
-                <span class="text-slate-500">IGST ({{ igstPercent }}%)</span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ calculatedIgst.toLocaleString() }}</span>
+                <span class="text-slate-500">IGST ({{ igstPercent() }}%)</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ calculatedIgst().toLocaleString() }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-slate-500">Admin Commission</span>
@@ -137,7 +137,7 @@ import { Order } from '../../models';
                 <span class="text-slate-500">Balance Pending</span>
                 <div class="flex items-center gap-2">
                   <span class="text-[#1A1A1A] dark:text-white">₹</span>
-                  <input type="number" [(ngModel)]="pendingAmount" class="w-24 bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <input type="number" [ngModel]="pendingAmount()" class="w-24 bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                   <button (click)="updatePending()" class="text-[#FFC107] hover:text-[#FFA000]">
                     <mat-icon>save</mat-icon>
                   </button>
@@ -146,8 +146,8 @@ import { Order } from '../../models';
               <div class="flex justify-between text-lg font-black pt-2 border-t border-slate-100 dark:border-white/5">
                 <span class="text-[#1A1A1A] dark:text-white">Grand Total</span>
                 <div class="flex items-center gap-2">
-                  <span class="text-[#FFC107]">₹{{ (1 * (grandTotalAmount || 0)).toLocaleString() }}</span>
-                  <input type="number" [(ngModel)]="grandTotalAmount" class="w-24 bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white ml-4">
+                  <span class="text-[#FFC107]">₹{{ calculatedGrandTotal().toLocaleString() }}</span>
+                  <input type="number" [ngModel]="grandTotalAmount()" (ngModelChange)="grandTotalAmount.set($event)" class="w-24 bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-200 dark:border-white/5 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white ml-4">
                   <button (click)="updateGrandTotal()" class="text-[#FFC107] hover:text-[#FFA000]">
                     <mat-icon>save</mat-icon>
                   </button>
@@ -174,23 +174,23 @@ export class OrderDetails implements OnInit {
   settingsService = inject(SettingsService);
   toast = inject(ToastService);
   order = signal<Order | null>(null);
-  pendingAmount = 0;
-  grandTotalAmount = 0;
+  pendingAmount = signal(0);
+  grandTotalAmount = signal(0);
   shippingFeeAmount = 0;
   advanceAmount = 0;
+  
+  // Computed values for display and calculation
+  subtotal = computed(() => Number(this.order()?.subtotal) || 0);
+  shippingFee = computed(() => Number(this.shippingFeeAmount) || 0);
+  gstPercent = computed(() => Number(this.settingsService.settings().taxes.gst) || 0);
+  igstPercent = computed(() => Number(this.settingsService.settings().taxes.igst) || 0);
+  calculatedGst = computed(() => Math.round(((this.subtotal() + this.shippingFee()) * this.gstPercent()) / 100));
+  calculatedIgst = computed(() => Math.round(((this.subtotal() + this.shippingFee()) * this.igstPercent()) / 100));
+  
+  calculatedGrandTotal = computed(() => Math.round(this.subtotal() + this.shippingFee() + this.calculatedGst() + this.calculatedIgst()));
+  defaultPendingAmount = computed(() => Math.max(0, Math.round(this.grandTotalAmount() - Number(this.advanceAmount))));
 
-  get gstPercent() { return this.settingsService.settings().taxes.gst; }
-  get igstPercent() { return this.settingsService.settings().taxes.igst; }
 
-  get calculatedGst() {
-    const sub = this.order()?.subtotal || 0;
-    return (sub * this.gstPercent) / 100;
-  }
-
-  get calculatedIgst() {
-    const sub = this.order()?.subtotal || 0;
-    return (sub * this.igstPercent) / 100;
-  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -199,8 +199,8 @@ export class OrderDetails implements OnInit {
         this.api.getOrder(id).subscribe({
           next: (order: Order) => {
             this.order.set(order);
-            this.pendingAmount = order.balance_pending || 0;
-            this.grandTotalAmount = order.grand_total || 0;
+            this.pendingAmount.set(order.balance_pending || 0);
+            this.grandTotalAmount.set(order.grand_total || 0);
             this.shippingFeeAmount = order.shipping_fee || 0;
             this.advanceAmount = order.amount_received || 0;
           },
@@ -209,8 +209,8 @@ export class OrderDetails implements OnInit {
             const foundOrder = this.orderService.orders().find(o => o.id?.toString() === id || o.order_number === id);
             if (foundOrder) {
               this.order.set(foundOrder);
-              this.pendingAmount = foundOrder.balance_pending || 0;
-              this.grandTotalAmount = foundOrder.grand_total || 0;
+              this.pendingAmount.set(foundOrder.balance_pending || 0);
+              this.grandTotalAmount.set(foundOrder.grand_total || 0);
               this.shippingFeeAmount = foundOrder.shipping_fee || 0;
               this.advanceAmount = foundOrder.amount_received || 0;
             } else {
@@ -226,11 +226,11 @@ export class OrderDetails implements OnInit {
   updateAdvance() {
     const order = this.order();
     if (order && order.id) {
-      const grandTotal = order.grand_total || 0;
-      const newPending = Math.max(0, grandTotal - this.advanceAmount);
-      this.pendingAmount = newPending;
-      this.orderService.updateOrder(order.id, { amount_received: this.advanceAmount, balance_pending: newPending });
-      this.order.update(o => o ? { ...o, amount_received: this.advanceAmount, balance_pending: newPending } : o);
+      const grandTotal = this.calculatedGrandTotal();
+      const newPending = Math.max(0, grandTotal - Math.round(this.advanceAmount));
+      this.pendingAmount.set(newPending);
+      this.orderService.updateOrder(order.id, { amount_received: Math.round(this.advanceAmount), balance_pending: newPending });
+      this.order.update(o => o ? { ...o, amount_received: Math.round(this.advanceAmount), balance_pending: newPending } : o);
       this.toast.success('Advance amount updated');
     }
   }
@@ -238,11 +238,11 @@ export class OrderDetails implements OnInit {
   updatePending() {
     const order = this.order();
     if (order && order.id) {
-      const grandTotal = order.grand_total || 0;
-      const amountReceived = Math.max(0, grandTotal - this.pendingAmount);
+      const grandTotal = this.calculatedGrandTotal();
+      const amountReceived = Math.max(0, grandTotal - Math.round(this.pendingAmount()));
       this.advanceAmount = amountReceived;
-      this.orderService.updateOrder(order.id, { balance_pending: this.pendingAmount, amount_received: amountReceived });
-      this.order.update(o => o ? { ...o, balance_pending: this.pendingAmount, amount_received: amountReceived } : o);
+      this.orderService.updateOrder(order.id, { balance_pending: Math.round(this.pendingAmount()), amount_received: amountReceived });
+      this.order.update(o => o ? { ...o, balance_pending: Math.round(this.pendingAmount()), amount_received: amountReceived } : o);
       this.toast.success('Balance pending updated');
     }
   }
@@ -250,11 +250,12 @@ export class OrderDetails implements OnInit {
   updateGrandTotal() {
     const order = this.order();
     if (order && order.id) {
-      const amountReceived = order.amount_received || 0;
-      const newPending = Math.max(0, this.grandTotalAmount - amountReceived);
-      this.pendingAmount = newPending;
-      this.orderService.updateOrder(order.id, { grand_total: this.grandTotalAmount, balance_pending: newPending });
-      this.order.update(o => o ? { ...o, grand_total: this.grandTotalAmount, balance_pending: newPending } : o);
+      const grandTotal = this.grandTotalAmount();
+      const amountReceived = Math.round(order.amount_received || 0);
+      const newPending = Math.max(0, grandTotal - amountReceived);
+      this.pendingAmount.set(newPending);
+      this.orderService.updateOrder(order.id, { grand_total: grandTotal, balance_pending: newPending });
+      this.order.update(o => o ? { ...o, grand_total: grandTotal, balance_pending: newPending } : o);
       this.toast.success('Grand total updated');
     }
   }
@@ -262,16 +263,12 @@ export class OrderDetails implements OnInit {
   updateShippingFee() {
     const order = this.order();
     if (order && order.id) {
-      const subtotal = order.subtotal || 0;
-      const gst = (subtotal * this.gstPercent) / 100;
-      const igst = (subtotal * this.igstPercent) / 100;
-      const newGrandTotal = (1 * subtotal) + (1 * this.shippingFeeAmount) + gst + igst;
-      this.grandTotalAmount = newGrandTotal;
-      const amountReceived = order.amount_received || 0;
+      const newGrandTotal = this.calculatedGrandTotal();
+      const amountReceived = Math.round(order.amount_received || 0);
       const newPending = Math.max(0, newGrandTotal - amountReceived);
-      this.pendingAmount = newPending;
-      this.orderService.updateOrder(order.id, { shipping_fee: this.shippingFeeAmount, grand_total: newGrandTotal, balance_pending: newPending });
-      this.order.update(o => o ? { ...o, shipping_fee: this.shippingFeeAmount, grand_total: newGrandTotal, balance_pending: newPending } : o);
+      this.pendingAmount.set(newPending);
+      this.orderService.updateOrder(order.id, { shipping_fee: Math.round(this.shippingFeeAmount), grand_total: newGrandTotal, balance_pending: newPending });
+      this.order.update(o => o ? { ...o, shipping_fee: Math.round(this.shippingFeeAmount), grand_total: newGrandTotal, balance_pending: newPending } : o);
       this.toast.success('Shipping fee updated');
     }
   }

@@ -11,15 +11,16 @@ import { Hotel, DeliveryPerson, Order } from '../../models';
 
 import { OrderService } from '../../services/order.service';
 import { SettingsService } from '../../services/settings.service';
+import { InvoiceService } from '../../services/invoice.service';
 
 @Component({
   selector: 'app-create-order',
   standalone: true,
   imports: [CommonModule, FormsModule, MatIconModule],
   template: `
-    <div class="h-full overflow-hidden p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="h-full overflow-y-auto lg:overflow-hidden p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Left Panel: Hotel Selection -->
-      <div class="lg:col-span-3 flex flex-col gap-4 h-full overflow-hidden">
+      <div class="lg:col-span-3 flex flex-col gap-4 lg:h-full lg:overflow-hidden shrink-0">
         <div class="flex flex-col shrink-0">
           <h2 class="text-lg font-bold text-[#1A1A1A] dark:text-white flex items-center gap-2">
             <div class="w-6 h-6 bg-[#FFC107] rounded flex items-center justify-center">
@@ -40,18 +41,18 @@ import { SettingsService } from '../../services/settings.service';
           >
         </div>
 
-        <div class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+        <div class="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-y-auto lg:space-y-3 lg:space-x-0 pb-2 lg:pb-0 pr-1 custom-scrollbar">
           @for (hotel of filteredHotels(); track hotel.id) {
             <div 
               (click)="selectHotel(hotel)"
               (keydown.enter)="selectHotel(hotel)"
               tabindex="0"
-              class="group cursor-pointer bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 rounded-xl overflow-hidden transition-all hover:shadow-md"
+              class="group cursor-pointer bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 rounded-xl overflow-hidden transition-all hover:shadow-md shrink-0 w-32 lg:w-auto"
               [class.border-[#FFC107]]="selectedHotel()?.id === hotel.id"
               [class.ring-2]="selectedHotel()?.id === hotel.id"
               [class.ring-[#FFC107]/20]="selectedHotel()?.id === hotel.id"
             >
-              <div class="h-24 overflow-hidden relative">
+              <div class="h-20 lg:h-24 overflow-hidden relative">
                 <img [src]="hotel.image_url || 'https://picsum.photos/seed/' + hotel.name + '/400/300'" [alt]="hotel.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 @if (selectedHotel()?.id === hotel.id) {
                   <div class="absolute top-2 right-2 w-5 h-5 bg-[#FFC107] rounded-full flex items-center justify-center shadow-lg">
@@ -59,8 +60,8 @@ import { SettingsService } from '../../services/settings.service';
                   </div>
                 }
               </div>
-              <div class="p-3">
-                <h3 class="font-bold text-sm text-[#1A1A1A] dark:text-white truncate">{{ hotel.name }}</h3>
+              <div class="p-2 lg:p-3 text-center lg:text-left">
+                <h3 class="font-bold text-xs lg:text-sm text-[#1A1A1A] dark:text-white truncate">{{ hotel.name }}</h3>
               </div>
             </div>
           }
@@ -68,7 +69,7 @@ import { SettingsService } from '../../services/settings.service';
       </div>
 
       <!-- Center Panel: Menu Selection -->
-      <div class="lg:col-span-5 flex flex-col gap-4 h-full overflow-hidden">
+      <div class="lg:col-span-5 flex flex-col gap-4 lg:h-full lg:overflow-hidden min-h-[400px]">
         <div class="flex items-center justify-between shrink-0">
           <div>
             <h2 class="text-xl font-bold text-[#1A1A1A] dark:text-white">Menu Selection</h2>
@@ -111,33 +112,33 @@ import { SettingsService } from '../../services/settings.service';
           </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+        <div class="flex-1 overflow-y-auto grid grid-cols-2 lg:grid-cols-1 lg:flex lg:flex-col gap-3 pr-1 custom-scrollbar">
           @if (selectedHotel()?.id !== -1) {
             @for (item of filteredMenu(); track item.id) {
               <div 
-                class="bg-white dark:bg-[#1E293B] rounded-xl border border-slate-100 dark:border-white/5 p-3 flex gap-4 items-center group transition-all hover:border-[#FFC107]/30"
+                class="bg-white dark:bg-[#1E293B] rounded-xl border border-slate-100 dark:border-white/5 p-2 lg:p-3 flex flex-col lg:flex-row gap-2 lg:gap-4 items-center lg:items-start group transition-all hover:border-[#FFC107]/30"
                 [class.border-[#FFC107]]="getQuantity(item) > 0"
                 [class.bg-[#FFF9E6]/20]="getQuantity(item) > 0"
               >
-                <div class="relative">
-                  <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0">
+                <div class="relative w-full lg:w-auto flex justify-center">
+                  <div class="w-full aspect-square lg:w-16 lg:h-16 rounded-lg overflow-hidden shrink-0">
                     <img [src]="item.image_url || 'https://picsum.photos/seed/' + item.name + '/100/100'" [alt]="item.name" class="w-full h-full object-cover">
                   </div>
                   @if (getQuantity(item) > 0) {
-                    <div class="absolute -top-1 -left-1 w-5 h-5 bg-[#FFC107] rounded-full flex items-center justify-center shadow-sm">
-                      <mat-icon class="text-black text-xs font-bold">check</mat-icon>
+                    <div class="absolute -top-2 -right-2 lg:-top-1 lg:-left-1 w-6 h-6 lg:w-5 lg:h-5 bg-[#FFC107] rounded-full flex items-center justify-center shadow-sm">
+                      <mat-icon class="text-black text-sm lg:text-xs font-bold">check</mat-icon>
                     </div>
                   }
                 </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex justify-between items-start">
-                    <h4 class="font-bold text-sm text-[#1A1A1A] dark:text-white truncate">{{ item.name }}</h4>
-                    <span class="font-bold text-[#FFC107]">₹{{ ((item.hotelPrice ?? item.price) || 0).toLocaleString() }}</span>
+                <div class="flex-1 min-w-0 w-full flex flex-col">
+                  <div class="flex flex-col lg:flex-row justify-between items-start">
+                    <h4 class="font-bold text-xs lg:text-sm text-[#1A1A1A] dark:text-white line-clamp-2 lg:truncate">{{ item.name }}</h4>
+                    <span class="font-bold text-[#FFC107] text-sm mt-1 lg:mt-0">₹{{ ((item.hotelPrice ?? item.price) || 0).toLocaleString() }}</span>
                   </div>
-                  <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{{ item.description }}</p>
+                  <p class="text-[10px] lg:text-[11px] text-slate-500 line-clamp-2 lg:line-clamp-1 mt-1 lg:mt-0.5">{{ item.description }}</p>
                   
-                  <div class="flex items-center justify-between mt-2">
-                    <div class="flex items-center bg-slate-100 dark:bg-[#0F172A] rounded-lg p-0.5">
+                  <div class="flex items-center justify-between mt-auto pt-2 lg:pt-0 lg:mt-2">
+                    <div class="flex items-center bg-slate-100 dark:bg-[#0F172A] rounded-lg p-0.5 w-full lg:w-auto justify-between lg:justify-start">
                       <button (click)="updateQuantity(item, -1)" class="w-7 h-7 flex items-center justify-center hover:bg-white dark:hover:bg-[#1E293B] rounded-md transition-colors text-slate-500">
                         <mat-icon class="text-sm">remove</mat-icon>
                       </button>
@@ -147,19 +148,19 @@ import { SettingsService } from '../../services/settings.service';
                       </button>
                     </div>
                     @if (getQuantity(item) > 0) {
-                      <span class="text-[10px] font-bold text-slate-400">₹{{ ((getQuantity(item) * (item.hotelPrice ?? item.price)) || 0).toLocaleString() }}</span>
+                      <span class="text-[10px] font-bold text-slate-400 hidden lg:inline">₹{{ ((getQuantity(item) * (item.hotelPrice ?? item.price)) || 0).toLocaleString() }}</span>
                     }
                   </div>
                 </div>
               </div>
             } @empty {
-              <div class="py-12 text-center">
+              <div class="py-12 text-center col-span-2 lg:col-span-1">
                 <mat-icon class="text-4xl text-slate-300 mb-2">restaurant_menu</mat-icon>
                 <p class="text-slate-500">No items found for this category.</p>
               </div>
             }
           } @else {
-            <div class="py-12 text-center">
+            <div class="py-12 text-center col-span-2 lg:col-span-1">
               <mat-icon class="text-4xl text-slate-300 mb-2">info</mat-icon>
               <p class="text-slate-500">Menu selection is disabled for 'Manual Order'.</p>
             </div>
@@ -168,7 +169,7 @@ import { SettingsService } from '../../services/settings.service';
       </div>
 
       <!-- Right Panel: Order Summary -->
-      <div class="lg:col-span-4 flex flex-col gap-4 h-full overflow-hidden">
+      <div class="lg:col-span-4 flex flex-col gap-4 lg:h-full lg:overflow-hidden min-h-[500px]">
         <div class="flex items-center gap-2 shrink-0">
           <div class="w-6 h-6 bg-[#FFC107] rounded flex items-center justify-center">
             <mat-icon class="text-black text-sm">receipt_long</mat-icon>
@@ -185,7 +186,7 @@ import { SettingsService } from '../../services/settings.service';
                 <span class="text-[10px] font-bold text-slate-500 block">OrderID</span>
                 <span class="text-sm font-bold text-[#1A1A1A] dark:text-white">{{ orderId() }}</span>
               </div>
-              <div class="grid gap-3">
+              <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label for="customerPhone" class="text-[10px] font-bold text-slate-500 mb-1 block">Phone Number <span class="text-red-500">*</span></label>
                   <div class="relative">
@@ -254,7 +255,7 @@ import { SettingsService } from '../../services/settings.service';
             <div class="space-y-2 pt-4 border-t border-slate-100">
               <div class="flex justify-between text-xs font-medium">
                 <span class="text-slate-500">Food Subtotal</span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ (subtotal() || 0).toLocaleString() }}.00</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (subtotal() || 0).toLocaleString() }}</span>
               </div>
               <div class="flex justify-between items-center text-xs font-medium">
                 <span class="text-slate-500 flex items-center gap-1">Delivery Charges (DC)</span>
@@ -266,23 +267,23 @@ import { SettingsService } from '../../services/settings.service';
 
               <div class="flex justify-between text-xs font-medium">
                 <span class="text-slate-500">GST ({{ gstPercent() }}%)</span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ (calculatedGst() || 0).toLocaleString() }}.00</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (calculatedGst() || 0).toLocaleString() }}</span>
               </div>
 
               <div class="flex justify-between text-xs font-medium">
                 <span class="text-slate-500">IGST ({{ igstPercent() }}%)</span>
-                <span class="text-[#1A1A1A] dark:text-white">₹{{ (calculatedIgst() || 0).toLocaleString() }}.00</span>
+                <span class="text-[#1A1A1A] dark:text-white">₹{{ (calculatedIgst() || 0).toLocaleString() }}</span>
               </div>
               
               <div class="bg-[#FFF9E6] p-4 rounded-xl flex justify-between items-center mt-3 border border-[#FFC107]/10">
                 <span class="text-[10px] font-bold uppercase tracking-wider text-[#1A1A1A]">Grand Total</span>
-                <span class="text-xl font-display font-black text-[#FFC107]">₹{{ (grandTotal() || 0).toLocaleString() }}.00</span>
+                <span class="text-xl font-display font-black text-[#FFC107]">₹{{ (grandTotal() || 0).toLocaleString() }}</span>
               </div>
 
               <div class="flex flex-col gap-1 pt-3">
                 <div class="flex justify-between items-center">
                   <span class="text-[10px] font-bold text-slate-500">Advance Amount</span>
-                  <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ (amountReceived() || 0).toLocaleString() }}.00</span>
+                  <span class="text-xs font-bold text-[#1A1A1A] dark:text-white">₹{{ (amountReceived() || 0).toLocaleString() }}</span>
                 </div>
                 <div class="h-px bg-slate-100 border-dashed border-t w-full my-1"></div>
                 <div class="flex justify-between items-center">
@@ -290,7 +291,7 @@ import { SettingsService } from '../../services/settings.service';
                     <span class="text-[10px] font-bold text-red-500 uppercase tracking-tighter">Balance Pending</span>
                     <span class="text-[8px] text-slate-400">To be received</span>
                   </div>
-                  <span class="text-lg font-black text-red-500">₹{{ (balancePending() || 0).toLocaleString() }}.00</span>
+                  <span class="text-lg font-black text-red-500">₹{{ (balancePending() || 0).toLocaleString() }}</span>
                 </div>
               </div>
             </div>
@@ -392,6 +393,7 @@ export class CreateOrder implements OnInit {
   api = inject(ApiService);
   orderService = inject(OrderService);
   settingsService = inject(SettingsService);
+  invoiceService = inject(InvoiceService);
   router = inject(Router);
   
   drivers = signal<DeliveryPerson[]>([]);
@@ -443,20 +445,26 @@ export class CreateOrder implements OnInit {
   gstPercent = computed(() => this.settingsService.settings().taxes.gst);
   igstPercent = computed(() => this.settingsService.settings().taxes.igst);
 
-  calculatedGst = computed(() => (this.subtotal() * this.gstPercent()) / 100);
-  calculatedIgst = computed(() => (this.subtotal() * this.igstPercent()) / 100);
+  calculatedGst = computed(() => Math.round(((this.subtotal() + this.shippingFee()) * this.gstPercent()) / 100));
+  calculatedIgst = computed(() => Math.round(((this.subtotal() + this.shippingFee()) * this.igstPercent()) / 100));
 
   onShippingFeeChange(value: number) {
-    this.shippingFee.set(value);
+    this.shippingFee.set(Math.round(value));
     this.isShippingManuallyEdited.set(true);
   }
 
   subtotal = computed(() => {
-    if (this.selectedHotel()?.id === -1) return this.manualPrice();
-    return this.cart().reduce((acc, entry) => acc + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0);
+    if (this.selectedHotel()?.id === -1) return Math.round(this.manualPrice());
+    return Math.round(this.cart().reduce((acc, entry) => acc + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0));
   });
-  grandTotal = computed(() => Number(this.subtotal()) + Number(this.shippingFee() || 0) + Number(this.calculatedGst()) + Number(this.calculatedIgst()));
-  balancePending = computed(() => Math.max(0, Number(this.grandTotal()) - Number(this.amountReceived() || 0)));
+  grandTotal = computed(() => {
+    const sub = Number(this.subtotal() || 0);
+    const ship = Number(this.shippingFee() || 0);
+    const gst = Number(this.calculatedGst() || 0);
+    const igst = Number(this.calculatedIgst() || 0);
+    return Math.round(sub + ship + gst + igst);
+  });
+  balancePending = computed(() => Math.max(0, Math.round(Number(this.grandTotal()) - Number(this.amountReceived() || 0))));
 
   filteredHotels = computed(() => {
     const filter = this.hotelFilter().toLowerCase();
@@ -517,7 +525,7 @@ export class CreateOrder implements OnInit {
           const range = ranges.find(r => sub >= r.min_amount && sub < r.max_amount);
           if (range) fee = range.price;
         }
-        this.shippingFee.set(fee);
+        this.shippingFee.set(Math.round(fee));
       }
     }, { allowSignalWrites: true });
 
@@ -627,6 +635,8 @@ export class CreateOrder implements OnInit {
       admin_commission_amount: commissionAmount,
       commission_percentage_applied: commissionPercentage,
       grand_total: this.grandTotal(),
+      gst_amount: this.calculatedGst(),
+      igst_amount: this.calculatedIgst(),
       amount_received: this.amountReceived(),
       balance_pending: this.balancePending(),
       status: 'Order Placed',
@@ -645,8 +655,31 @@ export class CreateOrder implements OnInit {
     console.log('Sending order data:', orderData);
 
     this.api.createOrder(orderData).subscribe({
-      next: (order) => {
+      next: async (order) => {
         this.toast.success(`Order #${order.order_number} confirmed successfully!`);
+        
+        // Auto-send invoice via WhatsApp
+        if (order.customer_phone) {
+          try {
+            const doc = await this.invoiceService.createInvoicePdf(order);
+            const pdfBase64 = doc.output('datauristring').split(',')[1];
+            
+            this.api.sendInvoicePdf(
+              order.customer_phone,
+              order.order_number || order.id?.toString() || '0',
+              pdfBase64,
+              order.id!,
+              Number(order.grand_total) || 0,
+              order.customer_name
+            ).subscribe({
+              next: () => this.toast.success('Invoice sent via WhatsApp'),
+              error: (err) => console.error('Failed to auto-send WhatsApp invoice:', err)
+            });
+          } catch (error) {
+            console.error('Failed to generate PDF for auto-send:', error);
+          }
+        }
+
         this.cart.set([]);
         this.amountReceived.set(0);
         this.orderService.loadOrders();

@@ -89,6 +89,8 @@ CREATE TABLE IF NOT EXISTS orders (
     admin_commission_amount DECIMAL(10,2),
     commission_percentage_applied DECIMAL(5,2),
     grand_total DECIMAL(10,2),
+    gst_amount DECIMAL(10,2),
+    igst_amount DECIMAL(10,2),
     amount_received DECIMAL(10,2),
     balance_pending DECIMAL(10,2),
     status VARCHAR(50) DEFAULT 'placed',

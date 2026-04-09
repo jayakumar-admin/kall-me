@@ -39,7 +39,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const { 
       order_number, hotel_id, hotel_name, delivery_person_id, customer_name, customer_phone, 
       customer_type, delivery_address, delivery_description, subtotal, amount_received, 
-      balance_pending, status, items 
+      balance_pending, status, items, gst_amount, igst_amount
     } = req.body;
 
     // Calculate shipping fee
@@ -64,7 +64,7 @@ router.post('/', authenticateToken, async (req, res) => {
       admin_commission_amount = (shipping_fee * commission_percentage_applied) / 100;
     }
 
-    const grand_total = Number(subtotal) + Number(shipping_fee);
+    const grand_total = Number(subtotal) + Number(shipping_fee) + Number(gst_amount) + Number(igst_amount);
 
     const hotel_id_to_use = (hotel_id === -1 || hotel_id === '-1' || !hotel_id) ? null : hotel_id;
     let order_number_to_use = order_number;
@@ -72,30 +72,31 @@ router.post('/', authenticateToken, async (req, res) => {
     let inserted = false;
     
     while (!inserted) {
-      try {
-        orderResult = await client.query(
-          `INSERT INTO orders (
-            order_number, hotel_id, hotel_name, delivery_person_id, customer_name, customer_phone, 
-            customer_type, delivery_address, delivery_description, subtotal, shipping_fee, delivery_charge, 
-            admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
-            balance_pending, status
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING *`,
-          [
-            order_number_to_use, hotel_id_to_use, hotel_name, delivery_person_id, customer_name, customer_phone, 
-            customer_type, delivery_address, delivery_description, subtotal, shipping_fee, shipping_fee, 
-            admin_commission_amount, commission_percentage_applied, grand_total, amount_received, 
-            balance_pending, status || 'Order Placed'
-          ]
-        );
-        inserted = true;
-      } catch (err) {
-        if (err.code === '23505') { // Unique constraint violation
-          order_number_to_use = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-        } else {
-          throw err;
+        try {
+          orderResult = await client.query(
+            `INSERT INTO orders (
+              order_number, hotel_id, hotel_name, delivery_person_id, customer_name, customer_phone, 
+              customer_type, delivery_address, delivery_description, subtotal, shipping_fee, delivery_charge, 
+              admin_commission_amount, commission_percentage_applied, grand_total, gst_amount, igst_amount, amount_received, 
+              balance_pending, status
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING *`,
+            [
+              order_number_to_use, hotel_id_to_use, hotel_name, delivery_person_id, customer_name, customer_phone, 
+              customer_type, delivery_address, delivery_description, subtotal, shipping_fee, shipping_fee, 
+              admin_commission_amount, commission_percentage_applied, grand_total, gst_amount, igst_amount, amount_received, 
+              balance_pending, status || 'Order Placed'
+            ]
+          );
+          inserted = true;
+        } catch (err) {
+          if (err.code === '23505') { // Unique constraint violation
+            order_number_to_use = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
+          } else {
+            throw err;
+          }
         }
-      }
     }
+
 
     const order = orderResult.rows[0];
     

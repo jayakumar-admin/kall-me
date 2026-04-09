@@ -75,7 +75,7 @@ export class SettingsService {
       liveTracking: true,
       promoCodes: true
     },
-    supportNumber: '919876543210',
+    supportNumber: '918903039099',
     whatsapp: {
       apiUrl: 'https://graph.facebook.com/v22.0/YOUR_PHONE_NUMBER_ID/messages',
       apiKey: '',

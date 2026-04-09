@@ -23,7 +23,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2 space-y-8">
+        <div class="lg:col-span-4 space-y-8 p-2">
           <!-- Financial -->
           <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">
             <div class="flex items-center gap-2">
@@ -31,22 +31,15 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
               <h3 class="font-bold text-[#1A1A1A] dark:text-white">Financial Commission Settings</h3>
             </div>
             
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <label for="adminCommission" class="text-xs font-bold text-slate-500 mb-2 block">Admin Commission (%)</label>
-                <div class="relative">
-                  <input id="adminCommission" type="number" [(ngModel)]="financial.adminCommission" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-4 pr-10 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
-                </div>
-                <p class="text-[10px] text-slate-400 mt-2">Percentage taken from each restaurant order.</p>
-              </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+             
               <div>
                 <label for="taxRegNumber" class="text-xs font-bold text-slate-500 mb-2 block">Tax Registration Number</label>
                 <input id="taxRegNumber" type="text" [(ngModel)]="financial.taxRegNumber" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label for="gstPercentage" class="text-xs font-bold text-slate-500 mb-2 block">GST (%)</label>
                 <div class="relative">
@@ -119,7 +112,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
                 <button (click)="addShippingRange()" class="text-xs font-bold text-[#FFC107] hover:text-[#FFA000]">Add Range</button>
               </div>
               @for (range of shippingRanges; track $index) {
-                <div class="grid grid-cols-4 gap-4 items-center">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
                   <input type="number" [(ngModel)]="range.min_amount" placeholder="Min" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                   <input type="number" [(ngModel)]="range.max_amount" placeholder="Max" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                   <input type="number" [(ngModel)]="range.price" placeholder="Price" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
@@ -234,7 +227,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
                 
                 <div>
                   <label for="supportNumber" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Support WhatsApp Number</label>
-                  <input id="supportNumber" type="text" [(ngModel)]="supportNumber" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] text-white mb-4" placeholder="e.g. 919876543210">
+                  <input id="supportNumber" type="text" [(ngModel)]="supportNumber" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] text-white mb-4" placeholder="e.g. 918903035099">
                 </div>
 
                 <button (click)="contactSupport()" class="btn-primary w-full">Contact Support</button>
@@ -299,7 +292,7 @@ export class GeneralSettings implements OnInit {
     this.logistics = { ...settings.logistics };
     this.features = { ...settings.features };
     this.whatsapp = { ...settings.whatsapp };
-    this.supportNumber = settings.supportNumber || '919876543210';
+    this.supportNumber = settings.supportNumber || '918903035099';
   }
 
   save() {

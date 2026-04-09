@@ -18,10 +18,10 @@ interface WhatsAppLog {
   standalone: true,
   imports: [CommonModule, MatIconModule],
   template: `
-    <div class="space-y-8">
+    <div class="space-y-4 md:space-y-8">
       <div>
-        <h1 class="text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">WhatsApp Logs</h1>
-        <p class="text-slate-500 dark:text-slate-400">Monitor all automated WhatsApp communications.</p>
+        <h1 class="text-2xl md:text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">WhatsApp Logs</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Monitor all automated WhatsApp communications.</p>
       </div>
 
       <div class="card overflow-hidden border-none ring-1 ring-slate-100 dark:ring-white/5 p-0">
@@ -29,32 +29,32 @@ interface WhatsAppLog {
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5">
-                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date & Time</th>
-                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recipient</th>
-                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Template</th>
-                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Message</th>
-                <th class="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                <th class="px-4 md:px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date</th>
+                <th class="px-4 md:px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recipient</th>
+                <th class="hidden md:table-cell px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Template</th>
+                <th class="hidden lg:table-cell px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Message</th>
+                <th class="px-4 md:px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-white/5">
               @for (log of logs(); track log.id) {
                 <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <p class="text-sm font-medium text-[#1A1A1A] dark:text-white">{{ log.created_at | date:'medium' }}</p>
+                  <td class="px-4 md:px-6 py-4 whitespace-nowrap">
+                    <p class="text-xs md:text-sm font-medium text-[#1A1A1A] dark:text-white">{{ log.created_at | date:'short' }}</p>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <p class="text-sm text-slate-600 dark:text-slate-400">{{ log.recipient }}</p>
+                  <td class="px-4 md:px-6 py-4 whitespace-nowrap">
+                    <p class="text-xs md:text-sm text-slate-600 dark:text-slate-400">{{ log.recipient }}</p>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                  <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-[9px] md:text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       {{ log.template_name }}
                     </span>
                   </td>
-                  <td class="px-6 py-4">
+                  <td class="hidden lg:table-cell px-6 py-4">
                     <p class="text-xs text-slate-500 line-clamp-2 max-w-xs">{{ log.message }}</p>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                  <td class="px-4 md:px-6 py-4 whitespace-nowrap">
+                    <span class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-[10px] md:text-xs font-bold">
                       <mat-icon class="text-sm w-4 h-4">check_circle</mat-icon>
                       {{ log.status }}
                     </span>

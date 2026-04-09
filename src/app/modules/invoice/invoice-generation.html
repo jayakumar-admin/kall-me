@@ -31,15 +31,15 @@
         } @else if (selectedOrder()) {
           <div #invoicePreview class="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-white dark:bg-[#1E293B] print:border-none print:rounded-none">
             <!-- Invoice Header -->
-            <div class="p-8 border-b border-slate-200 dark:border-white/10 flex justify-between items-start bg-slate-50 dark:bg-white/5 print:bg-white print:text-black">
+            <div class="p-4 md:p-8 border-b border-slate-200 dark:border-white/10 flex flex-col md:flex-row justify-between items-start gap-6 bg-slate-50 dark:bg-white/5 print:bg-white print:text-black">
               <div>
                 <h2 class="text-2xl font-black text-[#1A1A1A] dark:text-white tracking-tight print:text-black">INVOICE</h2>
                 <p class="text-slate-500 mt-1 print:text-black">Bill ID: {{ generateBillId(selectedOrder()!) }}</p>
                 <p class="text-slate-500 print:text-black">Order ID: {{ selectedOrder()!.order_number || selectedOrder()!.id }}</p>
                 <p class="text-slate-500 print:text-black">Date: {{ (selectedOrder()!.created_at | date:'medium') || (today | date:'medium') }}</p>
               </div>
-              <div class="text-right">
-                <div class="w-12 h-12 bg-[#FFC107] rounded-xl flex items-center justify-center shadow-sm ml-auto mb-4 print:bg-transparent print:border print:border-black">
+              <div class="md:text-right">
+                <div class="w-12 h-12 bg-[#FFC107] rounded-xl flex items-center justify-center shadow-sm md:ml-auto mb-4 print:bg-transparent print:border print:border-black">
                   <mat-icon class="text-black">delivery_dining</mat-icon>
                 </div>
                 <h3 class="font-bold text-[#1A1A1A] dark:text-white print:text-black">KALL ME Delivery</h3>
@@ -50,22 +50,22 @@
             </div>
 
             <!-- Customer & Hotel Info -->
-            <div class="p-8 grid grid-cols-2 gap-8 border-b border-slate-200 dark:border-white/10 print:text-black">
+            <div class="p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 border-b border-slate-200 dark:border-white/10 print:text-black">
               <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 print:text-black">Billed To:</p>
                 <p class="font-bold text-[#1A1A1A] dark:text-white print:text-black">{{ selectedOrder()!.customer_phone }}</p>
                 <p class="text-sm text-slate-500 print:text-black font-bold">{{ selectedOrder()!.delivery_address }}</p>
                 <p class="text-xs text-slate-400 mt-2 print:text-black italic">{{ selectedOrder()!.delivery_description }}</p>
               </div>
-              <div class="text-right">
+              <div class="md:text-right">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 print:text-black">Restaurant:</p>
                 <p class="font-bold text-[#1A1A1A] dark:text-white print:text-black">{{ (selectedOrder()!.hotel_id === -1 || selectedOrder()!.hotel_id === null) ? 'Manual Order' : (selectedOrder()!.hotel_name || 'Restaurant') }}</p>
               </div>
             </div>
 
             <!-- Order Items -->
-            <div class="p-8 print:text-black">
-              <table class="w-full text-left border-collapse">
+            <div class="p-4 md:p-8 print:text-black overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[500px]">
                 <thead>
                   <tr class="border-b border-slate-200 dark:border-white/10 print:border-black">
                     <th class="pb-3 text-xs font-bold text-slate-400 uppercase tracking-wider print:text-black">Item</th>
@@ -88,7 +88,7 @@
             </div>
 
             <!-- Totals -->
-            <div class="p-8 bg-slate-50 dark:bg-white/5 flex justify-end print:bg-white print:text-black">
+            <div class="p-4 md:p-8 bg-slate-50 dark:bg-white/5 flex justify-end print:bg-white print:text-black">
               <div class="w-full max-w-sm space-y-3">
                 <div class="flex justify-between text-sm text-slate-500 print:text-black">
                   <span>Subtotal ({{ totalProducts() }} items)</span>
@@ -124,11 +124,11 @@
                 <mat-icon class="text-sm">print</mat-icon>
                 Print
               </button>
-              <button (click)="sendViaWhatsApp()" class="px-6 py-2 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-600 transition-colors flex items-center gap-2">
+              <button (click)="sendViaWhatsApp()" class="w-full sm:w-auto px-6 py-2 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2">
                 <mat-icon class="text-sm">send</mat-icon>
                 Send Invoice via WhatsApp
               </button>
-              <button (click)="downloadPdf()" class="btn-primary flex items-center gap-2">
+              <button (click)="downloadPdf()" class="w-full sm:w-auto btn-primary flex items-center justify-center gap-2">
                 <mat-icon class="text-sm">download</mat-icon>
                 Download PDF
               </button>

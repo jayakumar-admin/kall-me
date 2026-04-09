@@ -12,13 +12,13 @@ import { ConfirmDialog } from '../../../components/confirm-dialog/confirm-dialog
   standalone: true,
   imports: [CommonModule, MatIconModule, FormsModule, ReactiveFormsModule, ConfirmDialog],
   template: `
-    <div class="space-y-8">
-      <div class="flex items-center justify-between">
+    <div class="space-y-4 md:space-y-8">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">User Management</h1>
-          <p class="text-slate-500 dark:text-slate-400">Manage admin and staff accounts.</p>
+          <h1 class="text-2xl md:text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">User Management</h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Manage admin and staff accounts.</p>
         </div>
-        <button (click)="openModal()" class="btn-primary flex items-center gap-2">
+        <button (click)="openModal()" class="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center">
           <mat-icon>person_add</mat-icon>
           Add User
         </button>
@@ -29,36 +29,36 @@ import { ConfirmDialog } from '../../../components/confirm-dialog/confirm-dialog
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5">
-                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">User</th>
-                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Contact</th>
-                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Role</th>
-                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
+                <th class="px-4 md:px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">User</th>
+                <th class="hidden md:table-cell px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Contact</th>
+                <th class="px-4 md:px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Role</th>
+                <th class="px-4 md:px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-white/5">
               @for (user of users(); track user.id) {
                 <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                  <td class="px-6 py-4">
+                  <td class="px-4 md:px-6 py-4">
                     <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 rounded-full bg-[#FFC107]/10 flex items-center justify-center text-[#FFC107] font-bold">
+                      <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#FFC107]/10 flex items-center justify-center text-[#FFC107] font-bold text-sm">
                         {{ user.name.charAt(0) }}
                       </div>
                       <div>
-                        <p class="font-bold text-[#1A1A1A] dark:text-white">{{ user.name }}</p>
-                        <p class="text-xs text-slate-500">{{ user.email }}</p>
+                        <p class="font-bold text-sm md:text-base text-[#1A1A1A] dark:text-white">{{ user.name }}</p>
+                        <p class="text-[10px] md:text-xs text-slate-500">{{ user.email }}</p>
                       </div>
                     </div>
                   </td>
-                  <td class="px-6 py-4">
+                  <td class="hidden md:table-cell px-6 py-4">
                     <p class="text-sm text-slate-600 dark:text-slate-400">{{ user.mobile || 'N/A' }}</p>
                   </td>
-                  <td class="px-6 py-4">
-                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest"
+                  <td class="px-4 md:px-6 py-4">
+                    <span class="px-2 md:px-3 py-1 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-widest"
                       [ngClass]="user.role === 'admin' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'">
                       {{ user.role }}
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-right">
+                  <td class="px-4 md:px-6 py-4 text-right">
                     <button (click)="deleteUser(user)" class="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors">
                       <mat-icon>delete</mat-icon>
                     </button>

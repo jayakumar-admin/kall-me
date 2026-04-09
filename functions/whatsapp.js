@@ -36,7 +36,7 @@ async function getSettings() {
 ///////////////////////////////////////////////////////////
 // FORMAT PHONE NUMBER FOR WHATSAPP CLOUD API
 // Must be international format WITHOUT +
-// Example: +91 98765 43210 -> 919876543210
+// Example: +91 98765 43210 -> 918903035099
 ///////////////////////////////////////////////////////////
 function formatPhone(number) {
   if (!number) return null;

@@ -39,12 +39,13 @@
         <!-- Nav Links -->
         <nav class="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
           @if (auth.isAdmin()) {
-            <ng-container *ngTemplateOutlet="navLink; context: { label: 'Hotels', link: '/app/hotels', icon: 'storefront' }"></ng-container>
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Dashboard', link: '/app/dashboard', icon: 'dashboard' }"></ng-container>
+            <ng-container *ngTemplateOutlet="navLink; context: { label: 'Hotels', link: '/app/hotels', icon: 'storefront' }"></ng-container>
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Orders', link: '/app/orders', icon: 'list_alt' }"></ng-container>
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Create Order', link: '/app/create-order', icon: 'add_circle_outline' }"></ng-container>
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Invoice Generation', link: '/app/invoice', icon: 'receipt_long' }"></ng-container>
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Reports', link: '/app/reports', icon: 'bar_chart' }"></ng-container>
+            <ng-container *ngTemplateOutlet="navLink; context: { label: 'Delivery Reports', link: '/app/delivery-reports', icon: 'assignment' }"></ng-container>
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Delivery Team', link: '/app/delivery', icon: 'delivery_dining' }"></ng-container>
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Settings', link: '/app/settings', icon: 'settings' }"></ng-container>
           } @else if (auth.isDelivery()) {

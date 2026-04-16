@@ -9,27 +9,62 @@ router.get('/daily', async (req, res) => {
       SELECT 
         DATE(created_at) as date, 
         COUNT(*) as total_orders, 
-        SUM(amount) as total_revenue
+        SUM(grand_total) as total_revenue
       FROM orders
       GROUP BY DATE(created_at)
       ORDER BY DATE(created_at) DESC
       LIMIT 7
     `);
-    
+
     if (result.rows.length === 0) {
       // Return mock data if DB is empty for demo purposes
       return res.json([
         { date: '2024-03-01', total_orders: 45, total_revenue: 12000 },
-        { date: '2024-03-02', total_orders: 52, total_revenue: 15000 },
-        { date: '2024-03-03', total_orders: 38, total_revenue: 11000 },
-        { date: '2024-03-04', total_orders: 60, total_revenue: 18000 },
-        { date: '2024-03-05', total_orders: 55, total_revenue: 16500 },
-        { date: '2024-03-06', total_orders: 70, total_revenue: 21000 },
-        { date: '2024-03-07', total_orders: 86, total_revenue: 25000 }
       ]);
     }
-    
+
     res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/delivery-person', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    let query = `
+      SELECT 
+        d.name,
+        COUNT(o.id) AS total_orders,
+        SUM(o.grand_total) AS total_amount,
+        SUM(o.subtotal) AS item_total,
+        SUM(o.delivery_charge) AS delivery_total,
+        SUM(CASE WHEN o.delivery_charge <= 30 THEN 1 ELSE 0 END) AS below_30_count,
+        SUM(o.admin_commission_amount) AS total_commission
+      FROM orders o
+      JOIN delivery_persons d ON o.delivery_person_id = d.id
+    `;
+    if (startDate && endDate) {
+      query += ` WHERE DATE(o.created_at) >= '${startDate}' AND DATE(o.created_at) <= '${endDate}'`;
+    }
+    query += ` GROUP BY d.name;`;
+
+    const result = await db.query(query);
+
+    // Add calculated fields
+    const formattedData = result.rows.map(row => {
+      const bonus = parseInt(row.below_30_count) * 10;
+      const commission = parseFloat(row.total_commission || 0);
+      const deliveryTotal = parseFloat(row.delivery_total || 0);
+      return {
+        ...row,
+        bonus: bonus,
+        final_earnings: deliveryTotal - commission + bonus
+      };
+    });
+
+    res.json(formattedData);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

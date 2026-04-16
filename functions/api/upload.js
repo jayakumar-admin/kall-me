@@ -14,10 +14,10 @@ router.post('/', (req, res) => {
   let fileProcessed = false;
 
   busboy.on('file', (name, file, info) => {
-    const { filename, mimeType } = info;
+    const { filename, encoding, mimeType } = info;
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const newFileName = uniqueSuffix + path.extname(filename);
-
+    
     const blob = bucket.file(`uploads/${newFileName}`);
     const blobStream = blob.createWriteStream({
       metadata: { contentType: mimeType },
@@ -41,11 +41,11 @@ router.post('/', (req, res) => {
         });
 
         if (!res.headersSent) {
-          res.json({
-            success: true,
-            url: url,
-            fileName: newFileName
-          });
+        res.json({ 
+          success: true,
+          url: url,
+          fileName: newFileName 
+        });
         }
       } catch (err) {
         console.error('Error generating URL:', err);
@@ -67,7 +67,7 @@ router.post('/', (req, res) => {
 
   // 2. Instead of req.pipe(busboy), use busboy.end(req.rawBody)
   // This pushes the already-buffered body into Busboy
-  busboy.end(req.rawBody);
+    busboy.end(req.rawBody);
 });
 
 module.exports = router;

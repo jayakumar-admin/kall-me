@@ -1,6 +1,5 @@
 import { Injectable, inject } from '@angular/core';
 import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { Order } from '../models';
 import { SettingsService } from './settings.service';
 
@@ -18,137 +17,98 @@ export class InvoiceService {
   }
 
   async createInvoicePdf(order: Order): Promise<jsPDF> {
-    const doc = new jsPDF();
-    
-    // Add header
-    doc.setFontSize(22);
-    doc.setTextColor(26, 26, 26); // #1A1A1A
-    doc.text('INVOICE', 14, 25);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139); // slate-500
-    doc.text(`Bill ID: ${this.generateBillId(order)}`, 14, 35);
-    doc.text(`Order ID: ${order.order_number || order.id}`, 14, 40);
-    doc.text(`Date: ${new Date(order.created_at || Date.now()).toLocaleString()}`, 14, 45);
-    
-    // Hotel Info (Right Aligned)
-    doc.setTextColor(26, 26, 26);
-    doc.setFontSize(14);
-    doc.text('KALL ME Delivery', 196, 25, { align: 'right' });
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.text('123 Delivery Street', 196, 32, { align: 'right' });
-    doc.text('Amalapuram, Andhra Pradesh', 196, 37, { align: 'right' });
-    doc.text('GSTIN: --', 196, 42, { align: 'right' });
-    
-    // Divider
-    doc.setDrawColor(241, 245, 249); // slate-100
-    doc.line(14, 55, 196, 55);
-    
-    // Billed To & Restaurant
-    doc.setTextColor(100, 116, 139);
-    doc.setFontSize(9);
-    doc.text('BILLED TO:', 14, 65);
-    doc.text('RESTAURANT:', 120, 65);
-    
-    doc.setTextColor(26, 26, 26);
-    doc.setFontSize(11);
-    doc.text(order.customer_phone || 'N/A', 14, 72);
-    doc.text((order.hotel_id === -1 || order.hotel_id === null) ? 'Manual Order' : (order.hotel_name || 'Restaurant'), 120, 72);
-    
-    doc.setTextColor(100, 116, 139);
-    doc.setFontSize(10);
-    doc.text(order.delivery_address || 'No Address', 14, 78);
-    doc.setFontSize(9);
-    doc.text(`Notes: ${order.delivery_description || 'N/A'}`, 14, 84);
-    
-    // Table Data
-    const tableBody = (order.items || []).map(item => [
-      item.menu_name || 'Menu Item',
-      item.quantity.toString(),
-      `Rs. ${Number(item.price).toFixed(2)}`,
-      `Rs. ${Number(item.total).toFixed(2)}`
-    ]);
-
-    autoTable(doc, {
-      startY: 95,
-      head: [['Item', 'Qty', 'Price', 'Total']],
-      body: tableBody,
-      theme: 'plain',
-      headStyles: {
-        textColor: [100, 116, 139],
-        fontSize: 9,
-        fontStyle: 'bold',
-        halign: 'left'
-      },
-      bodyStyles: {
-        textColor: [26, 26, 26],
-        fontSize: 10,
-        halign: 'left'
-      },
-      columnStyles: {
-        1: { halign: 'center' },
-        2: { halign: 'right' },
-        3: { halign: 'right', fontStyle: 'bold' }
-      },
-      didDrawCell: (data) => {
-        // Add bottom border to rows
-        if (data.row.section === 'body') {
-          doc.setDrawColor(241, 245, 249);
-          doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height);
-        }
-      }
+    const doc = new jsPDF({
+      unit: 'mm',
+      format: [80, 150], // Thermal printer width
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const finalY = (doc as any).lastAutoTable.finalY || 150;
-    
-    // Totals
-    const subtotal = (order.items || []).reduce((sum, item) => sum + Number(item.total), 0);
-    const shippingFee = Number(order.shipping_fee) || 0;
-    
-    const gstPercent = this.settingsService.settings().taxes.gst;
-    const igstPercent = this.settingsService.settings().taxes.igst;
-    
-    const gst = (subtotal * gstPercent) / 100;
-    const igst = (subtotal * igstPercent) / 100;
-    const grandTotal = subtotal + shippingFee + gst + igst;
+    // Center alignment helper
+    const centerX = 40;
+
+    // Header
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('E-BILL', centerX, 10, { align: 'center' });
 
     doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    
-    let currentY = finalY + 15;
-    doc.text('Subtotal:', 140, currentY);
-    doc.text(`Rs. ${subtotal.toFixed(2)}`, 196, currentY, { align: 'right' });
-    
-    currentY += 8;
-    doc.text('Delivery Fee:', 140, currentY);
-    doc.text(`Rs. ${shippingFee.toFixed(2)}`, 196, currentY, { align: 'right' });
-    
-    currentY += 8;
-    doc.text(`GST (${gstPercent}%):`, 140, currentY);
-    doc.text(`Rs. ${gst.toFixed(2)}`, 196, currentY, { align: 'right' });
-    
-    currentY += 8;
-    doc.text(`IGST (${igstPercent}%):`, 140, currentY);
-    doc.text(`Rs. ${igst.toFixed(2)}`, 196, currentY, { align: 'right' });
-    
-    currentY += 12;
-    doc.setDrawColor(241, 245, 249);
-    doc.line(140, currentY - 6, 196, currentY - 6);
-    
-    doc.setFontSize(12);
-    doc.setTextColor(26, 26, 26);
+    doc.text('Kall Me Delivery', centerX, 16, { align: 'center' });
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Biller Name: Admin', centerX, 21, { align: 'center' });
+
+    doc.line(5, 25, 75, 25);
+
+    // Table Header
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text('Grand Total:', 140, currentY);
-    doc.setTextColor(239, 68, 68); // red-500
-    doc.text(`Rs. ${grandTotal.toFixed(2)}`, 196, currentY, { align: 'right' });
-    
+    doc.text('Name', 5, 30);
+    doc.text('Qty.', 35, 30, { align: 'right' });
+    doc.text('Rate', 55, 30, { align: 'right' });
+    doc.text('Price', 75, 30, { align: 'right' });
+
+    doc.line(5, 32, 75, 32);
+
+    // Items
+    doc.setFont('helvetica', 'normal');
+    let y = 37;
+    let totalQty = 0;
+    (order.items || []).forEach(item => {
+      // Handle item name wrapping if too long
+      const itemName = item.menu_name || 'Item';
+      const splitName = doc.splitTextToSize(itemName, 28);
+      doc.text(splitName, 5, y);
+
+      doc.text(item.quantity.toString(), 35, y, { align: 'right' });
+      doc.text(Number(item.price).toFixed(2), 55, y, { align: 'right' });
+      doc.text(Number(item.total).toFixed(2), 75, y, { align: 'right' });
+
+      y += (splitName.length * 4);
+      totalQty += item.quantity;
+    });
+
+    doc.line(5, y, 75, y);
+    y += 5;
+
+    // Totals
+    doc.text('Total Quantity:', 5, y);
+    doc.text(totalQty.toString(), 75, y, { align: 'right' });
+    y += 5;
+
+    const subtotal = (order.items || []).reduce((sum, item) => sum + Number(item.total), 0);
+    doc.text('Sub Total:', 5, y);
+    doc.text(`Rs. ${subtotal.toFixed(2)}`, 75, y, { align: 'right' });
+    y += 5;
+
+    if (Number(order.shipping_fee) > 0) {
+      doc.text('Delivery Fee:', 5, y);
+      doc.text(`Rs. ${Number(order.shipping_fee).toFixed(2)}`, 75, y, { align: 'right' });
+      y += 5;
+    }
+
+    if (Number(order.gst_amount) > 0) {
+      doc.text('GST:', 5, y);
+      doc.text(`Rs. ${Number(order.gst_amount).toFixed(2)}`, 75, y, { align: 'right' });
+      y += 5;
+    }
+
+    if (Number(order.igst_amount) > 0) {
+      doc.text('IGST:', 5, y);
+      doc.text(`Rs. ${Number(order.igst_amount).toFixed(2)}`, 75, y, { align: 'right' });
+      y += 5;
+    }
+
+    doc.line(5, y, 75, y);
+    y += 5;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Payable Amount:', 5, y);
+    doc.text(`Rs. ${Number(order.grand_total).toFixed(2)}`, 75, y, { align: 'right' });
+
     // Footer
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(148, 163, 184); // slate-400
-    doc.text('Thank you for your business!', 105, 280, { align: 'center' });
+    doc.setFontSize(8);
+    doc.text('Thank you for Choosing Us, Please Visit again', centerX, y + 10, { align: 'center' });
 
     return doc;
   }

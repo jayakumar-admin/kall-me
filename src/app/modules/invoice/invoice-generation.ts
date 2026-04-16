@@ -96,11 +96,11 @@ export class InvoiceGeneration implements OnInit {
         // Fallback to searching in list if getOrder fails (maybe it's not implemented on external API)
         this.api.getOrders().subscribe({
           next: (orders) => {
-            const order = orders.find(o => 
-              o.order_number === this.searchOrderId.trim() || 
+            const order = orders.find(o =>
+              o.order_number === this.searchOrderId.trim() ||
               o.id?.toString() === this.searchOrderId.trim()
             );
-            
+
             if (order) {
               this.selectedOrder.set(order);
             } else {
@@ -125,8 +125,24 @@ export class InvoiceGeneration implements OnInit {
     return Number(value) || 0;
   }
 
-  printInvoice() {
-    window.print();
+  async printInvoice() {
+    const order = this.selectedOrder();
+    if (!order) return;
+
+    this.toast.success('Preparing for print...');
+
+    try {
+      const doc = await this.invoiceService.createInvoicePdf(order);
+      // Auto-print JS
+      doc.autoPrint();
+      // Open in new window/tab and trigger print
+      const blobUrl = doc.output('bloburl');
+      window.open(blobUrl, '_blank');
+      this.toast.success('Print dialog opened');
+    } catch (error) {
+      console.error('Print Error:', error);
+      this.toast.error('Failed to prepare invoice for printing');
+    }
   }
 
   async downloadPdf() {
@@ -158,10 +174,10 @@ export class InvoiceGeneration implements OnInit {
     try {
       const doc = await this.invoiceService.createInvoicePdf(order);
       const pdfBase64 = doc.output('datauristring').split(',')[1];
-      
+
       this.api.sendInvoicePdf(
-        order.customer_phone, 
-        order.order_number || order.id?.toString() || '0', 
+        order.customer_phone,
+        order.order_number || order.id?.toString() || '0',
         pdfBase64,
         order.id!,
         this.grandTotal(),
@@ -205,10 +221,10 @@ export class InvoiceGeneration implements OnInit {
       const reader = new FileReader();
       reader.onload = () => {
         const base64String = (reader.result as string).split(',')[1];
-        
+
         this.api.sendInvoicePdf(
-          order.customer_phone!, 
-          order.order_number || order.id?.toString() || '0', 
+          order.customer_phone!,
+          order.order_number || order.id?.toString() || '0',
           base64String,
           order.id!,
           this.grandTotal(),

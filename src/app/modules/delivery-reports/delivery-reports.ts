@@ -13,6 +13,7 @@ interface ReportData {
   total_commission: number;
   bonus: number;
   final_earnings: number;
+  balance_pending: number;
 }
 
 @Component({
@@ -21,9 +22,20 @@ interface ReportData {
   imports: [CommonModule, MatIconModule],
   template: `
     <div class="h-full overflow-y-auto p-6 custom-scrollbar space-y-8">
-      <div>
-        <h1 class="text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Delivery Person-wise Report</h1>
-        <p class="text-slate-500 dark:text-slate-400">Detailed earnings and performance breakdown for each delivery person.</p>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Delivery Person-wise Report</h1>
+          <p class="text-slate-500 dark:text-slate-400">Detailed earnings and performance breakdown for each delivery person.</p>
+        </div>
+        <div class="bg-indigo-600 text-white p-4 rounded-2xl shadow-lg flex items-center gap-4 border border-indigo-400">
+          <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+            <mat-icon>payments</mat-icon>
+          </div>
+          <div>
+            <p class="text-[10px] font-black uppercase tracking-widest text-indigo-100">Overall Admin Commission</p>
+            <p class="text-2xl font-black">₹{{ overallAdminCommission() | number:'1.0-0' }}</p>
+          </div>
+        </div>
       </div>
 
       <div class="flex gap-4 items-center bg-white dark:bg-[#1E293B] p-4 rounded-xl shadow-sm border border-slate-100 dark:border-white/5">
@@ -59,15 +71,15 @@ interface ReportData {
                 </div>
                 <div class="flex justify-between border-b border-slate-50 dark:border-white/5 pb-2">
                   <span class="text-slate-500">Total Amount:</span>
-                  <span class="font-bold text-[#1A1A1A] dark:text-white">₹{{dp.total_amount | number:'1.2-2'}}</span>
+                  <span class="font-bold text-[#1A1A1A] dark:text-white">₹{{dp.total_amount | number:'1.0-0'}}</span>
                 </div>
                 <div class="flex justify-between border-b border-slate-50 dark:border-white/5 pb-2">
                   <span class="text-slate-500">Item Total:</span>
-                  <span class="font-bold text-[#1A1A1A] dark:text-white">₹{{dp.item_total | number:'1.2-2'}}</span>
+                  <span class="font-bold text-[#1A1A1A] dark:text-white">₹{{dp.item_total | number:'1.0-0'}}</span>
                 </div>
                 <div class="flex justify-between border-b border-slate-50 dark:border-white/5 pb-2">
                   <span class="text-slate-500">Delivery Charges:</span>
-                  <span class="font-bold text-[#1A1A1A] dark:text-white">₹{{dp.delivery_total | number:'1.2-2'}}</span>
+                  <span class="font-bold text-[#1A1A1A] dark:text-white">₹{{dp.delivery_total | number:'1.0-0'}}</span>
                 </div>
                 <div class="flex justify-between border-b border-slate-50 dark:border-white/5 pb-2">
                   <span class="text-slate-500">₹30 Orders Count:</span>
@@ -75,18 +87,28 @@ interface ReportData {
                 </div>
                 <div class="flex justify-between border-b border-slate-50 dark:border-white/5 pb-2">
                   <span class="text-slate-500">Bonus:</span>
-                  <span class="font-bold text-[#1A1A1A] dark:text-white">₹{{dp.bonus | number:'1.2-2'}}</span>
+                  <span class="font-bold text-[#1A1A1A] dark:text-white">₹{{dp.bonus | number:'1.0-0'}}</span>
                 </div>
                 <div class="flex justify-between border-b border-slate-50 dark:border-white/5 pb-2">
                   <span class="text-slate-500">Admin Commission:</span>
-                  <span class="font-bold text-[#1A1A1A] dark:text-white">₹{{dp.total_commission | number:'1.2-2'}}</span>
+                  <span class="font-bold text-indigo-600 dark:text-indigo-400">₹{{dp.total_commission | number:'1.0-0'}}</span>
+                </div>
+                <div class="flex justify-between border-b border-slate-50 dark:border-white/5 pb-2">
+                  <span class="text-slate-500 font-bold">Pending Amount:</span>
+                  <span class="font-bold text-rose-500">₹{{dp.balance_pending | number:'1.0-0'}}</span>
                 </div>
               </div>
 
-              <div class="mt-6 pt-4 border-t-2 border-dashed border-slate-100 dark:border-white/10 flex flex-col items-end">
-                <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Final Earnings</p>
-                <div class="text-3xl font-black text-emerald-600 dark:text-emerald-400 font-display">
-                  ₹{{dp.final_earnings | number:'1.2-2'}}
+              <div class="mt-6 pt-4 border-t-2 border-dashed border-slate-100 dark:border-white/10 grid grid-cols-2 gap-4">
+                <div>
+                  <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1 text-center sm:text-left">Admin Earning</p>
+                  <p class="text-lg font-black text-indigo-600 dark:text-indigo-400 text-center sm:text-left">₹{{dp.total_commission | number:'1.0-0'}}</p>
+                </div>
+                <div class="flex flex-col items-center sm:items-end border-l border-slate-100 dark:border-white/5 pl-4">
+                  <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Driver Earning</p>
+                  <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-display leading-tight">
+                    ₹{{dp.final_earnings | number:'1.0-0'}}
+                  </div>
                 </div>
               </div>
             </div>
@@ -101,12 +123,16 @@ export class DeliveryReports implements OnInit {
   private api = inject(ApiService);
   deliveryPersons = signal<DeliveryPerson[]>([]);
   reportData = signal<Record<string, ReportData>>({});
-
+  
   mergedData = computed(() => {
     return this.deliveryPersons().map(dp => {
-      const data = this.reportData()[dp.name] || { total_orders: 0, total_amount: 0, item_total: 0, delivery_total: 0, below_30_count: 0, total_commission: 0, bonus: 0, final_earnings: 0 };
+      const data = this.reportData()[dp.name] || { total_orders: 0, total_amount: 0, item_total: 0, delivery_total: 0, below_30_count: 0, total_commission: 0, bonus: 0, final_earnings: 0, balance_pending: 0 };
       return { ...dp, ...data, expanded: false };
     });
+  });
+
+  overallAdminCommission = computed(() => {
+    return Object.values(this.reportData()).reduce((acc, curr) => acc + (Number(curr.total_commission) || 0), 0);
   });
 
   loading = signal(true);

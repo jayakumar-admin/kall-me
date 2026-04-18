@@ -84,7 +84,10 @@
                       </div>
                     </div>
                   </td>
-                  <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-medium">{{ driver.mobile }}</td>
+                  <td class="px-6 py-4">
+                    <p class="text-sm text-slate-600 dark:text-slate-400 font-medium">{{ driver.mobile }}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">{{ driver.vehicle_number || '--' }}</p>
+                  </td>
                   <td class="px-6 py-4">
                     <span 
                       [class]="getStatusClass(driver.status)"
@@ -123,75 +126,94 @@
     <!-- Modal -->
     @if (showModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-          <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xl flex flex-col max-h-[90vh] shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
+          <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
             <h2 class="text-xl font-bold text-slate-900 dark:text-white">
               {{ editingDriver() ? 'Edit Driver' : 'Add New Driver' }}
             </h2>
-            <button (click)="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+            <button (click)="closeModal()" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
               <mat-icon>close</mat-icon>
             </button>
           </div>
           
-          <form [formGroup]="driverForm" (ngSubmit)="saveDriver()" class="p-6 space-y-4">
-            
-            <div class="flex flex-col items-center gap-4 mb-6">
-              <div class="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative group border-2 border-slate-200 dark:border-slate-700">
-                <img [src]="croppedImage() || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (driverForm.get('name')?.value || 'new')" alt="Driver profile image" class="w-full h-full object-cover">
-                <label class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                  <mat-icon class="text-white">photo_camera</mat-icon>
-                  <span class="text-[10px] text-white font-bold mt-1">Upload</span>
-                  <input type="file" (change)="fileChangeEvent($event)" class="hidden" accept="image/*">
-                </label>
-              </div>
-              
-              @if (showCropper()) {
-                <div class="w-full h-64 bg-slate-50 dark:bg-slate-800 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-                  <image-cropper
-                    [imageChangedEvent]="imageChangedEvent()"
-                    [maintainAspectRatio]="true"
-                    [aspectRatio]="1 / 1"
-                    format="png"
-                    (imageCropped)="imageCropped($event)"
-                    (imageLoaded)="imageLoaded()"
-                    (cropperReady)="cropperReady()"
-                    (loadImageFailed)="loadImageFailed()"
-                    class="h-full"
-                  ></image-cropper>
+          <form [formGroup]="driverForm" (ngSubmit)="saveDriver()" class="flex flex-col flex-1 min-h-0">
+            <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1">
+              <div class="flex flex-col items-center gap-4">
+                <div class="w-32 h-32 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative group border-4 border-white dark:border-slate-800 shadow-xl">
+                  <img [src]="croppedImage() || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (driverForm.get('name')?.value || 'new')" alt="Driver profile image" class="w-full h-full object-cover">
+                  <label class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                    @if (isUploading()) {
+                      <mat-icon class="text-white animate-spin">refresh</mat-icon>
+                      <span class="text-[10px] text-white font-bold mt-1 uppercase tracking-wider">Uploading...</span>
+                    } @else {
+                      <mat-icon class="text-white text-3xl">photo_camera</mat-icon>
+                      <span class="text-[10px] text-white font-bold mt-1 uppercase tracking-wider">Change Photo</span>
+                    }
+                    <input type="file" (change)="fileChangeEvent($event)" class="hidden" accept="image/*">
+                  </label>
                 </div>
-              }
+                
+                @if (showCropper()) {
+                  <div class="w-full h-64 bg-slate-50 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner">
+                    <image-cropper
+                      [imageChangedEvent]="imageChangedEvent()"
+                      [maintainAspectRatio]="true"
+                      [aspectRatio]="1 / 1"
+                      format="png"
+                      (imageCropped)="imageCropped($event)"
+                      (imageLoaded)="imageLoaded()"
+                      (cropperReady)="cropperReady()"
+                      (loadImageFailed)="loadImageFailed()"
+                      class="h-full"
+                    ></image-cropper>
+                  </div>
+                }
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label for="driverName" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Full Name</label>
+                  <input id="driverName" type="text" formControlName="name" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all" placeholder="Enter full name">
+                </div>
+                
+                <div>
+                  <label for="driverMobile" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Mobile Number</label>
+                  <input id="driverMobile" type="text" formControlName="mobile" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all" placeholder="Enter mobile number">
+                </div>
+
+                <div>
+                  <label for="vehicleNumber" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Vehicle Number</label>
+                  <input id="vehicleNumber" type="text" formControlName="vehicle_number" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all" placeholder="DL-10-AB-1234">
+                </div>
+
+                <div>
+                  <label for="licenseNumber" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">License Number</label>
+                  <input id="licenseNumber" type="text" formControlName="license_number" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all" placeholder="DL-12345678">
+                </div>
+
+                <div>
+                  <label for="driverStatus" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Availability Status</label>
+                  <select id="driverStatus" formControlName="status" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all">
+                    <option value="active">Available (Active)</option>
+                    <option value="busy">On Delivery (Busy)</option>
+                    <option value="offline">Offline</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="driverPassword" class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Account Password</label>
+                  <input id="driverPassword" type="password" formControlName="password" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all" [placeholder]="editingDriver() ? 'Leave blank to keep current' : 'Set login password'">
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label for="driverName" class="block text-xs font-bold text-slate-400 uppercase mb-2">Full Name</label>
-              <input id="driverName" type="text" formControlName="name" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all">
-            </div>
-            
-            <div>
-              <label for="driverMobile" class="block text-xs font-bold text-slate-400 uppercase mb-2">Mobile Number</label>
-              <input id="driverMobile" type="text" formControlName="mobile" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all">
-            </div>
-            
-            <div>
-              <label for="driverStatus" class="block text-xs font-bold text-slate-400 uppercase mb-2">Status</label>
-              <select id="driverStatus" formControlName="status" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all">
-                <option value="active">Active</option>
-                <option value="busy">Busy</option>
-                <option value="offline">Offline</option>
-              </select>
-            </div>
-
-            <div>
-              <label for="driverPassword" class="block text-xs font-bold text-slate-400 uppercase mb-2">Password (Optional for Edit)</label>
-              <input id="driverPassword" type="password" formControlName="password" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 ring-indigo-500/20 transition-all" placeholder="Set login password">
-            </div>
-
-            <div class="pt-4 flex gap-3">
-              <button type="button" (click)="closeModal()" class="flex-1 px-6 py-3 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+            <div class="p-6 border-t border-slate-100 dark:border-slate-800 flex gap-4 shrink-0 bg-slate-50/50 dark:bg-slate-800/50">
+              <button type="button" (click)="closeModal()" class="flex-1 px-6 py-3 rounded-2xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
                 Cancel
               </button>
-              <button type="submit" [disabled]="driverForm.invalid" class="flex-1 px-6 py-3 rounded-xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/20">
-                {{ editingDriver() ? 'Update Driver' : 'Add Driver' }}
+              <button type="submit" [disabled]="driverForm.invalid" class="flex-[2] px-6 py-3 rounded-2xl font-bold text-sm bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2">
+                <mat-icon class="text-sm">save</mat-icon>
+                {{ editingDriver() ? 'Update Driver Profile' : 'Create Driver Profile' }}
               </button>
             </div>
           </form>

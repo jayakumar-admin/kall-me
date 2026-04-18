@@ -9,6 +9,7 @@ export interface ShippingRange {
   min_amount: number;
   max_amount: number;
   price: number;
+  calculation_type: 'percentage' | 'fixed';
 }
 
 export interface AppSettings {
@@ -20,11 +21,13 @@ export interface AppSettings {
     adminCommission: number;
     taxRegNumber: string;
     autoSettlement: boolean;
+    commissionType: 'percentage' | 'fixed';
   };
   logistics: {
     defaultDeliveryCharge: number;
     freeDeliveryThreshold: number;
     deliveryRadius: number;
+    shippingType: 'percentage' | 'fixed';
   };
   features: {
     ratings: boolean;
@@ -63,19 +66,21 @@ export class SettingsService {
     financial: {
       adminCommission: 15,
       taxRegNumber: 'TAX-KALL-99201',
-      autoSettlement: true
+      autoSettlement: true,
+      commissionType: 'percentage'
     },
     logistics: {
       defaultDeliveryCharge: 49,
       freeDeliveryThreshold: 499,
-      deliveryRadius: 15
+      deliveryRadius: 15,
+      shippingType: 'fixed'
     },
     features: {
       ratings: true,
       liveTracking: true,
       promoCodes: true
     },
-    supportNumber: '918903039099',
+    supportNumber: '919876543210',
     whatsapp: {
       apiUrl: 'https://graph.facebook.com/v22.0/YOUR_PHONE_NUMBER_ID/messages',
       apiKey: '',

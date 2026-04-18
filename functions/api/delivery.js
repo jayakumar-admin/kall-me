@@ -84,7 +84,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== 'delivery') return res.status(403).json({ error: 'Forbidden' });
     
-    const result = await db.query('SELECT id, name, mobile, status FROM delivery_persons WHERE id = $1', [req.user.id]);
+    const result = await db.query('SELECT id, name, mobile, status, image_url, vehicle_number, license_number FROM delivery_persons WHERE id = $1', [req.user.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Profile not found' });
     
     res.json(result.rows[0]);
@@ -99,19 +99,19 @@ router.put('/profile', authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== 'delivery') return res.status(403).json({ error: 'Forbidden' });
     
-    const { name, status, password } = req.body;
+    const { name, status, password, image_url, vehicle_number, license_number } = req.body;
     
     let result;
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
       result = await db.query(
-        'UPDATE delivery_persons SET name = $1, status = $2, password = $3 WHERE id = $4 RETURNING id, name, mobile, status',
-        [name, status, hashedPassword, req.user.id]
+        'UPDATE delivery_persons SET name = $1, status = $2, password = $3, image_url = $4, vehicle_number = $5, license_number = $6 WHERE id = $7 RETURNING id, name, mobile, status, image_url, vehicle_number, license_number',
+        [name, status, hashedPassword, image_url, vehicle_number, license_number, req.user.id]
       );
     } else {
       result = await db.query(
-        'UPDATE delivery_persons SET name = $1, status = $2 WHERE id = $3 RETURNING id, name, mobile, status',
-        [name, status, req.user.id]
+        'UPDATE delivery_persons SET name = $1, status = $2, image_url = $3, vehicle_number = $4, license_number = $5 WHERE id = $6 RETURNING id, name, mobile, status, image_url, vehicle_number, license_number',
+        [name, status, image_url, vehicle_number, license_number, req.user.id]
       );
     }
     
@@ -128,7 +128,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
 // Get all delivery persons
 router.get('/', async (req, res) => {
   try {
-    const result = await db.query('SELECT id, name, mobile, status FROM delivery_persons ORDER BY id ASC');
+    const result = await db.query('SELECT id, name, mobile, status, image_url, vehicle_number, license_number FROM delivery_persons ORDER BY id ASC');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -142,7 +142,7 @@ router.patch('/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const result = await db.query(
-      'UPDATE delivery_persons SET status = $1 WHERE id = $2 RETURNING id, name, mobile, status',
+      'UPDATE delivery_persons SET status = $1 WHERE id = $2 RETURNING id, name, mobile, status, image_url, vehicle_number, license_number',
       [status, id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Delivery person not found' });
@@ -156,14 +156,14 @@ router.patch('/:id/status', async (req, res) => {
 // Create delivery person
 router.post('/', async (req, res) => {
   try {
-    const { name, mobile, status, password: providedPassword } = req.body;
+    const { name, mobile, status, password: providedPassword, image_url, vehicle_number, license_number } = req.body;
     
     const password = providedPassword || generatePassword(6);
     const hashedPassword = await bcrypt.hash(password, 10);
     
     const result = await db.query(
-      'INSERT INTO delivery_persons (name, mobile, status, password) VALUES ($1, $2, $3, $4) RETURNING id, name, mobile, status',
-      [name, mobile, status || 'active', hashedPassword]
+      'INSERT INTO delivery_persons (name, mobile, status, password, image_url, vehicle_number, license_number) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, mobile, status, image_url, vehicle_number, license_number',
+      [name, mobile, status || 'active', hashedPassword, image_url, vehicle_number, license_number]
     );
     
     const newDP = result.rows[0];
@@ -190,19 +190,19 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, mobile, status, password } = req.body;
+    const { name, mobile, status, password, image_url, vehicle_number, license_number } = req.body;
     
     let result;
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
       result = await db.query(
-        'UPDATE delivery_persons SET name = $1, mobile = $2, status = $3, password = $4 WHERE id = $5 RETURNING id, name, mobile, status',
-        [name, mobile, status, hashedPassword, id]
+        'UPDATE delivery_persons SET name = $1, mobile = $2, status = $3, password = $4, image_url = $5, vehicle_number = $6, license_number = $7 WHERE id = $8 RETURNING id, name, mobile, status, image_url, vehicle_number, license_number',
+        [name, mobile, status, hashedPassword, image_url, vehicle_number, license_number, id]
       );
     } else {
       result = await db.query(
-        'UPDATE delivery_persons SET name = $1, mobile = $2, status = $3 WHERE id = $4 RETURNING id, name, mobile, status',
-        [name, mobile, status, id]
+        'UPDATE delivery_persons SET name = $1, mobile = $2, status = $3, image_url = $4, vehicle_number = $5, license_number = $6 WHERE id = $7 RETURNING id, name, mobile, status, image_url, vehicle_number, license_number',
+        [name, mobile, status, image_url, vehicle_number, license_number, id]
       );
     }
     

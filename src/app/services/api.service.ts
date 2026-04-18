@@ -249,13 +249,13 @@ export class ApiService {
     );
   }
 
-  getDeliveryPersonReport(startDate?: string, endDate?: string): Observable<{name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, bonus: number, final_earnings: number}[]> {
+  getDeliveryPersonReport(startDate?: string, endDate?: string): Observable<{name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, bonus: number, final_earnings: number, balance_pending: number}[]> {
     let url = `${this.baseUrl}/reports/delivery-person`;
     if (startDate && endDate) {
       url += `?startDate=${startDate}&endDate=${endDate}`;
     }
     return this.withLoader(
-      this.http.get<{name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, bonus: number, final_earnings: number}[]>(url),
+      this.http.get<{name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, bonus: number, final_earnings: number, balance_pending: number}[]>(url),
       'Generating Delivery Report...'
     );
   }

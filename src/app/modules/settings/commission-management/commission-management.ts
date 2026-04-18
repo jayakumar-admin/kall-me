@@ -28,10 +28,6 @@ import { CommissionRange } from '../../../models';
           <mat-icon class="text-[#FFC107]">percent</mat-icon>
           <h3 class="font-bold text-[#1A1A1A] dark:text-white">Delivery Charge Based Commission</h3>
         </div>
-        
-        <p class="text-sm text-slate-500">
-          Set commission percentages based on the delivery charge (DC) of an order. The commission is calculated as a percentage of the delivery charge and does not depend on the hotel.
-        </p>
 
         <div class="space-y-4">
           <div class="flex items-center justify-between">
@@ -41,18 +37,42 @@ import { CommissionRange } from '../../../models';
             </button>
           </div>
           
-          <div class="hidden sm:grid grid-cols-4 gap-4 mb-2 px-4">
-            <div class="text-xs font-bold text-slate-500">Min DC (₹)</div>
-            <div class="text-xs font-bold text-slate-500">Max DC (₹)</div>
-            <div class="text-xs font-bold text-slate-500">Commission (%)</div>
+          <div class="hidden sm:grid grid-cols-5 gap-4 mb-2 px-4 shadow-sm py-2 bg-slate-50 dark:bg-white/5 rounded-lg">
+            <div class="text-[10px] font-bold text-slate-500 uppercase">Min DC (₹)</div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase">Max DC (₹)</div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase">Type</div>
+            <div class="text-[10px] font-bold text-slate-500 uppercase">Commission</div>
             <div></div>
           </div>
 
           @for (range of ranges; track $index) {
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
-              <input type="number" [(ngModel)]="range.min_range" placeholder="Min DC" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-              <input type="number" [(ngModel)]="range.max_range" placeholder="Max DC" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-              <input type="number" [(ngModel)]="range.commission_percentage" placeholder="%" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 items-center bg-white dark:bg-[#1e293b]/50 p-4 rounded-xl border border-slate-100 dark:border-white/5 shadow-sm sm:shadow-none sm:p-0 sm:bg-transparent sm:border-none sm:dark:bg-transparent sm:dark:border-none">
+              <div class="space-y-1 sm:space-y-0 text-left">
+                <span class="sm:hidden text-[10px] font-bold text-slate-400 uppercase">Min DC (₹)</span>
+                <input type="number" [(ngModel)]="range.min_range" placeholder="Min DC" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+              </div>
+              <div class="space-y-1 sm:space-y-0 text-left">
+                <span class="sm:hidden text-[10px] font-bold text-slate-400 uppercase">Max DC (₹)</span>
+                <input type="number" [(ngModel)]="range.max_range" placeholder="Max DC" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+              </div>
+              <div class="space-y-1 sm:space-y-0 text-left">
+                <span class="sm:hidden text-[10px] font-bold text-slate-400 uppercase">Type</span>
+                <select [(ngModel)]="range.calculation_type" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <option value="fixed">Fixed (₹)</option>
+                  <option value="percentage">Percent (%)</option>
+                </select>
+              </div>
+              <div class="space-y-1 sm:space-y-0 text-left">
+                <span class="sm:hidden text-[10px] font-bold text-slate-400 uppercase">Comm. ({{ range.calculation_type === 'percentage' ? '%' : '₹' }})</span>
+                <div class="relative">
+                  <span *ngIf="range.calculation_type === 'fixed'" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                  <input type="number" [(ngModel)]="range.commission_percentage" 
+                    [placeholder]="range.calculation_type === 'percentage' ? '%' : '₹'"
+                    [class.pl-8]="range.calculation_type === 'fixed'"
+                    class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pr-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <span *ngIf="range.calculation_type === 'percentage'" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
+                </div>
+              </div>
               <button (click)="removeRange($index)" class="text-red-500 hover:text-red-700 w-10 h-10 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                 <mat-icon>delete</mat-icon>
               </button>
@@ -71,7 +91,7 @@ import { CommissionRange } from '../../../models';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CommissionManagement {
-  private settingsService = inject(SettingsService);
+  public settingsService = inject(SettingsService);
   private toast = inject(ToastService);
 
   ranges: CommissionRange[] = [];
@@ -89,7 +109,8 @@ export class CommissionManagement {
     this.ranges.push({
       min_range: min,
       max_range: min + 100,
-      commission_percentage: 5
+      commission_percentage: 5,
+      calculation_type: 'percentage'
     });
   }
 
@@ -106,12 +127,16 @@ export class CommissionManagement {
   save() {
     // Basic validation
     for (const range of this.ranges) {
-      if (range.min_range >= range.max_range) {
-        this.toast.show('Min DC must be less than Max DC', 'error');
+      if (Number(range.min_range) >= Number(range.max_range)) {
+        this.toast.show('Min range must be less than Max range', 'error');
+        return;
+      }
+      if (range.commission_percentage < 0) {
+        this.toast.show('Commission cannot be negative', 'error');
         return;
       }
     }
-    
+
     this.settingsService.updateCommissionRanges(this.ranges);
   }
 }

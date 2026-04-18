@@ -205,7 +205,7 @@ import { InvoiceService } from '../../services/invoice.service';
               @if (selectedHotel()?.id === -1) {
                 <div>
                   <label for="manualPrice" class="text-[10px] font-bold text-slate-500 mb-1 block">Manual Price <span class="text-red-500">*</span></label>
-                  <input id="manualPrice" type="number" [ngModel]="manualPrice()" (ngModelChange)="manualPrice.set($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <input id="manualPrice" type="number" [ngModel]="manualPrice()" (ngModelChange)="onManualPriceChange($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                 </div>
               }
             </div>
@@ -245,7 +245,7 @@ import { InvoiceService } from '../../services/invoice.service';
                   <label for="amountReceived" class="text-[10px] font-bold text-slate-500 mb-1 block">Advance Amount</label>
                   <div class="relative">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">₹</span>
-                    <input id="amountReceived" type="number" [ngModel]="amountReceived()" (ngModelChange)="amountReceived.set($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-7 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                    <input id="amountReceived" type="number" [ngModel]="amountReceived()" (ngModelChange)="onAmountReceivedChange($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-7 pr-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                   </div>
                 </div>
               </div>
@@ -273,6 +273,14 @@ import { InvoiceService } from '../../services/invoice.service';
               <div class="flex justify-between text-xs font-medium">
                 <span class="text-slate-500">IGST ({{ igstPercent() }}%)</span>
                 <span class="text-[#1A1A1A] dark:text-white">₹{{ (calculatedIgst() || 0).toLocaleString() }}</span>
+              </div>
+
+              <div class="flex justify-between items-center text-xs font-medium">
+                <span class="text-slate-500">Admin Commission</span>
+                <div class="relative w-24">
+                  <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                  <input type="number" [ngModel]="adminCommission()" (ngModelChange)="onAdminCommissionChange($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-6 pr-2 py-1 text-right text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                </div>
               </div>
               
               <div class="bg-[#FFF9E6] p-4 rounded-xl flex justify-between items-center mt-3 border border-[#FFC107]/10">
@@ -442,11 +450,54 @@ export class CreateOrder implements OnInit {
   manualPrice = signal<number>(0);
   isShippingManuallyEdited = signal<boolean>(false);
 
+  onAmountReceivedChange(value: number) {
+    this.amountReceived.set(Math.round(value));
+  }
+
+  onManualPriceChange(value: number) {
+    this.manualPrice.set(Math.round(value));
+  }
+
   gstPercent = computed(() => this.settingsService.settings().taxes.gst);
   igstPercent = computed(() => this.settingsService.settings().taxes.igst);
 
   calculatedGst = computed(() => Math.round(((this.subtotal() + this.shippingFee()) * this.gstPercent()) / 100));
   calculatedIgst = computed(() => Math.round(((this.subtotal() + this.shippingFee()) * this.igstPercent()) / 100));
+
+  adminCommission = signal<number>(0);
+  isCommissionManuallyEdited = signal<boolean>(false);
+
+  // Compute default commission based on settings and logic
+  defaultAdminCommission = computed(() => {
+    const settings = this.settingsService.settings().financial;
+    const dc = this.shippingFee();
+    const ranges = this.settingsService.commissionRanges();
+    
+    let amount = 0;
+    // Find range first
+    const range = ranges.length > 0 ? ranges.find(r => dc >= r.min_range && dc <= r.max_range) : null;
+    
+    if (range) {
+      if (range.calculation_type === 'percentage') {
+        amount = (dc * range.commission_percentage) / 100;
+      } else {
+        amount = range.commission_percentage;
+      }
+    } else {
+      // Fallback to global setting if no range matches
+      if (settings.commissionType === 'percentage') {
+        amount = (dc * settings.adminCommission) / 100;
+      } else {
+        amount = settings.adminCommission;
+      }
+    }
+    return Math.round(amount);
+  });
+
+  onAdminCommissionChange(value: number) {
+    this.adminCommission.set(Math.round(value));
+    this.isCommissionManuallyEdited.set(true);
+  }
 
   onShippingFeeChange(value: number) {
     this.shippingFee.set(Math.round(value));
@@ -475,7 +526,7 @@ export class CreateOrder implements OnInit {
       address: '', 
       category: 'Manual Order', 
       rating: 0, 
-      image_url: 'assets/manual-logo.png', 
+      image_url: '', 
       status: 'active' 
     };
     const hotels = [othersHotel, ...this.catalog.hotels()];
@@ -519,13 +570,25 @@ export class CreateOrder implements OnInit {
     effect(() => {
       const sub = this.subtotal();
       const ranges = this.settingsService.shippingRanges();
+      
       if (!this.isShippingManuallyEdited()) {
         let fee = 0;
         if (ranges && ranges.length > 0) {
           const range = ranges.find(r => sub >= r.min_amount && sub < r.max_amount);
-          if (range) fee = range.price;
+          if (range) {
+            fee = range.price;
+            if (range.calculation_type === 'percentage') {
+              fee = (sub * fee) / 100;
+            }
+          }
         }
         this.shippingFee.set(Math.round(fee));
+      }
+    }, { allowSignalWrites: true });
+
+    effect(() => {
+      if (!this.isCommissionManuallyEdited()) {
+        this.adminCommission.set(this.defaultAdminCommission());
       }
     }, { allowSignalWrites: true });
 
@@ -613,13 +676,21 @@ export class CreateOrder implements OnInit {
     
     const hotel = this.selectedHotel()!;
     const dc = this.shippingFee();
+    const settings = this.settingsService.settings().financial;
     const ranges = this.settingsService.commissionRanges();
+    
     let commissionPercentage = 0;
-    if (ranges && ranges.length > 0) {
-      const range = ranges.find(r => dc >= r.min_range && dc <= r.max_range);
-      if (range) commissionPercentage = range.commission_percentage;
+    const commissionAmount = this.adminCommission();
+    
+    const range = ranges.length > 0 ? ranges.find(r => dc >= r.min_range && dc <= r.max_range) : null;
+
+    if (range) {
+      if (range.calculation_type === 'percentage') {
+        commissionPercentage = range.commission_percentage;
+      }
+    } else if (settings.commissionType === 'percentage') {
+      commissionPercentage = settings.adminCommission;
     }
-    const commissionAmount = (dc * commissionPercentage) / 100;
 
     const orderData: Partial<Order> = {
       order_number: this.orderId(),
@@ -634,6 +705,8 @@ export class CreateOrder implements OnInit {
       delivery_charge: dc,
       admin_commission_amount: commissionAmount,
       commission_percentage_applied: commissionPercentage,
+      commission_calculation_type: settings.commissionType,
+      shipping_calculation_type: this.settingsService.settings().logistics.shippingType,
       grand_total: this.grandTotal(),
       gst_amount: this.calculatedGst(),
       igst_amount: this.calculatedIgst(),
@@ -641,13 +714,13 @@ export class CreateOrder implements OnInit {
       balance_pending: this.balancePending(),
       status: 'Order Placed',
       items: this.cart().map(c => {
-        const price = c.item.hotelPrice ?? c.item.price;
+        const price = Math.round(c.item.hotelPrice ?? c.item.price);
         return {
           menu_id: c.item.id,
           menu_name: c.item.name,
           quantity: c.quantity,
           price: price,
-          total: c.quantity * price
+          total: Math.round(c.quantity * price)
         };
       })
     };

@@ -88,6 +88,8 @@ CREATE TABLE IF NOT EXISTS orders (
     delivery_charge DECIMAL(10,2),
     admin_commission_amount DECIMAL(10,2),
     commission_percentage_applied DECIMAL(5,2),
+    commission_calculation_type VARCHAR(20) DEFAULT 'percentage',
+    shipping_calculation_type VARCHAR(20) DEFAULT 'fixed',
     grand_total DECIMAL(10,2),
     gst_amount DECIMAL(10,2),
     igst_amount DECIMAL(10,2),

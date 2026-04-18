@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { ToastService } from '../../../services/toast.service';
-import { SettingsService, ShippingRange } from '../../../services/settings.service';
+import { SettingsService } from '../../../services/settings.service';
 
 @Component({
   selector: 'app-general-settings',
@@ -23,7 +23,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-4 space-y-8 p-2">
+        <div class="lg:col-span-3 space-y-8 p-2">
           <!-- Financial -->
           <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">
             <div class="flex items-center gap-2">
@@ -32,7 +32,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-             
+              
               <div>
                 <label for="taxRegNumber" class="text-xs font-bold text-slate-500 mb-2 block">Tax Registration Number</label>
                 <input id="taxRegNumber" type="text" [(ngModel)]="financial.taxRegNumber" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
@@ -70,101 +70,6 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
             </div>
           </div>
           -->
-
-          <!-- Logistics -->
-          <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">
-            <div class="flex items-center gap-2">
-              <mat-icon class="text-[#FFC107]">local_shipping</mat-icon>
-              <h3 class="font-bold text-[#1A1A1A] dark:text-white">Delivery & Logistics</h3>
-            </div>
- <!--
-            <div class="grid grid-cols-2 gap-6">
-              <div>
-                <label for="deliveryCharge" class="text-xs font-bold text-slate-500 mb-2 block">Default Delivery Charge</label>
-                <div class="relative">
-                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                  <input id="deliveryCharge" type="number" [(ngModel)]="logistics.defaultDeliveryCharge" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-8 pr-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-                </div>
-              </div>
-              <div>
-                <label for="freeDeliveryThreshold" class="text-xs font-bold text-slate-500 mb-2 block">Free Delivery Threshold</label>
-                <div class="relative">
-                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                  <input id="freeDeliveryThreshold" type="number" [(ngModel)]="logistics.freeDeliveryThreshold" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pl-8 pr-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-                </div>
-              </div>
-            </div>
--->
-            <!--  <div>
-              <label for="deliveryRadius" class="text-xs font-bold text-slate-500 mb-2 block">Default Delivery Radius (km): {{ logistics.deliveryRadius }}</label>
-              <input id="deliveryRadius" type="range" min="1" max="50" [(ngModel)]="logistics.deliveryRadius" class="w-full accent-[#FFC107]">
-              <div class="flex justify-between text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-widest">
-                <span>1km</span>
-                <span class="text-[#FFC107]">15km</span>
-                <span>50km</span>
-              </div>
-            </div> -->
-
-            <!-- Shipping Ranges -->
-            <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <div class="text-xs font-bold text-slate-500 block mb-2">Shipping Ranges</div>
-                <button (click)="addShippingRange()" class="text-xs font-bold text-[#FFC107] hover:text-[#FFA000]">Add Range</button>
-              </div>
-              @for (range of shippingRanges; track $index) {
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
-                  <input type="number" [(ngModel)]="range.min_amount" placeholder="Min" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-                  <input type="number" [(ngModel)]="range.max_amount" placeholder="Max" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-                  <input type="number" [(ngModel)]="range.price" placeholder="Price" class="bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
-                  <button (click)="removeShippingRange($index)" class="text-red-500 hover:text-red-700">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
-              }
-            </div>
-          </div>
-          <!-- Feature Configuration -->
-          <!--  <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">
-            <div class="flex items-center gap-2">
-              <mat-icon class="text-[#FFC107]">toggle_on</mat-icon>
-              <h3 class="font-bold text-[#1A1A1A] dark:text-white">Feature Configuration</h3>
-            </div>
-            
-            <div class="space-y-4">
-              <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
-                <div>
-                  <p class="text-sm font-bold text-[#1A1A1A] dark:text-white">Customer Ratings & Reviews</p>
-                  <p class="text-[10px] text-slate-500">Allow customers to rate orders and leave reviews.</p>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" [(ngModel)]="features.ratings" class="sr-only peer">
-                  <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-[#FFC107]"></div>
-                </label>
-              </div>
-
-              <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
-                <div>
-                  <p class="text-sm font-bold text-[#1A1A1A] dark:text-white">Live Order Tracking</p>
-                  <p class="text-[10px] text-slate-500">Enable real-time GPS tracking for active deliveries.</p>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" [(ngModel)]="features.liveTracking" class="sr-only peer">
-                  <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-[#FFC107]"></div>
-                </label>
-              </div>
-
-              <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
-                <div>
-                  <p class="text-sm font-bold text-[#1A1A1A] dark:text-white">Promo Codes & Discounts</p>
-                  <p class="text-[10px] text-slate-500">Enable the promotional code system during checkout.</p>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" [(ngModel)]="features.promoCodes" class="sr-only peer">
-                  <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-[#FFC107]"></div>
-                </label>
-              </div>
-            </div>
-          </div> -->
 
           <!-- WhatsApp Configuration -->
           <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">
@@ -227,7 +132,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
                 
                 <div>
                   <label for="supportNumber" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Support WhatsApp Number</label>
-                  <input id="supportNumber" type="text" [(ngModel)]="supportNumber" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] text-white mb-4" placeholder="e.g. 918903035099">
+                  <input id="supportNumber" type="text" [(ngModel)]="supportNumber" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] text-white mb-4" placeholder="e.g. 919876543210">
                 </div>
 
                 <button (click)="contactSupport()" class="btn-primary w-full">Contact Support</button>
@@ -250,13 +155,15 @@ export class GeneralSettings implements OnInit {
   financial = {
     adminCommission: 15,
     taxRegNumber: 'TAX-KALL-99201',
-    autoSettlement: true
+    autoSettlement: true,
+    commissionType: 'percentage' as 'percentage' | 'fixed'
   };
 
   logistics = {
     defaultDeliveryCharge: 49,
     freeDeliveryThreshold: 499,
-    deliveryRadius: 15
+    deliveryRadius: 15,
+    shippingType: 'fixed' as 'percentage' | 'fixed'
   };
 
   features = {
@@ -276,14 +183,7 @@ export class GeneralSettings implements OnInit {
     enabled: false
   };
 
-  shippingRanges: ShippingRange[] = [];
-  supportNumber = '918903035099';
-
-  constructor() {
-    effect(() => {
-      this.shippingRanges = [...this.settingsService.shippingRanges()];
-    });
-  }
+  supportNumber = '919876543210';
 
   ngOnInit() {
     const settings = this.settingsService.settings();
@@ -304,21 +204,12 @@ export class GeneralSettings implements OnInit {
       whatsapp: this.whatsapp,
       supportNumber: this.supportNumber
     });
-    this.settingsService.updateShippingRanges(this.shippingRanges);
     this.toast.success('Settings saved successfully');
   }
 
   discard() {
     this.ngOnInit();
     this.toast.info('Changes discarded');
-  }
-
-  addShippingRange() {
-    this.shippingRanges.push({ min_amount: 0, max_amount: 0, price: 0 });
-  }
-
-  removeShippingRange(index: number) {
-    this.shippingRanges.splice(index, 1);
   }
 
   contactSupport() {

@@ -24,8 +24,8 @@ router.post('/', authenticateToken, async (req, res) => {
     const ranges = req.body;
     for (const range of ranges) {
       await client.query(
-        'INSERT INTO admin_commission_config (min_range, max_range, commission_percentage) VALUES ($1, $2, $3)',
-        [range.min_range, range.max_range, range.commission_percentage]
+        'INSERT INTO admin_commission_config (min_range, max_range, commission_percentage, calculation_type) VALUES ($1, $2, $3, $4)',
+        [range.min_range, range.max_range, range.commission_percentage, range.calculation_type || 'percentage']
       );
     }
     

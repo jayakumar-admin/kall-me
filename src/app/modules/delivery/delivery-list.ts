@@ -41,6 +41,8 @@ export class DeliveryList implements OnInit {
     mobile: ['', [Validators.required]],
     status: ['active', [Validators.required]],
     image_url: [''],
+    vehicle_number: [''],
+    license_number: [''],
     password: ['']
   });
 
@@ -146,7 +148,9 @@ export class DeliveryList implements OnInit {
         name: driver.name,
         mobile: driver.mobile,
         status: driver.status,
-        image_url: driver.image_url || ''
+        image_url: driver.image_url || '',
+        vehicle_number: driver.vehicle_number || '',
+        license_number: driver.license_number || ''
       });
       if (driver.image_url) {
         this.croppedImage.set(driver.image_url);

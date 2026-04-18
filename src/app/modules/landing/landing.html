@@ -30,39 +30,39 @@
         <!-- Cards -->
         <div class="grid md:grid-cols-3 gap-8">
           <!-- Card 1 -->
-          <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100">
-            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <div (click)="handleDeepLink('/app/hotels')" (keydown.enter)="handleDeepLink('/app/hotels')" tabindex="0" role="button" class="bg-slate-50 p-8 rounded-3xl border border-slate-100 cursor-pointer hover:shadow-xl transition-all group outline-none focus:ring-2 focus:ring-[#FFC107]">
+            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
               <mat-icon class="text-[#FFC107]">restaurant</mat-icon>
             </div>
             <h3 class="text-xl font-bold mb-4">Explore Hotels & Menus</h3>
             <p class="text-sm text-slate-500 mb-6">Browse through a curated list of top-rated hotels and their exclusive menus to find your next meal.</p>
-            <a routerLink="/login" class="inline-flex items-center gap-2 text-sm font-bold hover:gap-3 transition-all">
+            <span class="inline-flex items-center gap-2 text-sm font-bold group-hover:gap-3 transition-all pointer-events-none">
               View Catalog <mat-icon class="text-sm">arrow_forward</mat-icon>
-            </a>
+            </span>
           </div>
 
           <!-- Card 2 -->
-          <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100">
-            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <mat-icon class="text-[#FFC107]">admin_panel_settings</mat-icon>
+          <div (click)="handleDeepLink('/app/settings')" (keydown.enter)="handleDeepLink('/app/settings')" tabindex="0" role="button" class="bg-slate-50 p-8 rounded-3xl border border-slate-100 cursor-pointer hover:shadow-xl transition-all group outline-none focus:ring-2 focus:ring-[#FFC107]">
+            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+              <mat-icon class="text-[#FFC107]">settings</mat-icon>
             </div>
-            <h3 class="text-xl font-bold mb-4">Admin Portal</h3>
-            <p class="text-sm text-slate-500 mb-6">Securely access management tools, view analytics, and oversee the entire delivery ecosystem.</p>
-            <a routerLink="/login" class="inline-flex items-center gap-2 text-sm font-bold hover:gap-3 transition-all">
-              Go to Dashboard <mat-icon class="text-sm">arrow_forward</mat-icon>
-            </a>
+            <h3 class="text-xl font-bold mb-4">App Settings</h3>
+            <p class="text-sm text-slate-500 mb-6">Securely access management tools, configure system parameters, and oversee the entire delivery ecosystem.</p>
+            <span class="inline-flex items-center gap-2 text-sm font-bold group-hover:gap-3 transition-all pointer-events-none">
+              Configure System <mat-icon class="text-sm">arrow_forward</mat-icon>
+            </span>
           </div>
 
           <!-- Card 3 -->
-          <div class="bg-slate-50 p-8 rounded-3xl border border-slate-100">
-            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <div (click)="handleDeepLink('/app/delivery')" (keydown.enter)="handleDeepLink('/app/delivery')" tabindex="0" role="button" class="bg-slate-50 p-8 rounded-3xl border border-slate-100 cursor-pointer hover:shadow-xl transition-all group outline-none focus:ring-2 focus:ring-[#FFC107]">
+            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
               <mat-icon class="text-[#FFC107]">local_shipping</mat-icon>
             </div>
             <h3 class="text-xl font-bold mb-4">Our Delivery Fleet</h3>
             <p class="text-sm text-slate-500 mb-6">Track active personnel, manage assignments, and ensure lightning-fast delivery to your doorstep.</p>
-            <a routerLink="/login" class="inline-flex items-center gap-2 text-sm font-bold hover:gap-3 transition-all">
+            <span class="inline-flex items-center gap-2 text-sm font-bold group-hover:gap-3 transition-all pointer-events-none">
               Manage Fleet <mat-icon class="text-sm">arrow_forward</mat-icon>
-            </a>
+            </span>
           </div>
         </div>
       </main>

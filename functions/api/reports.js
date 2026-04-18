@@ -15,14 +15,14 @@ router.get('/daily', async (req, res) => {
       ORDER BY DATE(created_at) DESC
       LIMIT 7
     `);
-
+    
     if (result.rows.length === 0) {
       // Return mock data if DB is empty for demo purposes
       return res.json([
         { date: '2024-03-01', total_orders: 45, total_revenue: 12000 },
       ]);
     }
-
+    
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -41,7 +41,8 @@ router.get('/delivery-person', async (req, res) => {
         SUM(o.subtotal) AS item_total,
         SUM(o.delivery_charge) AS delivery_total,
         SUM(CASE WHEN o.delivery_charge <= 30 THEN 1 ELSE 0 END) AS below_30_count,
-        SUM(o.admin_commission_amount) AS total_commission
+        SUM(o.admin_commission_amount) AS total_commission,
+        SUM(o.balance_pending) AS balance_pending
       FROM orders o
       JOIN delivery_persons d ON o.delivery_person_id = d.id
     `;
@@ -49,9 +50,9 @@ router.get('/delivery-person', async (req, res) => {
       query += ` WHERE DATE(o.created_at) >= '${startDate}' AND DATE(o.created_at) <= '${endDate}'`;
     }
     query += ` GROUP BY d.name;`;
-
+    
     const result = await db.query(query);
-
+    
     // Add calculated fields
     const formattedData = result.rows.map(row => {
       const bonus = parseInt(row.below_30_count) * 10;

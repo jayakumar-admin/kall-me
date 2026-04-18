@@ -21,7 +21,7 @@ export class InvoiceService {
       unit: 'mm',
       format: [80, 150], // Thermal printer width
     });
-
+    
     // Center alignment helper
     const centerX = 40;
 
@@ -29,15 +29,15 @@ export class InvoiceService {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('E-BILL', centerX, 10, { align: 'center' });
-
+    
     doc.setFontSize(10);
     doc.text('Kall Me Delivery', centerX, 16, { align: 'center' });
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.text('Biller Name: Admin', centerX, 21, { align: 'center' });
-
+    
     doc.line(5, 25, 75, 25);
-
+    
     // Table Header
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
@@ -45,9 +45,9 @@ export class InvoiceService {
     doc.text('Qty.', 35, 30, { align: 'right' });
     doc.text('Rate', 55, 30, { align: 'right' });
     doc.text('Price', 75, 30, { align: 'right' });
-
+    
     doc.line(5, 32, 75, 32);
-
+    
     // Items
     doc.setFont('helvetica', 'normal');
     let y = 37;
@@ -57,54 +57,54 @@ export class InvoiceService {
       const itemName = item.menu_name || 'Item';
       const splitName = doc.splitTextToSize(itemName, 28);
       doc.text(splitName, 5, y);
-
+      
       doc.text(item.quantity.toString(), 35, y, { align: 'right' });
-      doc.text(Number(item.price).toFixed(2), 55, y, { align: 'right' });
-      doc.text(Number(item.total).toFixed(2), 75, y, { align: 'right' });
-
+      doc.text(Number(item.price).toFixed(0), 55, y, { align: 'right' });
+      doc.text(Number(item.total).toFixed(0), 75, y, { align: 'right' });
+      
       y += (splitName.length * 4);
       totalQty += item.quantity;
     });
-
+    
     doc.line(5, y, 75, y);
     y += 5;
-
+    
     // Totals
     doc.text('Total Quantity:', 5, y);
     doc.text(totalQty.toString(), 75, y, { align: 'right' });
     y += 5;
-
+    
     const subtotal = (order.items || []).reduce((sum, item) => sum + Number(item.total), 0);
     doc.text('Sub Total:', 5, y);
-    doc.text(`Rs. ${subtotal.toFixed(2)}`, 75, y, { align: 'right' });
+    doc.text(`Rs. ${Math.round(subtotal)}`, 75, y, { align: 'right' });
     y += 5;
 
     if (Number(order.shipping_fee) > 0) {
       doc.text('Delivery Fee:', 5, y);
-      doc.text(`Rs. ${Number(order.shipping_fee).toFixed(2)}`, 75, y, { align: 'right' });
+      doc.text(`Rs. ${Math.round(Number(order.shipping_fee))}`, 75, y, { align: 'right' });
       y += 5;
     }
 
     if (Number(order.gst_amount) > 0) {
       doc.text('GST:', 5, y);
-      doc.text(`Rs. ${Number(order.gst_amount).toFixed(2)}`, 75, y, { align: 'right' });
+      doc.text(`Rs. ${Math.round(Number(order.gst_amount))}`, 75, y, { align: 'right' });
       y += 5;
     }
 
     if (Number(order.igst_amount) > 0) {
       doc.text('IGST:', 5, y);
-      doc.text(`Rs. ${Number(order.igst_amount).toFixed(2)}`, 75, y, { align: 'right' });
+      doc.text(`Rs. ${Math.round(Number(order.igst_amount))}`, 75, y, { align: 'right' });
       y += 5;
     }
-
+    
     doc.line(5, y, 75, y);
     y += 5;
-
+    
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Total Payable Amount:', 5, y);
-    doc.text(`Rs. ${Number(order.grand_total).toFixed(2)}`, 75, y, { align: 'right' });
-
+    doc.text(`Rs. ${Math.round(Number(order.grand_total))}`, 75, y, { align: 'right' });
+    
     // Footer
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);

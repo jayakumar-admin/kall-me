@@ -81,7 +81,7 @@ export class AuthService {
     }
   }
 
-  login(credentials: { email?: string | null; password?: string | null; mobile?: string | null; role?: 'admin' | 'delivery' }) {
+  login(credentials: { email?: string | null; password?: string | null; mobile?: string | null; role?: 'admin' | 'delivery' }, returnUrl?: string | null) {
     this.loader.show('Authenticating...');
     const endpoint = `${this.baseUrl}/auth/login`;
     
@@ -107,7 +107,9 @@ export class AuthService {
 
           this.setupInactivityListeners();
           
-          if (user.role === 'delivery') {
+          if (returnUrl) {
+            this.router.navigate([returnUrl]);
+          } else if (user.role === 'delivery') {
             this.router.navigate(['/app/delivery-dashboard']);
           } else {
             this.router.navigate(['/app/dashboard']);

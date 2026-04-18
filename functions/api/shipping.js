@@ -21,8 +21,8 @@ router.post('/', async (req, res) => {
     await client.query('DELETE FROM shipping_ranges');
     for (const range of req.body) {
       await client.query(
-        'INSERT INTO shipping_ranges (min_amount, max_amount, price) VALUES ($1, $2, $3)',
-        [range.min_amount, range.max_amount, range.price]
+        'INSERT INTO shipping_ranges (min_amount, max_amount, price, calculation_type) VALUES ($1, $2, $3, $4)',
+        [range.min_amount, range.max_amount, range.price, range.calculation_type || 'fixed']
       );
     }
     await client.query('COMMIT');

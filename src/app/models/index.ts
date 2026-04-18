@@ -30,6 +30,8 @@ export interface DeliveryPerson {
   mobile: string;
   status: 'active' | 'busy' | 'offline';
   image_url?: string;
+  vehicle_number?: string;
+  license_number?: string;
 }
 
 export interface Order {
@@ -49,6 +51,8 @@ export interface Order {
   delivery_charge: number;
   admin_commission_amount: number;
   commission_percentage_applied: number;
+  commission_calculation_type?: 'percentage' | 'fixed';
+  shipping_calculation_type?: 'percentage' | 'fixed';
   grand_total: number;
   gst_amount: number;
   igst_amount: number;
@@ -97,4 +101,5 @@ export interface CommissionRange {
   min_range: number;
   max_range: number;
   commission_percentage: number;
+  calculation_type: 'percentage' | 'fixed';
 }

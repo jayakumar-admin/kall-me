@@ -49,7 +49,10 @@ router.post('/login', async (req, res) => {
           id: dp.id,
           name: dp.name,
           email: dp.mobile,
-          role: 'delivery'
+          role: 'delivery',
+          image_url: dp.image_url,
+          vehicle_number: dp.vehicle_number,
+          license_number: dp.license_number
         };
         
         if (password === 'password123' && dp.password === '$2b$10$YourHashedPasswordHere') {
@@ -78,7 +81,10 @@ router.post('/login', async (req, res) => {
         id: user.id,
         name: user.name, 
         email: user.email, 
-        role: user.role 
+        role: user.role,
+        image_url: user.image_url,
+        vehicle_number: user.vehicle_number,
+        license_number: user.license_number
       }
     });
 

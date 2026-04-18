@@ -11,8 +11,16 @@ export const SETTINGS_ROUTES: Routes = [
     loadComponent: () => import('./general-settings/general-settings').then(m => m.GeneralSettings)
   },
   {
+    path: 'calculation-type',
+    loadComponent: () => import('./calculation-type/calculation-type').then(m => m.CalculationType)
+  },
+  {
     path: 'commission-management',
     loadComponent: () => import('./commission-management/commission-management').then(m => m.CommissionManagement)
+  },
+  {
+    path: 'delivery-logistics',
+    loadComponent: () => import('./delivery-logistics/delivery-logistics').then(m => m.DeliveryLogistics)
   },
   {
     path: 'hotel-management',

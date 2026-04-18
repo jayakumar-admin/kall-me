@@ -15,7 +15,28 @@ const port = process.env.PORT || 3000; // Use 3001 for dev, 3000 for prod (if se
 try {
   const schemaPath = path.join(__dirname, 'schema.sql');
   const schema = fs.readFileSync(schemaPath, 'utf8');
-  db.query(schema).then(() => console.log('Database schema initialized')).catch(console.error);
+  db.query(schema).then(() => {
+    console.log('Database schema initialized');
+    // Run additional migrations
+    return db.query(`
+      ALTER TABLE orders 
+      ADD COLUMN IF NOT EXISTS commission_calculation_type VARCHAR(20) DEFAULT 'percentage';
+      ALTER TABLE orders
+      ADD COLUMN IF NOT EXISTS shipping_calculation_type VARCHAR(20) DEFAULT 'fixed';
+      ALTER TABLE shipping_ranges
+      ADD COLUMN IF NOT EXISTS calculation_type VARCHAR(20) DEFAULT 'fixed';
+      ALTER TABLE admin_commission_config
+      ADD COLUMN IF NOT EXISTS calculation_type VARCHAR(20) DEFAULT 'percentage';
+      ALTER TABLE delivery_persons
+      ADD COLUMN IF NOT EXISTS image_url TEXT;
+      ALTER TABLE delivery_persons
+      ADD COLUMN IF NOT EXISTS vehicle_number VARCHAR(100);
+      ALTER TABLE delivery_persons
+      ADD COLUMN IF NOT EXISTS license_number VARCHAR(100);
+    `);
+  })
+  .then(() => console.log('Database migrations completed'))
+  .catch(console.error);
 } catch (e) {
   console.error('Error reading schema.sql', e);
 }

@@ -136,7 +136,7 @@ export class CommissionManagement {
         return;
       }
     }
-
+    
     this.settingsService.updateCommissionRanges(this.ranges);
   }
 }

@@ -44,7 +44,10 @@ import { Hotel } from '../../../models';
                   <h3 class="font-bold text-lg text-[#1A1A1A] dark:text-white">{{ hotel.name }}</h3>
                   <p class="text-xs text-slate-500 dark:text-slate-400">{{ hotel.category }}</p>
                 </div>
-            
+                <div class="flex items-center gap-1 bg-[#FFC107]/10 px-2 py-1 rounded-md text-[#FFC107] font-bold text-xs">
+                  <mat-icon class="text-sm">star</mat-icon>
+                  {{ hotel.rating }}
+                </div>
               </div>
               
               <div class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400 mt-2">

@@ -1,66 +1,66 @@
     <div class="min-h-screen bg-white text-[#1A1A1A] font-sans">
       <!-- Header -->
-      <header class="flex items-center justify-between px-8 py-6">
+      <header class="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-6">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-[#FFC107] rounded-lg flex items-center justify-center">
+          <div class="w-8 h-8 bg-[#FFC107] rounded-lg flex items-center justify-center shrink-0">
             <mat-icon class="text-black text-sm">delivery_dining</mat-icon>
           </div>
-          <span class="font-display font-black text-xl tracking-tight">Kall me</span>
+          <span class="font-display font-black text-lg sm:text-xl tracking-tight">Kall me</span>
         </div>
-        <div class="flex items-center gap-4">
-          <a routerLink="/login" class="text-sm font-bold text-slate-600 hover:text-black">Login</a>
-          <a routerLink="/login" class="bg-black text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-slate-800">Get Started</a>
+        <div class="flex items-center gap-3 sm:gap-4">
+          <a routerLink="/login" class="text-xs sm:text-sm font-bold text-slate-600 hover:text-black">Login</a>
+          <a routerLink="/login" class="bg-black text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold hover:bg-slate-800 transition-colors whitespace-nowrap">Get Started</a>
         </div>
       </header>
 
       <!-- Hero -->
-      <main class="max-w-6xl mx-auto px-4 py-16 text-center">
-        <div class="inline-flex items-center gap-2 bg-slate-100 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-slate-500 mb-6">
-          <mat-icon class="text-sm text-[#FFC107]">emoji_objects</mat-icon>
+      <main class="max-w-6xl mx-auto px-4 py-10 sm:py-16 text-center">
+        <div class="inline-flex items-center gap-2 bg-slate-100 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-500 mb-6">
+          <mat-icon class="text-xs sm:text-sm text-[#FFC107]">emoji_objects</mat-icon>
           SMART DELIVERY MANAGEMENT
         </div>
-        <h1 class="text-6xl md:text-7xl font-display font-black tracking-tighter mb-6 leading-tight">
-          Your Restaurant's<br/>
+        <h1 class="text-4xl sm:text-6xl md:text-7xl font-display font-black tracking-tighter mb-4 sm:mb-6 leading-tight">
+          Your Restaurant's<br class="hidden sm:block"/>
           <span class="text-[#FFC107]">Digital Edge</span>
         </h1>
-        <p class="text-lg text-slate-500 max-w-2xl mx-auto mb-16">
+        <p class="text-sm sm:text-lg text-slate-500 max-w-2xl mx-auto mb-10 sm:mb-16 px-4">
           The ultimate food delivery management system. Streamlining operations for hotels, admins, and delivery partners with professional precision.
         </p>
 
         <!-- Cards -->
-        <div class="grid md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           <!-- Card 1 -->
-          <div (click)="handleDeepLink('/app/hotels')" (keydown.enter)="handleDeepLink('/app/hotels')" tabindex="0" role="button" class="bg-slate-50 p-8 rounded-3xl border border-slate-100 cursor-pointer hover:shadow-xl transition-all group outline-none focus:ring-2 focus:ring-[#FFC107]">
-            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+          <div (click)="handleDeepLink('/app/hotels')" (keydown.enter)="handleDeepLink('/app/hotels')" tabindex="0" role="button" class="bg-slate-50 p-6 sm:p-8 rounded-3xl border border-slate-100 cursor-pointer hover:shadow-xl transition-all group outline-none focus:ring-2 focus:ring-[#FFC107]">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
               <mat-icon class="text-[#FFC107]">restaurant</mat-icon>
             </div>
-            <h3 class="text-xl font-bold mb-4">Explore Hotels & Menus</h3>
-            <p class="text-sm text-slate-500 mb-6">Browse through a curated list of top-rated hotels and their exclusive menus to find your next meal.</p>
-            <span class="inline-flex items-center gap-2 text-sm font-bold group-hover:gap-3 transition-all pointer-events-none">
+            <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-4">Explore Hotels</h3>
+            <p class="text-xs sm:text-sm text-slate-500 mb-4 sm:mb-6">Browse through a curated list of top-rated hotels and their exclusive menus to find your next meal.</p>
+            <span class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold group-hover:gap-3 transition-all pointer-events-none">
               View Catalog <mat-icon class="text-sm">arrow_forward</mat-icon>
             </span>
           </div>
 
           <!-- Card 2 -->
-          <div (click)="handleDeepLink('/app/settings')" (keydown.enter)="handleDeepLink('/app/settings')" tabindex="0" role="button" class="bg-slate-50 p-8 rounded-3xl border border-slate-100 cursor-pointer hover:shadow-xl transition-all group outline-none focus:ring-2 focus:ring-[#FFC107]">
-            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+          <div (click)="handleDeepLink('/app/settings')" (keydown.enter)="handleDeepLink('/app/settings')" tabindex="0" role="button" class="bg-slate-50 p-6 sm:p-8 rounded-3xl border border-slate-100 cursor-pointer hover:shadow-xl transition-all group outline-none focus:ring-2 focus:ring-[#FFC107]">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
               <mat-icon class="text-[#FFC107]">settings</mat-icon>
             </div>
-            <h3 class="text-xl font-bold mb-4">App Settings</h3>
-            <p class="text-sm text-slate-500 mb-6">Securely access management tools, configure system parameters, and oversee the entire delivery ecosystem.</p>
-            <span class="inline-flex items-center gap-2 text-sm font-bold group-hover:gap-3 transition-all pointer-events-none">
+            <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-4">App Settings</h3>
+            <p class="text-xs sm:text-sm text-slate-500 mb-4 sm:mb-6">Securely access management tools, configure system parameters, and oversee the entire delivery ecosystem.</p>
+            <span class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold group-hover:gap-3 transition-all pointer-events-none">
               Configure System <mat-icon class="text-sm">arrow_forward</mat-icon>
             </span>
           </div>
 
           <!-- Card 3 -->
-          <div (click)="handleDeepLink('/app/delivery')" (keydown.enter)="handleDeepLink('/app/delivery')" tabindex="0" role="button" class="bg-slate-50 p-8 rounded-3xl border border-slate-100 cursor-pointer hover:shadow-xl transition-all group outline-none focus:ring-2 focus:ring-[#FFC107]">
-            <div class="w-12 h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+          <div (click)="handleDeepLink('/app/delivery')" (keydown.enter)="handleDeepLink('/app/delivery')" tabindex="0" role="button" class="bg-slate-50 p-6 sm:p-8 rounded-3xl border border-slate-100 cursor-pointer hover:shadow-xl transition-all group outline-none focus:ring-2 focus:ring-[#FFC107]">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-[#FFC107]/20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
               <mat-icon class="text-[#FFC107]">local_shipping</mat-icon>
             </div>
-            <h3 class="text-xl font-bold mb-4">Our Delivery Fleet</h3>
-            <p class="text-sm text-slate-500 mb-6">Track active personnel, manage assignments, and ensure lightning-fast delivery to your doorstep.</p>
-            <span class="inline-flex items-center gap-2 text-sm font-bold group-hover:gap-3 transition-all pointer-events-none">
+            <h3 class="text-lg sm:text-xl font-bold mb-2 sm:mb-4">Delivery Fleet</h3>
+            <p class="text-xs sm:text-sm text-slate-500 mb-4 sm:mb-6">Track active personnel, manage assignments, and ensure lightning-fast delivery to your doorstep.</p>
+            <span class="inline-flex items-center gap-2 text-xs sm:text-sm font-bold group-hover:gap-3 transition-all pointer-events-none">
               Manage Fleet <mat-icon class="text-sm">arrow_forward</mat-icon>
             </span>
           </div>

@@ -58,7 +58,10 @@ CREATE TABLE IF NOT EXISTS delivery_persons (
     name VARCHAR(255) NOT NULL,
     mobile VARCHAR(20),
     password VARCHAR(255) NOT NULL DEFAULT '$2b$10$YourHashedPasswordHere',
-    status VARCHAR(20) DEFAULT 'active'
+    status VARCHAR(20) DEFAULT 'active',
+    image_url TEXT,
+    vehicle_number VARCHAR(100),
+    license_number VARCHAR(100)
 );
 
 -- Admin Commission Config table
@@ -67,6 +70,7 @@ CREATE TABLE IF NOT EXISTS admin_commission_config (
     min_range DECIMAL(10,2) NOT NULL,
     max_range DECIMAL(10,2) NOT NULL,
     commission_percentage DECIMAL(5,2) NOT NULL,
+    calculation_type VARCHAR(20) DEFAULT 'percentage',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -131,7 +135,8 @@ CREATE TABLE IF NOT EXISTS shipping_ranges (
     id SERIAL PRIMARY KEY,
     min_amount DECIMAL(10,2) NOT NULL,
     max_amount DECIMAL(10,2) NOT NULL,
-    price DECIMAL(10,2) NOT NULL
+    price DECIMAL(10,2) NOT NULL,
+    calculation_type VARCHAR(20) DEFAULT 'fixed'
 );
 
 -- WhatsApp Logs table

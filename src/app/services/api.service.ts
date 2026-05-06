@@ -12,7 +12,7 @@ import { LoaderService } from './loader.service';
 export class ApiService {
   private http = inject(HttpClient);
   private loader = inject(LoaderService);
-  public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
   // public baseUrl = 'http://localhost:3000/api';
 
   private withLoader<T>(request: Observable<T>, message: string): Observable<T> {
@@ -249,13 +249,13 @@ export class ApiService {
     );
   }
 
-  getDeliveryPersonReport(startDate?: string, endDate?: string): Observable<{name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, bonus: number, final_earnings: number, balance_pending: number}[]> {
+  getDeliveryPersonReport(startDate?: string, endDate?: string): Observable<{name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, advance_amount: number, bonus: number, final_earnings: number, balance_pending: number}[]> {
     let url = `${this.baseUrl}/reports/delivery-person`;
     if (startDate && endDate) {
       url += `?startDate=${startDate}&endDate=${endDate}`;
     }
     return this.withLoader(
-      this.http.get<{name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, bonus: number, final_earnings: number, balance_pending: number}[]>(url),
+      this.http.get<{name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, advance_amount: number, bonus: number, final_earnings: number, balance_pending: number}[]>(url),
       'Generating Delivery Report...'
     );
   }

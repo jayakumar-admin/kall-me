@@ -52,7 +52,7 @@ import { InvoiceService } from '../../services/invoice.service';
               [class.ring-2]="selectedHotel()?.id === hotel.id"
               [class.ring-[#FFC107]/20]="selectedHotel()?.id === hotel.id"
             >
-              <div class="h-20 lg:h-24 overflow-hidden relative">
+              <div class="hidden lg:block h-24 overflow-hidden relative">
                 <img [src]="hotel.image_url || 'https://picsum.photos/seed/' + hotel.name + '/400/300'" [alt]="hotel.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 @if (selectedHotel()?.id === hotel.id) {
                   <div class="absolute top-2 right-2 w-5 h-5 bg-[#FFC107] rounded-full flex items-center justify-center shadow-lg">
@@ -60,6 +60,11 @@ import { InvoiceService } from '../../services/invoice.service';
                   </div>
                 }
               </div>
+              @if (selectedHotel()?.id === hotel.id) {
+                <div class="lg:hidden absolute top-1 right-1 w-4 h-4 bg-[#FFC107] rounded-full flex items-center justify-center shadow-sm">
+                  <mat-icon class="text-black text-[10px] font-bold">check</mat-icon>
+                </div>
+              }
               <div class="p-2 lg:p-3 text-center lg:text-left">
                 <h3 class="font-bold text-xs lg:text-sm text-[#1A1A1A] dark:text-white truncate">{{ hotel.name }}</h3>
               </div>
@@ -120,8 +125,8 @@ import { InvoiceService } from '../../services/invoice.service';
                 [class.border-[#FFC107]]="getQuantity(item) > 0"
                 [class.bg-[#FFF9E6]/20]="getQuantity(item) > 0"
               >
-                <div class="relative w-full lg:w-auto flex justify-center">
-                  <div class="w-full aspect-square lg:w-16 lg:h-16 rounded-lg overflow-hidden shrink-0">
+                <div class="relative w-full lg:w-auto flex justify-center lg:block">
+                  <div class="hidden lg:block w-16 h-16 rounded-lg overflow-hidden shrink-0">
                     <img [src]="item.image_url || 'https://picsum.photos/seed/' + item.name + '/100/100'" [alt]="item.name" class="w-full h-full object-cover">
                   </div>
                   @if (getQuantity(item) > 0) {
@@ -223,7 +228,7 @@ import { InvoiceService } from '../../services/invoice.service';
                 >
                   <div class="flex items-center gap-3">
                     @if (selectedDriver()) {
-                      <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                      <div class="hidden lg:block w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
                         <img [src]="selectedDriver()?.image_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + selectedDriver()?.name" alt="">
                       </div>
                       <div class="flex flex-col">
@@ -357,7 +362,7 @@ import { InvoiceService } from '../../services/invoice.service';
                 [class.border-[#FFC107]]="selectedDriverId() === driver.id.toString()"
                 [class.bg-[#FFF9E6]/20]="selectedDriverId() === driver.id.toString()"
               >
-                <div class="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                <div class="hidden lg:block w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
                   <img [src]="driver.image_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + driver.name" alt="">
                 </div>
                 <div class="flex-1 min-w-0">

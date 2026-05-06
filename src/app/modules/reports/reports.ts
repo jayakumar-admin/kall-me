@@ -17,66 +17,78 @@ import autoTable from 'jspdf-autotable';
   standalone: true,
   imports: [CommonModule, MatIconModule, FormsModule, NgxEchartsDirective],
   template: `
-    <div class="h-full overflow-y-auto p-6 custom-scrollbar space-y-8">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 class="text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Reports & Analytics</h1>
-          <p class="text-slate-500 dark:text-slate-400">Track your business performance and growth.</p>
+    <div class="h-full overflow-y-auto p-4 sm:p-6 custom-scrollbar space-y-6 sm:space-y-8">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <h1 class="text-2xl sm:text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Reports & Analytics</h1>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Track and analyze business performance metrics.</p>
         </div>
-        <div class="flex flex-wrap gap-3">
-          <button (click)="exportCSV()" class="px-4 py-2.5 rounded-xl bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-sm flex items-center gap-2 shadow-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+        <div class="flex flex-wrap gap-2 sm:gap-3">
+          <button (click)="exportCSV()" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
             <mat-icon class="text-lg">table_view</mat-icon>
             Export CSV
           </button>
-          <button (click)="exportPDF()" class="px-4 py-2.5 rounded-xl bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-sm flex items-center gap-2 shadow-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+          <button (click)="exportPDF()" class="flex-1 sm:flex-none px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
             <mat-icon class="text-lg">picture_as_pdf</mat-icon>
             Export PDF
           </button>
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/10">
-        <div class="flex">
-          @for (tab of tabs; track tab) {
-            <button (click)="currentTab.set(tab)" [class.border-[#FFC107]]="currentTab() === tab" class="px-4 py-2 border-b-2 font-bold text-sm transition-colors" [class.text-[#FFC107]]="currentTab() === tab" [class.text-slate-500]="currentTab() !== tab">
-              {{ tab }}
-            </button>
-          }
-        </div>
-        <div class="flex gap-2">
-          @for (sub of subTabs; track sub) {
-            <button (click)="currentSubTab.set(sub)" [class.bg-[#FFC107]]="currentSubTab() === sub" class="px-3 py-1 rounded-md text-xs font-bold transition-colors" [class.text-black]="currentSubTab() === sub" [class.text-slate-500]="currentSubTab() !== sub">
-              {{ sub }}
-            </button>
-          }
+      <!-- Tabs - Mobile horizontal scrollable -->
+      <div class="space-y-4">
+        <div class="flex flex-col gap-4 border-b border-slate-200 dark:border-white/10">
+          <div class="flex overflow-x-auto no-scrollbar -mb-px">
+            @for (tab of tabs; track tab) {
+              <button (click)="currentTab.set(tab)" 
+                [class.border-[#FFC107]]="currentTab() === tab" 
+                class="px-4 py-3 border-b-2 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0" 
+                [class.text-[#FFC107]]="currentTab() === tab" 
+                [class.text-slate-500]="currentTab() !== tab">
+                {{ tab }}
+              </button>
+            }
+          </div>
+          <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+            @for (sub of subTabs; track sub) {
+              <button (click)="currentSubTab.set(sub)" 
+                [class.bg-[#FFC107]]="currentSubTab() === sub" 
+                class="px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wider transition-colors shrink-0" 
+                [class.text-black]="currentSubTab() === sub" 
+                [class.text-slate-500]="currentSubTab() !== sub"
+                [class.bg-slate-100]="currentSubTab() !== sub"
+                [class.dark:bg-white/5]="currentSubTab() !== sub">
+                {{ sub }}
+              </button>
+            }
+          </div>
         </div>
       </div>
 
       <!-- Filters -->
-      <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
-        <div class="flex items-center justify-between gap-2 mb-4">
+      <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 sm:p-6">
+        <div class="flex items-center justify-between gap-2 mb-6">
           <div class="flex items-center gap-2">
             <mat-icon class="text-[#FFC107]">filter_list</mat-icon>
-            <h3 class="font-bold text-[#1A1A1A] dark:text-white">Customized Filters</h3>
+            <h3 class="font-black text-sm sm:text-base text-[#1A1A1A] dark:text-white uppercase tracking-tight">Active Filters</h3>
           </div>
-          <button (click)="resetFilters()" class="text-xs font-bold text-[#FFC107] hover:text-[#E6AE06] transition-colors flex items-center gap-1">
+          <button (click)="resetFilters()" class="text-[10px] font-black uppercase tracking-widest text-[#FFC107] hover:text-[#E6AE06] transition-colors flex items-center gap-1">
             <mat-icon class="text-sm">restart_alt</mat-icon>
-            Reset Filters
+            Reset
           </button>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div>
-            <label for="startDate" class="text-xs font-bold text-slate-500 mb-2 block">Start Date</label>
-            <input id="startDate" type="date" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" class="input-field py-2 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div class="space-y-1">
+            <label for="startDate" class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Start Date</label>
+            <input id="startDate" type="date" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)" class="w-full bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/10 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
           </div>
-          <div>
-            <label for="endDate" class="text-xs font-bold text-slate-500 mb-2 block">End Date</label>
-            <input id="endDate" type="date" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)" class="input-field py-2 text-sm">
+          <div class="space-y-1">
+            <label for="endDate" class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">End Date</label>
+            <input id="endDate" type="date" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)" class="w-full bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/10 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
           </div>
-          <div>
-            <label for="statusFilter" class="text-xs font-bold text-slate-500 mb-2 block">Order Status</label>
-            <select id="statusFilter" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" class="input-field py-2 text-sm appearance-none">
+          <div class="space-y-1">
+            <label for="statusFilter" class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Status</label>
+            <select id="statusFilter" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" class="w-full bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/10 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
               <option value="all">All Statuses</option>
               <option value="delivered">Delivered</option>
               <option value="cancelled">Cancelled</option>
@@ -84,19 +96,19 @@ import autoTable from 'jspdf-autotable';
               <option value="placed">Placed</option>
             </select>
           </div>
-          <div>
-            <label for="hotelFilter" class="text-xs font-bold text-slate-500 mb-2 block">Hotel</label>
-            <select id="hotelFilter" [ngModel]="hotelFilter()" (ngModelChange)="hotelFilter.set($event)" class="input-field py-2 text-sm appearance-none">
+          <div class="space-y-1">
+            <label for="hotelFilter" class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Hotel</label>
+            <select id="hotelFilter" [ngModel]="hotelFilter()" (ngModelChange)="hotelFilter.set($event)" class="w-full bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/10 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
               <option value="all">All Hotels</option>
               @for (hotel of uniqueHotels(); track hotel.id) {
                 <option [value]="hotel.id">{{ hotel.name }}</option>
               }
             </select>
           </div>
-          <div>
-            <label for="deliveryFilter" class="text-xs font-bold text-slate-500 mb-2 block">Delivery Person</label>
-            <select id="deliveryFilter" [ngModel]="deliveryFilter()" (ngModelChange)="deliveryFilter.set($event)" class="input-field py-2 text-sm appearance-none">
-              <option value="all">All Delivery Persons</option>
+          <div class="space-y-1">
+            <label for="deliveryFilter" class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Delivery Partner</label>
+            <select id="deliveryFilter" [ngModel]="deliveryFilter()" (ngModelChange)="deliveryFilter.set($event)" class="w-full bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/10 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
+              <option value="all">All Delivery Partners</option>
               @for (dp of drivers(); track dp.id) {
                 <option [value]="dp.id">{{ dp.name }}</option>
               }
@@ -171,11 +183,11 @@ import autoTable from 'jspdf-autotable';
             </div>
           </div>
         } @else {
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @for (item of metrics().items; track item.label) {
-              <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{{ item.label }}</p>
-                <p class="text-2xl font-black text-[#1A1A1A] dark:text-white">{{ item.value }}</p>
+              <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 p-4 sm:p-5">
+                <p class="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ item.label }}</p>
+                <p class="text-lg sm:text-2xl font-black text-[#1A1A1A] dark:text-white leading-tight">{{ item.value }}</p>
               </div>
             }
           </div>
@@ -209,30 +221,96 @@ import autoTable from 'jspdf-autotable';
                 <h3 class="font-bold text-[#1A1A1A] dark:text-white">{{ currentTab() }} Data</h3>
                 <span class="text-xs font-bold text-slate-500 bg-white dark:bg-[#1E293B] px-2 py-1 rounded-md border border-slate-200 dark:border-white/10">{{ filteredOrders().length }} Records</span>
               </div>
-              <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                  <thead>
-                    <tr [class]="tableConfig().headerColor" class="border-b border-slate-100 dark:border-white/5">
-                      @for (header of tableConfig().headers; track header) {
-                        <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" [class.text-right]="header === 'Amount' || header === 'Earnings'">{{ header }}</th>
-                      }
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 dark:divide-white/5 bg-white dark:bg-[#1E293B]">
-                    @for (row of tableConfig().rows; track row) {
-                      <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                        @for (cell of row; track cell) {
-                          <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white" [class.text-right]="cell.toString().startsWith('₹')">{{ cell }}</td>
+              <div class="overflow-x-auto custom-scrollbar">
+                @if (currentTab() === 'Payment Sheet') {
+                  <table class="w-full text-left border-collapse min-w-max">
+                    <thead>
+                      <tr class="bg-indigo-50 dark:bg-indigo-900/40 border-b border-slate-100 dark:border-white/5 sticky top-0 z-20">
+                        @for (header of tableConfig().headers; track header; let i = $index) {
+                          <th 
+                            class="px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-wider whitespace-nowrap"
+                            [class.sticky]="i < 2 || i === tableConfig().headers.length - 1"
+                            [class.left-0]="i === 0"
+                            [class.left-16]="i === 1"
+                            [class.right-0]="i === tableConfig().headers.length - 1"
+                            [class.bg-indigo-50]="i < 2 || i === tableConfig().headers.length - 1"
+                            [class.dark:bg-[#1E293B]]="i < 2 || i === tableConfig().headers.length - 1"
+                            [class.z-30]="i < 2 || i === tableConfig().headers.length - 1"
+                            [class.text-right]="i >= 2"
+                            [class.border-r]="i === 1"
+                            [class.border-l]="i === tableConfig().headers.length - 1"
+                            [class.border-slate-200]="i === 1 || i === tableConfig().headers.length - 1"
+                            [class.shadow-[2px_0_5px_rgb(0,0,0,0.05)]]="i === 1"
+                            [class.shadow-[-2px_0_5px_rgb(0,0,0,0.05)]]="i === tableConfig().headers.length - 1"
+                          >
+                            {{ header }}
+                          </th>
                         }
                       </tr>
-                    }
-                    @if (tableConfig().rows.length === 0) {
-                      <tr>
-                        <td [attr.colspan]="tableConfig().headers.length" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">No records match the selected filters.</td>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-white/5 bg-white dark:bg-[#1E293B]">
+                      @for (row of tableConfig().rows; track row; let rowIndex = $index) {
+                        <tr 
+                          class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group"
+                          [class.bg-indigo-50/30]="row[1] === 'GRAND TOTAL'"
+                          [class.dark:bg-indigo-900/10]="row[1] === 'GRAND TOTAL'"
+                        >
+                          @for (cell of row; track cell; let i = $index) {
+                            <td 
+                              class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white whitespace-nowrap"
+                              [class.sticky]="i < 2 || i === row.length - 1"
+                              [class.left-0]="i === 0"
+                              [class.left-16]="i === 1"
+                              [class.right-0]="i === row.length - 1"
+                              [class.bg-white]="(i < 2 || i === row.length - 1) && row[1] !== 'GRAND TOTAL'"
+                              [class.dark:bg-[#1E293B]]="(i < 2 || i === row.length - 1) && row[1] !== 'GRAND TOTAL'"
+                              [class.bg-indigo-50]="(i < 2 || i === row.length - 1) && row[1] === 'GRAND TOTAL'"
+                              [class.dark:bg-indigo-900]="(i < 2 || i === row.length - 1) && row[1] === 'GRAND TOTAL'"
+                              [class.group-hover:bg-slate-50]="(i < 2 || i === row.length - 1) && row[1] !== 'GRAND TOTAL'"
+                              [class.dark:group-hover:bg-white/5]="(i < 2 || i === row.length - 1) && row[1] !== 'GRAND TOTAL'"
+                              [class.z-10]="i < 2 || i === row.length - 1"
+                              [class.text-right]="i >= 2"
+                              [class.text-indigo-600]="i === row.length - 1"
+                              [class.dark:text-indigo-400]="i === row.length - 1"
+                              [class.border-r]="i === 1"
+                              [class.border-l]="i === row.length - 1"
+                              [class.border-slate-100]="i === 1 || i === row.length - 1"
+                              [class.shadow-[2px_0_5px_rgb(0,0,0,0.05)]]="i === 1"
+                              [class.shadow-[-2px_0_5px_rgb(0,0,0,0.05)]]="i === row.length - 1"
+                              [class.font-black]="row[1] === 'GRAND TOTAL' || i === row.length - 1"
+                            >
+                              {{ cell }}
+                            </td>
+                          }
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                } @else {
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr [class]="tableConfig().headerColor" class="border-b border-slate-100 dark:border-white/5">
+                        @for (header of tableConfig().headers; track header) {
+                          <th class="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider" [class.text-right]="header === 'Amount' || header === 'Earnings' || header === 'Revenue'">{{ header }}</th>
+                        }
                       </tr>
-                    }
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-white/5 bg-white dark:bg-[#1E293B]">
+                      @for (row of tableConfig().rows; track row) {
+                        <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                          @for (cell of row; track cell; let i = $index) {
+                            <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white" [class.text-right]="i >= 1 && (cell.toString().startsWith('₹') || tableConfig().headers[i] === 'Orders' || tableConfig().headers[i] === 'Quantity')">{{ cell }}</td>
+                          }
+                        </tr>
+                      }
+                      @if (tableConfig().rows.length === 0) {
+                        <tr>
+                          <td [attr.colspan]="tableConfig().headers.length" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">No records match the selected filters.</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                }
               </div>
             </div>
           }
@@ -255,6 +333,7 @@ export class Reports implements OnInit {
   // Tabs
   tabs = [
     'Overview', 
+    'Payment Sheet',
     'Master Chart View',
     'Hotel-wise', 
     'Delivery Person-wise', 
@@ -340,7 +419,77 @@ export class Reports implements OnInit {
 
   tableConfig = computed(() => {
     const tab = this.currentTab();
-    if (tab === 'Hotel-wise') {
+    if (tab === 'Payment Sheet') {
+      const orders = this.filteredOrders();
+      // Get all unique hotels from filtered orders or all orders to have consistent columns
+      const hotelNames = Array.from(new Set(this.orders().map(o => (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || 'Unknown')))).sort();
+      
+      // Group orders by date and hotel
+      const groupedByDate: Record<string, Record<string, number>> = {};
+      orders.forEach(o => {
+        if (o.created_at) {
+          const date = new Date(o.created_at).toLocaleDateString('en-IN');
+          const hotel = (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || 'Unknown');
+          if (!groupedByDate[date]) groupedByDate[date] = {};
+          groupedByDate[date][hotel] = (groupedByDate[date][hotel] || 0) + (Number(o.grand_total) || 0);
+        }
+      });
+
+      // Generate all dates in the range
+      const dates: string[] = [];
+      const startStr = this.startDate();
+      const endStr = this.endDate();
+
+      if (startStr && endStr) {
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+        const current = new Date(start);
+        
+        while (current <= end) {
+          dates.push(new Date(current).toLocaleDateString('en-IN'));
+          current.setDate(current.getDate() + 1);
+        }
+      } else {
+        // Fallback to sorted unique dates from existing orders if range is not selected
+        Object.keys(groupedByDate).sort((a, b) => {
+          const [d1, m1, y1] = a.split('/').map(Number);
+          const [d2, m2, y2] = b.split('/').map(Number);
+          return new Date(y1, m1 - 1, d1).getTime() - new Date(y2, m2 - 1, d2).getTime();
+        }).forEach(d => dates.push(d));
+      }
+      
+      const rows = dates.map((date, index) => {
+        const rowData = hotelNames.map(h => groupedByDate[date] ? (groupedByDate[date][h] || 0) : 0);
+        const rowTotal = rowData.reduce((sum, val) => sum + val, 0);
+        return [
+          (index + 1).toString(),
+          date,
+          ...rowData.map(v => v > 0 ? `₹${v.toLocaleString()}` : '-'),
+          `₹${rowTotal.toLocaleString()}`
+        ];
+      });
+
+      // Add Grand Total row if there is data
+      if (dates.length > 0) {
+        const colTotals = hotelNames.map(h => {
+          return dates.reduce((sum, d) => sum + (groupedByDate[d] ? (groupedByDate[d][h] || 0) : 0), 0);
+        });
+        const grandTotal = colTotals.reduce((sum, val) => sum + val, 0);
+        
+        rows.push([
+          '',
+          'GRAND TOTAL',
+          ...colTotals.map(v => v > 0 ? `₹${v.toLocaleString()}` : '-'),
+          `₹${grandTotal.toLocaleString()}`
+        ]);
+      }
+
+      return {
+        headers: ['SI.No', 'Date', ...hotelNames, 'Total'],
+        rows: rows,
+        headerColor: 'bg-indigo-50 dark:bg-indigo-900/20'
+      };
+    } else if (tab === 'Hotel-wise') {
       return {
         headers: ['Hotel', 'Orders', 'Revenue', 'Avg Order'],
         rows: Object.values(this.groupedByHotel()).map(g => [g.name, g.orders, `₹${g.revenue.toLocaleString()}`, `₹${Math.round(g.revenue / g.orders).toLocaleString()}`]),
@@ -348,14 +497,14 @@ export class Reports implements OnInit {
       };
     } else if (tab === 'Delivery Man-wise') {
       return {
-        headers: ['Delivery Person', 'Orders', 'Earnings'],
-        rows: Object.values(this.groupedByDelivery()).map(g => [g.name, g.orders, `₹${g.earnings.toLocaleString()}`]),
+        headers: ['Delivery Person', 'Orders', 'Earnings', 'Advance'],
+        rows: Object.values(this.groupedByDelivery()).map(g => [g.name, g.orders, `₹${g.earnings.toLocaleString()}`, `₹${g.advance.toLocaleString()}`]),
         headerColor: 'bg-emerald-50 dark:bg-emerald-900/20'
       };
     } else if (tab === 'Monthly Salary') {
       return {
-        headers: ['Month', 'Delivery Person', 'Orders', 'Earnings'],
-        rows: Object.values(this.groupedByMonthlyDelivery()).map(g => [g.month, g.name, g.orders, `₹${g.earnings.toLocaleString()}`]),
+        headers: ['Month', 'Delivery Person', 'Orders', 'Earnings', 'Advance'],
+        rows: Object.values(this.groupedByMonthlyDelivery()).map(g => [g.month, g.name, g.orders, `₹${g.earnings.toLocaleString()}`, `₹${g.advance.toLocaleString()}`]),
         headerColor: 'bg-blue-50 dark:bg-blue-900/20'
       };
     } else if (tab === 'Menu-wise') {
@@ -419,7 +568,7 @@ export class Reports implements OnInit {
   });
 
   groupedByMonthlyDelivery = computed(() => {
-    const grouped: Record<string, { month: string, name: string, orders: number, earnings: number }> = {};
+    const grouped: Record<string, { month: string, name: string, orders: number, earnings: number, advance: number }> = {};
     const drivers = this.drivers();
     
     this.filteredOrders().forEach(o => {
@@ -441,7 +590,8 @@ export class Reports implements OnInit {
             month: monthYear, 
             name: name || 'Unassigned', 
             orders: 0, 
-            earnings: 0 
+            earnings: 0,
+            advance: 0
           };
         }
         
@@ -449,6 +599,7 @@ export class Reports implements OnInit {
         const shippingFee = Number(o.shipping_fee) || 0;
         const adminComm = Number(o.admin_commission_amount) || 0;
         grouped[key].earnings += (shippingFee - adminComm);
+        grouped[key].advance += Number(o.amount_received) || 0;
       }
     });
     return grouped;
@@ -466,7 +617,7 @@ export class Reports implements OnInit {
   });
 
   groupedByDelivery = computed(() => {
-    const grouped: Record<number, { name: string, orders: number, earnings: number }> = {};
+    const grouped: Record<number, { name: string, orders: number, earnings: number, advance: number }> = {};
     const drivers = this.drivers();
     
     this.filteredOrders().forEach(o => {
@@ -477,12 +628,13 @@ export class Reports implements OnInit {
           const driver = drivers.find(d => d.id === dpId);
           if (driver) name = driver.name;
         }
-        grouped[dpId] = { name: name || 'Unassigned', orders: 0, earnings: 0 };
+        grouped[dpId] = { name: name || 'Unassigned', orders: 0, earnings: 0, advance: 0 };
       }
       grouped[dpId].orders++;
       const deliveryFee = Number(o.shipping_fee) || 0;
       const adminComm = Number(o.admin_commission_amount) || 0;
       grouped[dpId].earnings += (deliveryFee - adminComm);
+      grouped[dpId].advance += Number(o.amount_received) || 0;
     });
     return grouped;
   });
@@ -865,9 +1017,14 @@ export class Reports implements OnInit {
     const headers = config.headers;
     const rows = config.rows;
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(field => `"${field}"`).join(','))
+    // Add UTF-8 BOM for proper Excel rendering of rupee symbol
+    const csvContent = "\ufeff" + [
+      headers.map(h => `"${h}"`).join(','),
+      ...rows.map(row => row.map(field => {
+        // Ensure symbols are preserved and fields with commas are quoted correctly
+        const value = String(field);
+        return `"${value}"`;
+      }).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -884,17 +1041,19 @@ export class Reports implements OnInit {
   }
 
   exportPDF() {
-    const data = this.filteredOrders();
-    if (data.length === 0) {
+    const config = this.tableConfig();
+    if (config.rows.length === 0) {
       this.toast.error('No data to export');
       return;
     }
 
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      orientation: config.headers.length > 5 ? 'landscape' : 'portrait'
+    });
     
     // Title
     doc.setFontSize(20);
-    doc.text('Kall Me - Financial Report', 14, 22);
+    doc.text(`Kall Me - ${this.currentTab()} Report`, 14, 22);
     
     // Filters info
     doc.setFontSize(10);
@@ -914,35 +1073,39 @@ export class Reports implements OnInit {
     doc.text(`Summary:`, 14, 40);
     doc.setFontSize(10);
     
-    // Display items from the metrics object instead of hardcoded properties
     let y = 46;
     m.items.forEach(item => {
-      doc.text(`${item.label}: ${item.value}`, 14, y);
+      const sanitizedValue = item.value.replace(/₹/g, 'Rs.');
+      doc.text(`${item.label}: ${sanitizedValue}`, 14, y);
       y += 6;
     });
 
-    // Table
-    const headers = [['Order ID', 'Date', 'Hotel', 'Status', 'Total']];
-    const rows = data.map(o => [
-      o.order_number || '',
-      o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
-          (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || ''),
-      o.status || '',
-      `Rs. ${(o.grand_total || 0).toLocaleString()}`
-    ]);
+    // Table mapping to replace ₹ with Rs. for PDF compatibility
+    const sanitizedRows = config.rows.map(row => 
+      row.map(cell => String(cell).replace(/₹/g, 'Rs.'))
+    );
+    const sanitizedHeaders = config.headers.map(h => h.replace(/₹/g, 'Rs.'));
 
+    // Table
     autoTable(doc, {
-      startY: 65,
-      head: headers,
-      body: rows,
+      startY: y + 5,
+      head: [sanitizedHeaders],
+      body: sanitizedRows,
       theme: 'grid',
       headStyles: { fillColor: [255, 193, 7], textColor: [0, 0, 0] },
-      styles: { fontSize: 8 }
+      styles: { fontSize: config.headers.length > 8 ? 6 : 8 },
+      didParseCell: function(data) {
+        const raw = data.row.raw as (string | number)[];
+        if (raw && raw[1] === 'GRAND TOTAL') {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [240, 240, 240];
+        }
+      }
     });
 
-    doc.save(`kallme_report_${new Date().toISOString().split('T')[0]}.pdf`);
-    
+    doc.save(`kallme_report_${this.currentTab()}_${new Date().toISOString().split('T')[0]}.pdf`);
     this.toast.success('PDF exported successfully');
   }
 }
+
 

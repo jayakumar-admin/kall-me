@@ -23,7 +23,7 @@ import { SettingsService } from '../../../services/settings.service';
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-3 space-y-8 p-2">
+        <div class="lg:col-span-2 space-y-8">
           <!-- Financial -->
           <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">
             <div class="flex items-center gap-2">
@@ -32,7 +32,21 @@ import { SettingsService } from '../../../services/settings.service';
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
+              <div>
+                <label for="adminCommission" class="text-xs font-bold text-slate-500 mb-2 block">
+                  Admin Commission {{ financial.commissionType === 'percentage' ? '(%)' : '(₹)' }}
+                </label>
+                <div class="relative">
+                  <span *ngIf="financial.commissionType === 'fixed'" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
+                  <input id="adminCommission" type="number" [(ngModel)]="financial.adminCommission" 
+                    [class.pl-8]="financial.commissionType === 'fixed'"
+                    class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg pr-10 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
+                  <span *ngIf="financial.commissionType === 'percentage'" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-2">
+                  {{ financial.commissionType === 'percentage' ? 'Percentage' : 'Fixed amount' }} taken from each restaurant order.
+                </p>
+              </div>
               <div>
                 <label for="taxRegNumber" class="text-xs font-bold text-slate-500 mb-2 block">Tax Registration Number</label>
                 <input id="taxRegNumber" type="text" [(ngModel)]="financial.taxRegNumber" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
@@ -192,7 +206,7 @@ export class GeneralSettings implements OnInit {
     this.logistics = { ...settings.logistics };
     this.features = { ...settings.features };
     this.whatsapp = { ...settings.whatsapp };
-    this.supportNumber = settings.supportNumber || '918903035099';
+    this.supportNumber = settings.supportNumber || '919876543210';
   }
 
   save() {

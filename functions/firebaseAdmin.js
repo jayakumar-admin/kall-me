@@ -12,7 +12,7 @@ const serviceAccount = JSON.parse(serviceAccountJson);
 const bucketName = process.env.APP_FIREBASE_STORAGE_BUCKET;
 
 if (!bucketName || bucketName === "YOUR_FIREBASE_STORAGE_BUCKET") {
-    throw new Error('APP_FIREBASE_STORAGE_BUCKET environment variable is not set.');
+  throw new Error('APP_FIREBASE_STORAGE_BUCKET environment variable is not set.');
 }
 
 admin.initializeApp({

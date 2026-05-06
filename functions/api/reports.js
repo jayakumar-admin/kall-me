@@ -42,6 +42,7 @@ router.get('/delivery-person', async (req, res) => {
         SUM(o.delivery_charge) AS delivery_total,
         SUM(CASE WHEN o.delivery_charge <= 30 THEN 1 ELSE 0 END) AS below_30_count,
         SUM(o.admin_commission_amount) AS total_commission,
+        SUM(o.amount_received) AS advance_amount,
         SUM(o.balance_pending) AS balance_pending
       FROM orders o
       JOIN delivery_persons d ON o.delivery_person_id = d.id

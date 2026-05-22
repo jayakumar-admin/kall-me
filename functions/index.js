@@ -33,6 +33,8 @@ try {
       ADD COLUMN IF NOT EXISTS vehicle_number VARCHAR(100);
       ALTER TABLE delivery_persons
       ADD COLUMN IF NOT EXISTS license_number VARCHAR(100);
+      ALTER TABLE hotels
+      ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
     `);
   })
   .then(() => console.log('Database migrations completed'))
@@ -84,12 +86,12 @@ app.get(/.*/, (req, res) => {
 exports.api = functions.https.onRequest(app);
 
 // Export the Express app for local development / testing
-exports.app = app;
+// exports.app = app;
 
 // Start the server if not running as a function
-if (require.main === module) {
-  const serverPort = 3001;
-  app.listen(serverPort, '0.0.0.0', () => {
-    console.log(`Backend server running on http://0.0.0.0:${serverPort}`);
-  });
-}
+// if (require.main === module) {
+//   const serverPort = 3001;
+//   app.listen(serverPort, '0.0.0.0', () => {
+//     console.log(`Backend server running on http://0.0.0.0:${serverPort}`);
+//   });
+// }

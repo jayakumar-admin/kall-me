@@ -1,7 +1,7 @@
 {
   "name": "ai-studio-backend",
   "version": "1.0.0",
-  "description": "Backend for AI Studio App",
+  "description": "Backend for kall me",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

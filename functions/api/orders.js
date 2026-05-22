@@ -184,6 +184,11 @@ router.post('/', authenticateToken, async (req, res) => {
       }
     }
 
+    // Keep only the last 50 notifications total in the database
+    await client.query(
+      'DELETE FROM notifications WHERE id NOT IN (SELECT id FROM notifications ORDER BY created_at DESC, id DESC LIMIT 50)'
+    );
+
     // WhatsApp invoice will be triggered manually from UI action
     // await sendCustomerInvoiceMessage(customer_phone, order, grand_total, order.items);
 
@@ -251,6 +256,11 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
         ['delivery', order.delivery_person_id, 'Order Status Updated', `Order ${order.order_number} status changed to ${status}.`, deliveryLink]
       );
     }
+    
+    // Keep only the last 50 notifications total in the database
+    await db.query(
+      'DELETE FROM notifications WHERE id NOT IN (SELECT id FROM notifications ORDER BY created_at DESC, id DESC LIMIT 50)'
+    );
     
     res.json(order);
   } catch (err) {

@@ -6,6 +6,19 @@ import { Hotel, MenuItem, DeliveryPerson, Order, DeliveryUser, DeliveryPermissio
 import { User } from './auth.service';
 import { LoaderService } from './loader.service';
 
+interface BulkHotelResponse {
+  success: boolean;
+  count: number;
+  data: unknown[];
+}
+
+interface BulkMenuResponse {
+  success: boolean;
+  count: number;
+  data: unknown[];
+  skipped: unknown[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -279,6 +292,21 @@ public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
     return this.withLoader(
       this.http.delete<void>(`${this.baseUrl}/auth/users/${id}`),
       'Removing User...'
+    );
+  }
+
+  // Bulk Upload
+  bulkUploadHotels(hotels: Record<string, unknown>[]): Observable<BulkHotelResponse> {
+    return this.withLoader(
+      this.http.post<BulkHotelResponse>(`${this.baseUrl}/bulk/hotels`, { hotels }),
+      'Uploading Hotels...'
+    );
+  }
+
+  bulkUploadMenus(menus: Record<string, unknown>[]): Observable<BulkMenuResponse> {
+    return this.withLoader(
+      this.http.post<BulkMenuResponse>(`${this.baseUrl}/bulk/menus`, { menus }),
+      'Uploading Menus...'
     );
   }
 }

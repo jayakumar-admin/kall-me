@@ -696,11 +696,12 @@ export class Reports implements OnInit {
     } else if (tab === 'Delivery Man-wise') {
       const grouped: Record<number, { name: string, orders: number, earnings: number }> = {};
       data.forEach(o => {
-        if (!grouped[o.delivery_person_id]) grouped[o.delivery_person_id] = { name: o.delivery_person_name || 'Unknown', orders: 0, earnings: 0 };
-        grouped[o.delivery_person_id].orders++;
+        const dpId = o.delivery_person_id || 0;
+        if (!grouped[dpId]) grouped[dpId] = { name: o.delivery_person_name || 'Unassigned', orders: 0, earnings: 0 };
+        grouped[dpId].orders++;
         const adminComm = Number(o.admin_commission_amount) || 0;
         const deliveryFee = Number(o.shipping_fee) || 0;
-        grouped[o.delivery_person_id].earnings += (deliveryFee - adminComm);
+        grouped[dpId].earnings += (deliveryFee - adminComm);
       });
       return {
         type: 'Delivery Man-wise',

@@ -39,7 +39,7 @@ export interface Order {
   order_number?: string;
   hotel_id: number;
   hotel_name?: string;
-  delivery_person_id: number;
+  delivery_person_id?: number | null;
   delivery_person_name?: string;
   customer_name?: string;
   customer_phone: string;

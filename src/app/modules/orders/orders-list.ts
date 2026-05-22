@@ -23,6 +23,9 @@ export class OrdersList implements OnInit {
   orderService = inject(OrderService);
   router = inject(Router);
   statusFilter = signal<string>('all');
+  
+  pageSize = signal<number>(10);
+  currentPage = signal<number>(1);
 
   ngOnInit() {
     this.orderService.loadOrders();
@@ -40,6 +43,73 @@ export class OrdersList implements OnInit {
       return matchesSearch && matchesStatus;
     });
   });
+
+  totalPages = computed(() => {
+    return Math.ceil(this.filteredOrders().length / this.pageSize()) || 1;
+  });
+
+  currentPageClamped = computed(() => {
+    const page = this.currentPage();
+    const total = this.totalPages();
+    if (page < 1) return 1;
+    if (page > total) return total;
+    return page;
+  });
+
+  paginatedOrders = computed(() => {
+    const all = this.filteredOrders();
+    const size = this.pageSize();
+    const page = this.currentPageClamped();
+    const start = (page - 1) * size;
+    return all.slice(start, start + size);
+  });
+
+  pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPageClamped();
+    const pages: number[] = [];
+    
+    let start = Math.max(1, current - 2);
+    const end = Math.min(total, start + 4);
+    
+    if (end - start < 4) {
+      start = Math.max(1, end - 4);
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  });
+
+  paginationMessage = computed(() => {
+    const total = this.filteredOrders().length;
+    if (total === 0) return 'Showing 0 to 0 of 0 orders';
+    const size = this.pageSize();
+    const page = this.currentPageClamped();
+    const start = (page - 1) * size + 1;
+    const end = Math.min(page * size, total);
+    return `Showing ${start} to ${end} of ${total} orders`;
+  });
+
+  setPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  nextPage() {
+    this.setPage(this.currentPageClamped() + 1);
+  }
+
+  prevPage() {
+    this.setPage(this.currentPageClamped() - 1);
+  }
+
+  setPageSize(size: string | number) {
+    this.pageSize.set(Number(size));
+    this.currentPage.set(1);
+  }
 
   stats = computed(() => {
     const allOrders = this.filteredOrders();

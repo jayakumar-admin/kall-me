@@ -1,7 +1,7 @@
 {
   "name": "ai-studio-backend",
   "version": "1.0.0",
-  "description": "Backend for AI Studio App",
+  "description": "Backend for Kall Me",
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",

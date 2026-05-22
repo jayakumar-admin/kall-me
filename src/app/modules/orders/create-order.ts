@@ -264,14 +264,14 @@ import { InvoiceService } from '../../services/invoice.service';
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label for="customerPhone" class="text-[10px] font-bold text-slate-500 mb-1 block">Phone Number @if (selectedHotel()?.id !== -1) { <span class="text-red-500">*</span> }</label>
+                  <label for="customerPhone" class="text-[10px] font-bold text-slate-500 mb-1 block">Phone Number</label>
                   <div class="relative">
                     <input id="customerPhone" type="text" [(ngModel)]="customer.phone" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                   </div>
                 </div>
               </div>
               <div>
-                <label for="customerAddress" class="text-[10px] font-bold text-slate-500 mb-1 block">Delivery Address @if (selectedHotel()?.id !== -1) { <span class="text-red-500">*</span> }</label>
+                <label for="customerAddress" class="text-[10px] font-bold text-slate-500 mb-1 block">Delivery Address</label>
                 <textarea id="customerAddress" [(ngModel)]="customer.address" rows="2" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] resize-none dark:text-white"></textarea>
               </div>
               <div>
@@ -290,7 +290,7 @@ import { InvoiceService } from '../../services/invoice.service';
             <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-white/5">
               <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Logistics & Payment</p>
               <div>
-                <span class="text-[10px] font-bold text-slate-500 mb-1 block">Assign Delivery Driver @if (selectedHotel()?.id !== -1) { <span class="text-red-500">*</span> }</span>
+                <span class="text-[10px] font-bold text-slate-500 mb-1 block">Assign Delivery Driver</span>
                 <div 
                   (click)="openDriverModal()"
                   (keydown.enter)="openDriverModal()"
@@ -750,11 +750,7 @@ export class CreateOrder implements OnInit {
     const isOthers = this.selectedHotel()?.id === -1;
     if (isOthers) return true;
 
-    return this.cart().length > 0 && 
-           !!this.selectedHotel() && 
-           !!this.customer.phone?.trim() && 
-           !!this.customer.address?.trim() &&
-           !!this.selectedDriverId();
+    return this.cart().length > 0 && !!this.selectedHotel();
   }
 
   confirmOrder() {
@@ -782,7 +778,7 @@ export class CreateOrder implements OnInit {
       order_number: this.orderId(),
       hotel_id: hotel.id,
       hotel_name: hotel.name,
-      delivery_person_id: Number(this.selectedDriverId()) || 1, // Default driver
+      delivery_person_id: Number(this.selectedDriverId()) || null, // Optional driver
       customer_phone: this.customer.phone || '',
       delivery_address: this.customer.address || '',
       delivery_description: this.customer.description || '',

@@ -136,6 +136,8 @@ import { SettingsService } from '../../../services/settings.service';
               </div>
             }
           </div>
+
+
         </div>
 
         <!-- Sidebar Settings -->

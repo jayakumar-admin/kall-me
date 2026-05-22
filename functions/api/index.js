@@ -14,6 +14,7 @@ const notificationsRoutes = require('./notifications.js');
 const settingsRoutes = require('./settings.js');
 const shippingRoutes = require('./shipping.js');
 const commissionRoutes = require('./commission.js');
+const bulkRoutes = require('./bulk.js');
 
 const router = express.Router();
 
@@ -31,5 +32,6 @@ router.use('/notifications', notificationsRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/shipping', shippingRoutes);
 router.use('/commission', commissionRoutes);
+router.use('/bulk', bulkRoutes);
 
 module.exports = router;

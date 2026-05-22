@@ -133,7 +133,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-          @for (order of filteredOrders(); track order.id) {
+          @for (order of paginatedOrders(); track order.id) {
           <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
             <td class="px-6 py-4">
               <p class="font-bold text-[#1A1A1A] dark:text-white">
@@ -224,24 +224,54 @@
 
     <!-- Pagination -->
     <div
-      class="p-6 border-t border-slate-100 dark:border-white/5 flex items-center justify-between"
+      class="p-4 sm:p-6 border-t border-slate-100 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4"
     >
-      <p class="text-xs text-slate-500">
-        Showing {{ filteredOrders().length }} orders
-      </p>
-      <div class="flex gap-2">
+      <div class="flex flex-wrap items-center gap-4">
+        <p class="text-xs text-slate-500">
+          {{ paginationMessage() }}
+        </p>
+        <div class="flex items-center gap-2 border-l border-slate-150 dark:border-white/10 pl-4">
+          <span class="text-xs text-slate-500">Page size:</span>
+          <div class="relative">
+            <select
+              [ngModel]="pageSize()"
+              (ngModelChange)="setPageSize($event)"
+              class="appearance-none pl-3 pr-8 py-1 rounded bg-slate-50 dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs outline-none cursor-pointer focus:ring-1 focus:ring-[#FFC107]/20"
+            >
+              <option [value]="5">5</option>
+              <option [value]="10">10</option>
+              <option [value]="20">20</option>
+              <option [value]="50">50</option>
+            </select>
+            <mat-icon
+              class="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs w-4 h-4 flex items-center justify-center"
+              >expand_more</mat-icon
+            >
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 flex-wrap justify-center">
         <button
-          class="px-4 py-2 rounded-xl bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-50 transition-colors"
+          [disabled]="currentPageClamped() === 1"
+          (click)="prevPage()"
+          class="p-2 min-h-9 px-3 rounded-lg bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50 disabled:pointer-events-none transition-colors"
         >
           Previous
         </button>
+        @for (page of pageNumbers(); track page) {
+          <button
+            (click)="setPage(page)"
+            [class]="page === currentPageClamped() 
+              ? 'w-9 h-9 rounded-lg bg-[#FFC107] text-black font-black text-xs shadow-md shadow-[#FFC107]/20 transition-all font-mono' 
+              : 'w-9 h-9 rounded-lg bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-50 dark:hover:bg-white/5 transition-all font-mono'"
+          >
+            {{ page }}
+          </button>
+        }
         <button
-          class="w-10 h-10 rounded-xl bg-[#FFC107] text-black font-bold text-xs shadow-lg shadow-[#FFC107]/20"
-        >
-          1
-        </button>
-        <button
-          class="px-4 py-2 rounded-xl bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-50 transition-colors"
+          [disabled]="currentPageClamped() === totalPages()"
+          (click)="nextPage()"
+          class="p-2 min-h-9 px-3 rounded-lg bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50 disabled:pointer-events-none transition-colors"
         >
           Next
         </button>

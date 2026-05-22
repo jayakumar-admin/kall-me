@@ -19,8 +19,61 @@ import { InvoiceService } from '../../services/invoice.service';
   imports: [CommonModule, FormsModule, MatIconModule],
   template: `
     <div class="h-full overflow-y-auto lg:overflow-hidden p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Mobile Stepper Header -->
+      <div class="lg:hidden col-span-1 bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 rounded-2xl p-3 shadow-sm shrink-0">
+        <div class="flex items-center justify-between">
+          <!-- Step 1 Trigger -->
+          <button 
+            type="button"
+            (click)="currentStep.set(1)"
+            class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all"
+            [class.bg-[#FFC107]/10]="currentStep() === 1"
+            [class.text-[#FFC107]]="currentStep() === 1"
+            [class.text-slate-400]="currentStep() !== 1"
+          >
+            <div 
+              class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black transition-all"
+              [class.bg-[#FFC107]]="currentStep() === 1"
+              [class.text-black]="currentStep() === 1"
+              [class.bg-slate-100]="currentStep() !== 1"
+              [class.dark:bg-slate-800]="currentStep() !== 1"
+            >
+              1
+            </div>
+            <span class="text-xs font-black uppercase tracking-wider">Hotel & Items</span>
+          </button>
+
+          <!-- Divider line -->
+          <div class="w-8 h-[2px] bg-slate-100 dark:bg-slate-800 shrink-0 mx-1"></div>
+
+          <!-- Step 2 Trigger -->
+          <button 
+            type="button"
+            (click)="currentStep.set(2)"
+            class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all"
+            [class.bg-[#FFC107]/10]="currentStep() === 2"
+            [class.text-[#FFC107]]="currentStep() === 2"
+            [class.text-slate-400]="currentStep() !== 2"
+          >
+            <div 
+              class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black transition-all"
+              [class.bg-[#FFC107]]="currentStep() === 2"
+              [class.text-black]="currentStep() === 2"
+              [class.bg-slate-100]="currentStep() !== 2"
+              [class.dark:bg-slate-800]="currentStep() !== 2"
+            >
+              2
+            </div>
+            <span class="text-xs font-black uppercase tracking-wider">Details & Pay</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Left Panel: Hotel Selection -->
-      <div class="lg:col-span-3 flex flex-col gap-4 lg:h-full lg:overflow-hidden shrink-0">
+      <div 
+        [class.hidden]="currentStep() !== 1"
+        class="lg:col-span-3 lg:flex flex flex-col gap-4 lg:h-full lg:overflow-hidden shrink-0"
+      >
         <div class="flex flex-col shrink-0">
           <h2 class="text-lg font-bold text-[#1A1A1A] dark:text-white flex items-center gap-2">
             <div class="w-6 h-6 bg-[#FFC107] rounded flex items-center justify-center">
@@ -74,7 +127,10 @@ import { InvoiceService } from '../../services/invoice.service';
       </div>
 
       <!-- Center Panel: Menu Selection -->
-      <div class="lg:col-span-5 flex flex-col gap-4 lg:h-full lg:overflow-hidden min-h-[400px]">
+      <div 
+        [class.hidden]="currentStep() !== 1"
+        class="lg:col-span-5 lg:flex flex flex-col gap-4 lg:h-full lg:overflow-hidden min-h-[400px]"
+      >
         <div class="flex items-center justify-between shrink-0">
           <div>
             <h2 class="text-xl font-bold text-[#1A1A1A] dark:text-white">Menu Selection</h2>
@@ -171,10 +227,25 @@ import { InvoiceService } from '../../services/invoice.service';
             </div>
           }
         </div>
+
+        <!-- Mobile Continue Button -->
+        <div class="lg:hidden shrink-0 mt-2">
+          <button 
+            type="button"
+            (click)="currentStep.set(2)"
+            class="w-full bg-[#FFC107] hover:bg-[#FFA000] text-black font-black py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 shadow-[#FFC107]/20"
+          >
+            <span>Continue to Details & Payment</span>
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
       </div>
 
       <!-- Right Panel: Order Summary -->
-      <div class="lg:col-span-4 flex flex-col gap-4 lg:h-full lg:overflow-hidden min-h-[500px]">
+      <div 
+        [class.hidden]="currentStep() !== 2"
+        class="lg:col-span-4 lg:flex flex flex-col gap-4 lg:h-full lg:overflow-hidden min-h-[500px]"
+      >
         <div class="flex items-center gap-2 shrink-0">
           <div class="w-6 h-6 bg-[#FFC107] rounded flex items-center justify-center">
             <mat-icon class="text-black text-sm">receipt_long</mat-icon>
@@ -193,23 +264,23 @@ import { InvoiceService } from '../../services/invoice.service';
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label for="customerPhone" class="text-[10px] font-bold text-slate-500 mb-1 block">Phone Number <span class="text-red-500">*</span></label>
+                  <label for="customerPhone" class="text-[10px] font-bold text-slate-500 mb-1 block">Phone Number @if (selectedHotel()?.id !== -1) { <span class="text-red-500">*</span> }</label>
                   <div class="relative">
                     <input id="customerPhone" type="text" [(ngModel)]="customer.phone" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                   </div>
                 </div>
               </div>
               <div>
-                <label for="customerAddress" class="text-[10px] font-bold text-slate-500 mb-1 block">Delivery Address <span class="text-red-500">*</span></label>
+                <label for="customerAddress" class="text-[10px] font-bold text-slate-500 mb-1 block">Delivery Address @if (selectedHotel()?.id !== -1) { <span class="text-red-500">*</span> }</label>
                 <textarea id="customerAddress" [(ngModel)]="customer.address" rows="2" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] resize-none dark:text-white"></textarea>
               </div>
               <div>
-                <label for="deliveryDescription" class="text-[10px] font-bold text-slate-500 mb-1 block">Description / Notes @if (selectedHotel()?.id === -1) { <span class="text-red-500">*</span> }</label>
+                <label for="deliveryDescription" class="text-[10px] font-bold text-slate-500 mb-1 block">Description / Notes</label>
                 <textarea id="deliveryDescription" [(ngModel)]="customer.description" rows="4" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] resize-none dark:text-white"></textarea>
               </div>
               @if (selectedHotel()?.id === -1) {
                 <div>
-                  <label for="manualPrice" class="text-[10px] font-bold text-slate-500 mb-1 block">Manual Price <span class="text-red-500">*</span></label>
+                  <label for="manualPrice" class="text-[10px] font-bold text-slate-500 mb-1 block">Manual Price</label>
                   <input id="manualPrice" type="number" [ngModel]="manualPrice()" (ngModelChange)="onManualPriceChange($event)" class="w-full bg-[#F8F9FA] dark:bg-[#0F172A] border border-slate-100 dark:border-white/5 rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white">
                 </div>
               }
@@ -219,7 +290,7 @@ import { InvoiceService } from '../../services/invoice.service';
             <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-white/5">
               <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Logistics & Payment</p>
               <div>
-                <span class="text-[10px] font-bold text-slate-500 mb-1 block">Assign Delivery Driver <span class="text-red-500">*</span></span>
+                <span class="text-[10px] font-bold text-slate-500 mb-1 block">Assign Delivery Driver @if (selectedHotel()?.id !== -1) { <span class="text-red-500">*</span> }</span>
                 <div 
                   (click)="openDriverModal()"
                   (keydown.enter)="openDriverModal()"
@@ -311,6 +382,16 @@ import { InvoiceService } from '../../services/invoice.service';
           </div>
 
           <div class="p-5 bg-white dark:bg-[#1E293B] border-t border-slate-100 dark:border-white/5 shrink-0">
+            <!-- Mobile Back Button -->
+            <button 
+              type="button"
+              (click)="currentStep.set(1)"
+              class="lg:hidden w-full mb-3 bg-slate-100 dark:bg-[#0F172A] hover:bg-slate-200 dark:hover:bg-[#1E293B] text-slate-700 dark:text-slate-300 font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
+            >
+              <mat-icon>arrow_back</mat-icon>
+              <span>Back to Menu Selection</span>
+            </button>
+
             @if (!canConfirm()) {
               <p class="text-[10px] text-red-500 text-center mb-3 font-bold uppercase tracking-wider">Please fill all required fields to confirm</p>
             }
@@ -409,6 +490,7 @@ export class CreateOrder implements OnInit {
   invoiceService = inject(InvoiceService);
   router = inject(Router);
   
+  currentStep = signal<number>(1);
   drivers = signal<DeliveryPerson[]>([]);
   selectedHotel = signal<Hotel | null>(null);
   selectedCategory = signal<string>('All Items');
@@ -666,14 +748,13 @@ export class CreateOrder implements OnInit {
 
   canConfirm(): boolean {
     const isOthers = this.selectedHotel()?.id === -1;
-    const isDescriptionValid = isOthers ? !!this.customer.description?.trim() : true;
-    return (this.cart().length > 0 || isOthers) && 
+    if (isOthers) return true;
+
+    return this.cart().length > 0 && 
            !!this.selectedHotel() && 
            !!this.customer.phone?.trim() && 
            !!this.customer.address?.trim() &&
-           !!this.selectedDriverId() &&
-           isDescriptionValid &&
-           (!isOthers || this.manualPrice() > 0);
+           !!this.selectedDriverId();
   }
 
   confirmOrder() {
@@ -702,9 +783,9 @@ export class CreateOrder implements OnInit {
       hotel_id: hotel.id,
       hotel_name: hotel.name,
       delivery_person_id: Number(this.selectedDriverId()) || 1, // Default driver
-      customer_phone: this.customer.phone,
-      delivery_address: this.customer.address,
-      delivery_description: this.customer.description,
+      customer_phone: this.customer.phone || '',
+      delivery_address: this.customer.address || '',
+      delivery_description: this.customer.description || '',
       subtotal: this.subtotal(),
       shipping_fee: dc,
       delivery_charge: dc,

@@ -31,10 +31,10 @@ export class InvoiceService {
     doc.text('E-BILL', centerX, 10, { align: 'center' });
     
     doc.setFontSize(10);
-    doc.text('Kall Me Delivery', centerX, 16, { align: 'center' });
+    doc.text('Kall Me', centerX, 16, { align: 'center' });
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text('Biller Name: Admin', centerX, 21, { align: 'center' });
+    doc.text('Biller Name: admin', centerX, 21, { align: 'center' });
     
     doc.line(5, 25, 75, 25);
     

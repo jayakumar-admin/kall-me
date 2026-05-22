@@ -16,7 +16,7 @@ import { SettingsService, ShippingRange } from '../../../services/settings.servi
           <h1 class="text-2xl md:text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Delivery & Logistics</h1>
           <p class="text-sm text-slate-500 dark:text-slate-400">Manage delivery charges and logistics parameters.</p>
         </div>
-        <div class="flex gap-3 w-full sm:w-auto">
+        <div class="flex gap-3 w-full sm:w-auto"   >
           <button (click)="discard()" class="flex-1 sm:flex-none px-6 py-2 rounded-xl bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 font-bold text-sm">Discard</button>
           <button (click)="save()" class="btn-primary flex-1 sm:flex-none">Save Changes</button>
         </div>

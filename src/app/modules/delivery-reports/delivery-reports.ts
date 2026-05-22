@@ -182,7 +182,7 @@ export class DeliveryReports implements OnInit {
         final_earnings: 0, balance_pending: 0 
       };
       
-      const adminPayable = Number(data.item_total || 0) + Number(data.total_commission || 0) - (Number(data.bonus || 0) + Number(data.advance_amount || 0));
+      const adminPayable = Number(data.item_total || 0) + Number(data.total_commission || 0) - (Number(data.final_earnings || 0) + Number(data.advance_amount || 0));
       
       return { ...dp, ...data, adminPayable, expanded: false };
     });

@@ -112,7 +112,7 @@ export class AuthService {
           } else if (user.role === 'delivery') {
             this.router.navigate(['/app/delivery-dashboard']);
           } else {
-            this.router.navigate(['/app/dashboard']);
+            this.router.navigate(['/app/create-order']);
           }
         }
       }),

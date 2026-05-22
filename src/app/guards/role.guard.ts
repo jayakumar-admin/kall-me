@@ -20,7 +20,7 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
     if (user.role === 'delivery') {
       router.navigate(['/app/delivery-dashboard']);
     } else if (user.role === 'admin') {
-      router.navigate(['/app/dashboard']);
+      router.navigate(['/app/create-order']);
     } else {
       router.navigate(['/login']);
     }

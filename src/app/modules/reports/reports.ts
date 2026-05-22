@@ -431,7 +431,7 @@ export class Reports implements OnInit {
           const date = new Date(o.created_at).toLocaleDateString('en-IN');
           const hotel = (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || 'Unknown');
           if (!groupedByDate[date]) groupedByDate[date] = {};
-          groupedByDate[date][hotel] = (groupedByDate[date][hotel] || 0) + (Number(o.grand_total) || 0);
+          groupedByDate[date][hotel] = (groupedByDate[date][hotel] || 0) + (Number(o.subtotal) || 0);
         }
       });
 

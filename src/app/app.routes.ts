@@ -124,7 +124,7 @@ export const routes: Routes = [
         canActivate: [roleGuard(['delivery'])]
       },
 
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+      { path: '', redirectTo: 'create-order', pathMatch: 'full' }
     ]
   },
   { path: '**', redirectTo: '' }

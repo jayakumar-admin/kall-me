@@ -34,7 +34,7 @@ i  artifactregistry: ensuring required API artifactregistry.googleapis.com is en
 [2026-03-12T08:39:05.821Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/kallmee/adminSdkConfig {"projectId":"kallmee","storageBucket":"kallmee.firebasestorage.app"}
 [2026-03-12T08:39:05.828Z] Validating nodejs source
 [2026-03-12T08:39:10.927Z] > [functions] package.json contents: {
-  "name": "ai-studio-backend",
+  "name": "kallMe-backend",
   "version": "1.0.0",
   "description": "Backend for AI Studio App",
   "main": "index.js",

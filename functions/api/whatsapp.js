@@ -101,6 +101,19 @@ function formatPhone(phone) {
   return cleaned;
 }
 
+function formatPhoneForDisplay(phone) {
+  const cleaned = formatPhone(phone);
+  return cleaned ? `+${cleaned}` : '';
+}
+
+function sanitizeWhatsAppText(text) {
+  if (text == null) return '';
+  return String(text)
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/ {2,}/g, ' ')
+    .trim();
+}
+
 ///////////////////////////////////////////////////////////
 // CORE FUNCTION: SEND WHATSAPP MESSAGE
 ///////////////////////////////////////////////////////////
@@ -299,10 +312,15 @@ async function sendOrderStatusUpdate(order, customer, newStatus) {
   });
 }
 
-async function sendOrderAssignedMessage(dp, order, hotelName, items, shippingFee) {
+async function sendOrderAssignedMessage(dp, order, hotelName, items, shippingFee, grand_total,customer_name,customer_phone) {
   const settings = await getSettings();
   const whatsappSettings = settings.whatsapp || {};
   const templateName = whatsappSettings?.orderAssignedTemplateName || 'kall_me_deliveryalert';
+
+  const itemListText = sanitizeWhatsAppText(
+    items.map(i => `${i.menu_name} × ${i.quantity}`).join(' | ')
+  );
+  const displayCustomerPhone = formatPhoneForDisplay(customer_phone);
 
   return sendWhatsappMessage({
     recipientNumber: dp.mobile,
@@ -312,11 +330,14 @@ async function sendOrderAssignedMessage(dp, order, hotelName, items, shippingFee
       {
         type: 'body',
         parameters: [
-          { type: 'text', text: dp.name },
-          { type: 'text', text: new Date().toLocaleDateString() },
-          { type: 'text', text: hotelName },
-          { type: 'text', text: items.map(i => i.menu_name + ' - ' + i.quantity).join(', ') },
-          { type: 'text', text: shippingFee.toString() },
+          { type: 'text', text: sanitizeWhatsAppText(dp.name) },
+          { type: 'text', text: sanitizeWhatsAppText(new Date().toLocaleDateString()) },
+          { type: 'text', text: sanitizeWhatsAppText(hotelName) },
+          { type: 'text', text: itemListText },
+          { type: 'text', text: sanitizeWhatsAppText(shippingFee.toString()) },
+          { type: 'text', text: sanitizeWhatsAppText(`${displayCustomerPhone}`) },
+          { type: 'text', text: sanitizeWhatsAppText(grand_total) },
+          { type: 'text', text: sanitizeWhatsAppText(items?.length || 0) },
         ],
       },
     ],

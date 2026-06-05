@@ -182,9 +182,9 @@ public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
     );
   }
 
-  sendInvoicePdf(to: string, orderNumber: string, pdfBase64: string, orderId?: number, grandTotal?: number, customerName?: string): Observable<void> {
+  sendInvoicePdf(to: string, orderNumber: string, pdfBase64: string, orderId?: number, grandTotal?: number, customerName?: string, advanceAmount?: number, pendingAmount?: number): Observable<void> {
     return this.withLoader(
-      this.http.post<void>(`${this.baseUrl}/whatsapp/send-invoice-pdf`, { to, orderNumber, pdfBase64, orderId, grandTotal, customerName }),
+      this.http.post<void>(`${this.baseUrl}/whatsapp/send-invoice-pdf`, { to, orderNumber, pdfBase64, orderId, grandTotal, customerName, advanceAmount, pendingAmount }),
       'Sending Invoice PDF...'
     );
   }

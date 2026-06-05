@@ -839,7 +839,9 @@ export class CreateOrder implements OnInit {
               pdfBase64,
               order.id!,
               Number(order.grand_total) || 0,
-              order.customer_name
+              order.customer_name,
+              order.amount_received || 0,
+              order.balance_pending || 0
             ).subscribe({
               next: () => this.toast.success('Invoice sent via WhatsApp'),
               error: (err) => console.error('Failed to auto-send WhatsApp invoice:', err)

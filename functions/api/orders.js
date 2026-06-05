@@ -180,7 +180,7 @@ router.post('/', authenticateToken, async (req, res) => {
       const deliveryPerson = await client.query('SELECT name, mobile FROM delivery_persons WHERE id = $1', [delivery_person_id]);
       if (deliveryPerson.rows.length > 0) {
         const dp = deliveryPerson.rows[0];
-        await sendOrderAssignedMessage(dp, order, hotel_name, items, shipping_fee,grand_total,customer_name,customer_phone);
+        await sendOrderAssignedMessage(dp, order, hotel_name, items, shipping_fee,grand_total,customer_name,customer_phone,delivery_description,amount_received, balance_pending);
       }
     }
 

@@ -8,6 +8,7 @@
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
+    "format": "prettier --write .",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "dev": "nodemon local-server.js"

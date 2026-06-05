@@ -65,9 +65,11 @@ router.post('/', (req, res) => {
     }
   });
 
-  // 2. Instead of req.pipe(busboy), use busboy.end(req.rawBody)
-  // This pushes the already-buffered body into Busboy
+  if (req.rawBody) {
     busboy.end(req.rawBody);
+  } else {
+    req.pipe(busboy);
+  }
 });
 
 module.exports = router;

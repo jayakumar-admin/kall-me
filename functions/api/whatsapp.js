@@ -250,6 +250,9 @@ async function sendOrderConfirmation(order, customer, adminPhone) {
           { type: 'text', text: customer.name || 'Customer' },
           { type: 'text', text: order.id.toString() },
           { type: 'text', text: order.total_amount.toString() },
+            { type: 'text', text: advanceAmount.toString() ||'-'},
+            { type: 'text', text: pendingAmount.toString()||'-' },
+            { type: 'text', text: grandTotal.toString() ||'-'},
         ],
       },
     ],
@@ -312,14 +315,14 @@ async function sendOrderStatusUpdate(order, customer, newStatus) {
   });
 }
 
-async function sendOrderAssignedMessage(dp, order, hotelName, items, shippingFee, grand_total,customer_name,customer_phone) {
+async function sendOrderAssignedMessage(dp, order, hotelName, items, shippingFee, grand_total,customer_name,customer_phone,description,amount_received, balance_pending) {
   const settings = await getSettings();
   const whatsappSettings = settings.whatsapp || {};
   const templateName = whatsappSettings?.orderAssignedTemplateName || 'kall_me_deliveryalert';
 
   const itemListText = sanitizeWhatsAppText(
-    items.map(i => `${i.menu_name} × ${i.quantity}`).join(' | ')
-  );
+    Array.isArray(items) ? items.map(i => `${i.menu_name} × ${i.quantity}`).join(' | ') : '-'
+  ) ;
   const displayCustomerPhone = formatPhoneForDisplay(customer_phone);
 
   return sendWhatsappMessage({
@@ -333,11 +336,14 @@ async function sendOrderAssignedMessage(dp, order, hotelName, items, shippingFee
           { type: 'text', text: sanitizeWhatsAppText(dp.name) },
           { type: 'text', text: sanitizeWhatsAppText(new Date().toLocaleDateString()) },
           { type: 'text', text: sanitizeWhatsAppText(hotelName) },
-          { type: 'text', text: itemListText },
+          { type: 'text', text: itemListText|| '-' },
           { type: 'text', text: sanitizeWhatsAppText(shippingFee.toString()) },
-          { type: 'text', text: sanitizeWhatsAppText(`${displayCustomerPhone}`) },
+          { type: 'text', text: sanitizeWhatsAppText(`${displayCustomerPhone}`)|| '-' },
           { type: 'text', text: sanitizeWhatsAppText(grand_total) },
           { type: 'text', text: sanitizeWhatsAppText(items?.length || 0) },
+          { type: 'text', text: description ? description: '-' },
+          // { type: 'text', text: sanitizeWhatsAppText(amount_received) },
+          // { type: 'text', text: sanitizeWhatsAppText(balance_pending) },
         ],
       },
     ],
@@ -348,7 +354,7 @@ async function sendOrderAssignedMessage(dp, order, hotelName, items, shippingFee
 
 const { generateInvoicePdf } = require('../utils/pdf');
 
-async function sendCustomerInvoiceMessage(customerPhone, order, grandTotal, items) {
+async function sendCustomerInvoiceMessage(customerPhone, order, grandTotal, items,pending,advance) {
   const settings = await getSettings();
   const whatsappSettings = settings.whatsapp || {};
   const templateName = whatsappSettings?.customerInvoiceTemplateName || 'kall_me_attach';
@@ -382,7 +388,10 @@ async function sendCustomerInvoiceMessage(customerPhone, order, grandTotal, item
             { type: 'text', text: "Dear Customer" },
             { type: 'text', text: order.order_number },
             { type: 'text', text: new Date().toLocaleDateString() },
-            { type: 'text', text: grandTotal.toString() },
+            { type: 'text', text: advanceAmount.toString() ||'-'},
+            { type: 'text', text: pendingAmount.toString()||'-' },
+            { type: 'text', text: grandTotal.toString() ||'-'},
+
           ],
         },
       ],
@@ -403,7 +412,9 @@ async function sendCustomerInvoiceMessage(customerPhone, order, grandTotal, item
             { type: 'text', text: "Dear Customer" },
             { type: 'text', text: order.order_number },
             { type: 'text', text: new Date().toLocaleDateString() },
-            { type: 'text', text: grandTotal.toString() },
+            { type: 'text', text: advanceAmount.toString() ||'-'},
+            { type: 'text', text: pendingAmount.toString()||'-' },
+            { type: 'text', text: grandTotal.toString() ||'-'},
           ],
         },
       ],
@@ -518,7 +529,7 @@ router.post('/send', async (req, res) => {
 });
 
 router.post('/send-invoice-pdf', async (req, res) => {
-  const { to, orderNumber, pdfBase64, orderId, grandTotal, customerName } = req.body;
+  const { to, orderNumber, pdfBase64, orderId, grandTotal, customerName,advanceAmount,pendingAmount} = req.body;
 
   if (!to || !pdfBase64 || !orderNumber) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -579,7 +590,9 @@ router.post('/send-invoice-pdf', async (req, res) => {
             { type: 'text', text: customerName || "Customer" },
             { type: 'text', text: orderNumber },
             { type: 'text', text: new Date().toLocaleDateString() },
-            { type: 'text', text: (grandTotal || '0').toString() },
+             { type: 'text', text: advanceAmount||'-'},
+            { type: 'text', text: pendingAmount||'-' },
+             { type: 'text', text: (grandTotal || '0').toString() },
           ],
         },
       ],

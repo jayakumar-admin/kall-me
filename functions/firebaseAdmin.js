@@ -15,10 +15,10 @@ if (!bucketName || bucketName === "YOUR_FIREBASE_STORAGE_BUCKET") {
   throw new Error('APP_FIREBASE_STORAGE_BUCKET environment variable is not set.');
 }
 
-admin.initializeApp({
+  admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   storageBucket: bucketName
-});
+  });
 
 const bucket = admin.storage().bucket();
 

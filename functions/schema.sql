@@ -27,13 +27,14 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 
 -- Seed data
 INSERT INTO users (name, email, password, role) VALUES
-('Admin User', 'admin@kallme.com', '$2b$10$YourHashedPasswordHere', 'admin'); -- password is 'password123' (hashed)
+('Admin User', 'admin@kallme.com', '$2b$10$YourHashedPasswordHere', 'admin') ON CONFLICT (email) DO NOTHING; -- password is 'password123' (hashed)
 
 -- Hotels table
 CREATE TABLE IF NOT EXISTS hotels (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     address TEXT,
+    phone VARCHAR(50),
     category VARCHAR(100),
     rating DECIMAL(2,1),
     commission_rate INTEGER,
@@ -205,4 +206,5 @@ INSERT INTO delivery_persons (name, mobile, password, status) VALUES
 INSERT INTO orders (order_number, hotel_id, customer_name, grand_total, status, delivery_person_id) VALUES
 ('#KL-9821', 1, 'Rahul Sharma', 42.50, 'delivered', 1),
 ('#KL-9822', 2, 'Anjali Gupta', 28.90, 'in-transit', 2),
-('#KL-9823', 3, 'Arjun Singh', 15.20, 'preparing', 1);
+('#KL-9823', 3, 'Arjun Singh', 15.20, 'preparing', 1)
+ON CONFLICT (order_number) DO NOTHING;

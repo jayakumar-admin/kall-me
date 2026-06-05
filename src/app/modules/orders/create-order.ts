@@ -494,7 +494,21 @@ export class CreateOrder implements OnInit {
   drivers = signal<DeliveryPerson[]>([]);
   selectedHotel = signal<Hotel | null>(null);
   selectedCategory = signal<string>('All Items');
-  categories = ['All Items', 'Veg', 'Non-Veg', 'Beverage', 'Dessert'];
+ categories = [
+  'All Items',
+  'Veg Biryani',
+  'Non-Veg Biryani',
+  'Veg Starters',
+  'Non-Veg Starters',
+  'Chinese Starters',
+  'Tandoori Items',
+  'Veg Soups',
+  'Non-Veg Soups',
+  'Veg Curries',
+  'Non-Veg Curries',
+  'Beverages',
+  'Desserts'
+];
   
   hotelFilter = signal<string>('');
   

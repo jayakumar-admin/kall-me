@@ -146,18 +146,22 @@ import { InvoiceService } from '../../services/invoice.service';
         <!-- Category Tabs & Search -->
         <div class="flex flex-col gap-3 shrink-0">
           <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            @for (cat of categories; track cat) {
+            @for (cat of categoriesInfo(); track cat.name) {
               <button 
-                (click)="selectedCategory.set(cat)"
-                [class.bg-[#FFC107]]="selectedCategory() === cat"
-                [class.text-black]="selectedCategory() === cat"
-                [class.bg-white]="selectedCategory() !== cat"
-                [class.dark:bg-[#1E293B]]="selectedCategory() !== cat"
-                [class.text-slate-600]="selectedCategory() !== cat"
-                [class.dark:text-slate-400]="selectedCategory() !== cat"
-                class="px-5 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all shadow-sm border border-slate-100 dark:border-white/5"
+                (click)="selectedCategory.set(cat.name)"
+                [class.bg-[#FFC107]]="activeCategory() === cat.name"
+                [class.text-black]="activeCategory() === cat.name"
+                [class.bg-white]="activeCategory() !== cat.name"
+                [class.dark:bg-[#1E293B]]="activeCategory() !== cat.name"
+                [class.text-slate-600]="activeCategory() !== cat.name"
+                [class.dark:text-slate-400]="activeCategory() !== cat.name"
+                class="px-5 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all shadow-sm border border-slate-100 dark:border-white/5 flex items-center gap-1.5"
               >
-                {{ cat }}
+                <span>{{ cat.name }}</span>
+                <span class="text-[10px] opacity-70">({{ cat.count }})</span>
+                @if (cat.selectedSum > 0) {
+                  <span class="text-[10px] font-black bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded-md ml-1">₹{{ cat.selectedSum.toLocaleString() }}</span>
+                }
               </button>
             }
           </div>
@@ -494,21 +498,65 @@ export class CreateOrder implements OnInit {
   drivers = signal<DeliveryPerson[]>([]);
   selectedHotel = signal<Hotel | null>(null);
   selectedCategory = signal<string>('All Items');
- categories = [
-  'All Items',
-  'Veg Biryani',
-  'Non-Veg Biryani',
-  'Veg Starters',
-  'Non-Veg Starters',
-  'Chinese Starters',
-  'Tandoori Items',
-  'Veg Soups',
-  'Non-Veg Soups',
-  'Veg Curries',
-  'Non-Veg Curries',
-  'Beverages',
-  'Desserts'
-];
+
+  categoriesInfo = computed(() => {
+    const hotel = this.selectedHotel();
+    if (!hotel || hotel.id === -1) {
+      return [
+        {
+          name: 'All Items',
+          count: 0,
+          selectedCount: 0,
+          selectedSum: 0
+        }
+      ];
+    }
+    
+    let bank = this.catalog.hotelMenus()[hotel.id] || [];
+    bank = bank.filter(i => i.isLinked);
+    
+    const uniqueRaw = [...new Set(bank.map(i => i.category || 'Uncategorized').filter(Boolean))];
+    const cartItems = this.cart();
+    
+    const list = uniqueRaw.map(catName => {
+      const itemsInCat = bank.filter(i => i.category === catName);
+      const count = itemsInCat.length;
+      
+      const catCartItems = cartItems.filter(entry => entry.item.category === catName);
+      const selectedCount = catCartItems.reduce((sum, entry) => sum + entry.quantity, 0);
+      const selectedSum = catCartItems.reduce((sum, entry) => sum + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0);
+      
+      return {
+        name: catName,
+        count,
+        selectedCount,
+        selectedSum
+      };
+    });
+    
+    const totalCount = bank.length;
+    const totalSelectedCount = cartItems.reduce((sum, entry) => sum + entry.quantity, 0);
+    const totalSelectedSum = cartItems.reduce((sum, entry) => sum + ((entry.item.hotelPrice ?? entry.item.price) * entry.quantity), 0);
+    
+    return [
+      {
+        name: 'All Items',
+        count: totalCount,
+        selectedCount: totalSelectedCount,
+        selectedSum: totalSelectedSum
+      },
+      ...list
+    ];
+  });
+
+  activeCategory = computed(() => {
+    const cats = this.categoriesInfo();
+    const current = this.selectedCategory();
+    if (cats.some(c => c.name === current)) {
+      return current;
+    }
+    return 'All Items';
+  });
   
   hotelFilter = signal<string>('');
   
@@ -640,7 +688,7 @@ export class CreateOrder implements OnInit {
   menuSearchTerm = signal('');
 
   filteredMenu = computed(() => {
-    const cat = this.selectedCategory();
+    const cat = this.activeCategory();
     const hotel = this.selectedHotel();
     const term = this.menuSearchTerm().toLowerCase();
     

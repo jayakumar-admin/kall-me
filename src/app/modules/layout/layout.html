@@ -88,7 +88,7 @@
         <div class="hidden md:flex p-2 border-t border-slate-100 dark:border-white/5 justify-end">
           <button 
             (click)="toggleDesktopSidebar()" 
-            class="w-full p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400 flex items-center justify-center transition-colors"
+            class="w-full p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400 flex items-center justify-center transition-colors desktop-menu-toggle-btn"
           >
             <mat-icon>{{ isDesktopCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
           </button>
@@ -120,7 +120,7 @@
         <header class="h-16 bg-white/80 dark:bg-[#0F172A]/80 backdrop-blur border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-4 md:px-6 z-10 transition-colors print:hidden">
           
           <!-- Mobile Menu Toggle -->
-          <button (click)="isMobileMenuOpen.set(true)" class="md:hidden p-2 -ml-2 mr-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg">
+          <button (click)="isMobileMenuOpen.set(true)" class="md:hidden p-2 -ml-2 mr-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg mobile-menu-toggle-btn">
             <mat-icon>menu</mat-icon>
           </button>
 

@@ -33,7 +33,9 @@
             <!-- Invoice Header -->
             <div class="p-4 md:p-8 border-b border-slate-200 dark:border-white/10 flex flex-col md:flex-row justify-between items-start gap-6 bg-slate-50 dark:bg-white/5 print:bg-white print:text-black">
               <div>
-                <h2 class="text-2xl font-black text-[#1A1A1A] dark:text-white tracking-tight print:text-black">INVOICE</h2>
+                <h2 class="text-2xl font-black text-[#1A1A1A] dark:text-white tracking-tight print:text-black">
+                  {{ (selectedOrder()!.hotel_id === -1 || selectedOrder()!.hotel_id === null) ? 'E-Bill' : (selectedOrder()!.hotel_name || 'E-Bill') | uppercase }}
+                </h2>
                 <p class="text-slate-500 mt-1 print:text-black">Bill ID: {{ generateBillId(selectedOrder()!) }}</p>
                 <p class="text-slate-500 print:text-black">Order ID: {{ selectedOrder()!.order_number || selectedOrder()!.id }}</p>
                 <p class="text-slate-500 print:text-black">Date: {{ (selectedOrder()!.created_at | date:'medium') || (today | date:'medium') }}</p>

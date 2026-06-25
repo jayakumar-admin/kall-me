@@ -26,15 +26,21 @@ export class InvoiceService {
     const centerX = 40;
 
     // Header
+    const hotelName = order.hotel_name && order.hotel_name !== 'Manual Order' ? order.hotel_name : 'E-BILL';
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('E-BILL', centerX, 10, { align: 'center' });
+    doc.text(hotelName.toUpperCase(), centerX, 10, { align: 'center' });
     
     doc.setFontSize(10);
-    doc.text('Kall Me', centerX, 16, { align: 'center' });
+    // Remove the static GK Grand text since it's redundant if the title is dynamic
+    if (hotelName === 'E-BILL') {
+        doc.text('Kall Me', centerX, 16, { align: 'center' });
+    } else {
+        doc.text('Invoice', centerX, 16, { align: 'center' });
+    }
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text('Biller Name: admin', centerX, 21, { align: 'center' });
+    // doc.text('Biller Name: Kall Me', centerX, 21, { align: 'center' });
     
     doc.line(5, 25, 75, 25);
     

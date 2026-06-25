@@ -1,0 +1,41 @@
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 193, 7, 0.8) rgba(148, 163, 184, 0.18);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 193, 7, 0.8);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 193, 7, 1);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 193, 7, 0.85);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

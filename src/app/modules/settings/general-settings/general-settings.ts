@@ -22,7 +22,7 @@ import { SettingsService } from '../../../services/settings.service';
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="p-4">
         <div class="lg:col-span-2 space-y-8">
           <!-- Financial -->
           <div class="card space-y-6 border-none ring-1 ring-slate-100 dark:ring-white/5">

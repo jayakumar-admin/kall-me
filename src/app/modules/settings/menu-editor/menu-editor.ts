@@ -48,12 +48,12 @@ import { MenuItem, MENU_CATEGORIES } from '../../../data/static-data';
                   <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white">{{ item.name }}</td>
                   <td class="px-4 py-3 text-xs text-slate-500">
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                          [class.bg-emerald-100]="item.category?.toLowerCase().startsWith('veg') && !item.category?.toLowerCase().startsWith('non')"
-                          [class.text-emerald-700]="item.category?.toLowerCase().startsWith('veg') && !item.category?.toLowerCase().startsWith('non')"
-                          [class.bg-rose-100]="item.category?.toLowerCase().startsWith('non')"
-                          [class.text-rose-700]="item.category?.toLowerCase().startsWith('non')"
-                          [class.bg-amber-100]="!item.category?.toLowerCase().startsWith('veg') && !item.category?.toLowerCase().startsWith('non')"
-                          [class.text-amber-800]="!item.category?.toLowerCase().startsWith('veg') && !item.category?.toLowerCase().startsWith('non')">
+                          [class.bg-emerald-100]="isVegCategory(item.category)"
+                          [class.text-emerald-700]="isVegCategory(item.category)"
+                          [class.bg-rose-100]="isNonVegCategory(item.category)"
+                          [class.text-rose-700]="isNonVegCategory(item.category)"
+                          [class.bg-amber-100]="!isVegCategory(item.category) && !isNonVegCategory(item.category)"
+                          [class.text-amber-800]="!isVegCategory(item.category) && !isNonVegCategory(item.category)">
                       {{ item.category }}
                     </span>
                   </td>
@@ -151,6 +151,17 @@ export class MenuEditor {
   imageUpload = inject(ImageUploadService);
 
   categories = MENU_CATEGORIES;
+
+  isVegCategory(category: string | undefined | null): boolean {
+    if (!category) return false;
+    const cat = category.toLowerCase();
+    return cat.startsWith('veg') && !cat.startsWith('non');
+  }
+
+  isNonVegCategory(category: string | undefined | null): boolean {
+    if (!category) return false;
+    return category.toLowerCase().startsWith('non');
+  }
 
   showModal = signal(false);
   editingItemId = signal<number | null>(null);

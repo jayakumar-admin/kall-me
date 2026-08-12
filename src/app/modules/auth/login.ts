@@ -21,7 +21,7 @@ export class Login implements OnInit {
 
   loginForm = this.fb.group({
     email: ['admin@kallme.com', [Validators.required]],
-    password: ['password123', [Validators.required]]
+    password: ['', [Validators.required]]
   });
 
   loading = signal(false);

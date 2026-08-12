@@ -8,6 +8,7 @@ import { OrderService } from '../../services/order.service';
 import { ToastService } from '../../services/toast.service';
 import { ImageUploadService } from '../../services/image-upload.service';
 import { MenuItem } from '../../models';
+import { MENU_CATEGORIES } from '../../data/static-data';
 import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -150,10 +151,9 @@ import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.co
               <div>
                 <label for="itemCategory" class="text-xs font-bold text-slate-500 mb-1.5 block">Category</label>
                 <select id="itemCategory" [(ngModel)]="menuItemForm.category" class="w-full p-2.5 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#1E293B] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none">
-                  <option value="Veg">Veg</option>
-                  <option value="Non-Veg">Non-Veg</option>
-                  <option value="Beverage">Beverage</option>
-                  <option value="Dessert">Dessert</option>
+                  @for (cat of categories; track cat) {
+                    <option [value]="cat">{{ cat }}</option>
+                  }
                 </select>
               </div>
             </div>
@@ -222,6 +222,8 @@ export class HotelDetails implements OnInit {
   editingPrices: Record<number, number> = {};
 
   // Menu Item Modal & Form state
+  categories = MENU_CATEGORIES;
+
   showMenuItemModal = signal(false);
   editingMenuItemId = signal<number | null>(null);
   isUploading = signal(false);
@@ -231,7 +233,7 @@ export class HotelDetails implements OnInit {
   menuItemForm = {
     name: '',
     price: 0,
-    category: 'Veg',
+    category: 'Veg biryani',
     description: '',
     image_url: 'https://picsum.photos/seed/food/200/200',
     is_available: true,
@@ -279,7 +281,7 @@ export class HotelDetails implements OnInit {
     this.menuItemForm = {
       name: '',
       price: 0,
-      category: 'Veg',
+      category: 'Veg biryani',
       description: '',
       image_url: 'https://picsum.photos/seed/food/200/200',
       is_available: true,

@@ -7,6 +7,7 @@ import { CatalogService } from '../../services/catalog.service';
 import { ToastService } from '../../services/toast.service';
 import { ImageUploadService } from '../../services/image-upload.service';
 import { Hotel, MenuItem } from '../../models';
+import { MENU_CATEGORIES } from '../../data/static-data';
 import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.component';
 
 import { MainSkeletonComponent } from '../../components/main-skeleton';
@@ -23,6 +24,8 @@ export class HotelsList {
   toast = inject(ToastService);
   imageUpload = inject(ImageUploadService);
   
+  categories = MENU_CATEGORIES;
+
   // Menu Management
   showMenuModal = signal(false);
   showMenuItemModal = signal(false);
@@ -42,7 +45,7 @@ export class HotelsList {
   menuItemForm = {
     name: '',
     price: 0,
-    category: 'Veg',
+    category: 'Veg biryani',
     description: '',
     image_url: 'https://picsum.photos/seed/food/200/200',
     is_available: true,
@@ -87,7 +90,7 @@ export class HotelsList {
     this.menuItemForm = {
       name: '',
       price: 0,
-      category: 'Veg',
+      category: 'Veg biryani',
       description: '',
       image_url: 'https://picsum.photos/seed/food/200/200',
       is_available: true,

@@ -167,11 +167,10 @@
               </div>
               <div>
                 <label for="itemCategory" class="text-xs font-bold text-slate-500 mb-1.5 block">Category</label>
-                <select id="itemCategory" [(ngModel)]="menuItemForm.category" class="input-field appearance-none">
-                  <option value="Veg">Veg</option>
-                  <option value="Non-Veg">Non-Veg</option>
-                  <option value="Beverage">Beverage</option>
-                  <option value="Dessert">Dessert</option>
+                <select id="itemCategory" [(ngModel)]="menuItemForm.category" class="input-field appearance-none dark:bg-[#1E293B] dark:text-white">
+                  @for (cat of categories; track cat) {
+                    <option [value]="cat">{{ cat }}</option>
+                  }
                 </select>
               </div>
             </div>

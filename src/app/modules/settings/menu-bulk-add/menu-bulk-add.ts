@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { CatalogService } from '../../../services/catalog.service';
-import { MenuItem } from '../../../data/static-data';
+import { MenuItem, MENU_CATEGORIES } from '../../../data/static-data';
 import { ImageUploadService } from '../../../services/image-upload.service';
 import { ToastService } from '../../../services/toast.service';
 import { ApiService } from '../../../services/api.service';
@@ -162,7 +162,7 @@ interface ParsedMenuCSV {
                     <input 
                       type="text" 
                       [(ngModel)]="item.name" 
-                      placeholder="e.g. Butter Chicken"
+                      placeholder="e.g. Veg Biryani"
                       class="w-full bg-transparent border-none outline-none text-sm font-bold text-[#1A1A1A] dark:text-white placeholder:text-slate-300 focus:ring-0"
                     >
                   </td>
@@ -171,10 +171,9 @@ interface ParsedMenuCSV {
                       [(ngModel)]="item.category"
                       class="w-full bg-transparent border-none outline-none text-sm text-slate-600 dark:text-slate-300 focus:ring-0 cursor-pointer"
                     >
-                      <option value="Starters">Starters</option>
-                      <option value="Main Course">Main Course</option>
-                      <option value="Desserts">Desserts</option>
-                      <option value="Beverages">Beverages</option>
+                      @for (cat of menuCategories; track cat) {
+                        <option [value]="cat" class="dark:bg-[#1E293B]">{{ cat }}</option>
+                      }
                     </select>
                   </td>
                   <td class="px-4 py-3">
@@ -221,8 +220,10 @@ export class MenuBulkAdd {
   toast = inject(ToastService);
   apiService = inject(ApiService);
   
+  menuCategories = MENU_CATEGORIES;
+
   newItems = signal<{ name: string; category: MenuItem['category']; description: string; price: number; image_url: string }[]>([
-    { name: '', category: 'Main Course', description: '', price: 0, image_url: '' }
+    { name: '', category: 'Veg biryani', description: '', price: 0, image_url: '' }
   ]);
 
   showBulkUpload = signal(false);
@@ -289,7 +290,7 @@ export class MenuBulkAdd {
             return {
               hotel_name: row[hNameIdx] || '',
               menu_name: row[mNameIdx] || '',
-              category: categoryIdx !== -1 ? row[categoryIdx] : 'Main Course',
+              category: categoryIdx !== -1 ? row[categoryIdx] : 'Veg biryani',
               price: priceIdx !== -1 ? parseFloat(row[priceIdx]) || 0 : 0,
               description: descIdx !== -1 ? row[descIdx] : '',
               status: statusIdx !== -1 ? row[statusIdx] : 'active'
@@ -339,7 +340,7 @@ export class MenuBulkAdd {
   }
 
   downloadSample() {
-    const menuCsv = 'hotel_name,menu_name,category,price,description,status\nSpice Garden,Chicken Biryani,Main Course,120,Spicy biryani,active\nSpice Garden,Parotta,Main Course,20,Soft parotta,active';
+    const menuCsv = 'hotel_name,menu_name,category,price,description,status\nSpice Garden,Veg Biryani,Veg biryani,120,Spicy veg biryani,active\nSpice Garden,Chicken Biryani,Non veg biryani,180,Special chicken biryani,active';
     const blob = new Blob([menuCsv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -352,7 +353,7 @@ export class MenuBulkAdd {
   }
 
   addNewRow() {
-    this.newItems.update(items => [...items, { name: '', category: 'Main Course', description: '', price: 0, image_url: '' }]);
+    this.newItems.update(items => [...items, { name: '', category: 'Veg biryani', description: '', price: 0, image_url: '' }]);
   }
 
   removeItem(index: number) {
@@ -391,7 +392,8 @@ export class MenuBulkAdd {
     this.catalog.addGlobalItems(validItems);
     
     // Reset form
-    this.newItems.set([{ name: '', category: 'Main Course', description: '', price: 0, image_url: '' }]);
+    this.newItems.set([{ name: '', category: 'Veg biryani', description: '', price: 0, image_url: '' }]);
     this.toast.success(`Successfully added ${validItems.length} items to the catalog!`);
   }
 }
+

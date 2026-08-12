@@ -6,7 +6,7 @@ import { CatalogService } from '../../../services/catalog.service';
 import { ApiService } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
 import { ImageUploadService } from '../../../services/image-upload.service';
-import { MenuItem } from '../../../data/static-data';
+import { MenuItem, MENU_CATEGORIES } from '../../../data/static-data';
 
 @Component({
   selector: 'app-menu-editor',
@@ -48,12 +48,12 @@ import { MenuItem } from '../../../data/static-data';
                   <td class="px-4 py-3 text-sm font-bold text-[#1A1A1A] dark:text-white">{{ item.name }}</td>
                   <td class="px-4 py-3 text-xs text-slate-500">
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                          [class.bg-emerald-100]="item.category === 'Veg'"
-                          [class.text-emerald-600]="item.category === 'Veg'"
-                          [class.bg-red-100]="item.category === 'Non-Veg'"
-                          [class.text-red-600]="item.category === 'Non-Veg'"
-                          [class.bg-slate-100]="item.category !== 'Veg' && item.category !== 'Non-Veg'"
-                          [class.text-slate-600]="item.category !== 'Veg' && item.category !== 'Non-Veg'">
+                          [class.bg-emerald-100]="item.category?.toLowerCase().startsWith('veg') && !item.category?.toLowerCase().startsWith('non')"
+                          [class.text-emerald-700]="item.category?.toLowerCase().startsWith('veg') && !item.category?.toLowerCase().startsWith('non')"
+                          [class.bg-rose-100]="item.category?.toLowerCase().startsWith('non')"
+                          [class.text-rose-700]="item.category?.toLowerCase().startsWith('non')"
+                          [class.bg-amber-100]="!item.category?.toLowerCase().startsWith('veg') && !item.category?.toLowerCase().startsWith('non')"
+                          [class.text-amber-800]="!item.category?.toLowerCase().startsWith('veg') && !item.category?.toLowerCase().startsWith('non')">
                       {{ item.category }}
                     </span>
                   </td>
@@ -90,18 +90,16 @@ import { MenuItem } from '../../../data/static-data';
           <form [formGroup]="itemForm" (ngSubmit)="saveItem()" class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
             <div>
               <label for="item-name" class="text-xs font-bold text-slate-500 mb-1.5 block">Item Name</label>
-              <input id="item-name" type="text" formControlName="name" class="input-field" placeholder="e.g. Paneer Tikka">
+              <input id="item-name" type="text" formControlName="name" class="input-field" placeholder="e.g. Paneer Biryani">
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label for="item-category" class="text-xs font-bold text-slate-500 mb-1.5 block">Category</label>
-                <select id="item-category" formControlName="category" class="input-field appearance-none">
-                  <option value="Veg">Veg</option>
-                  <option value="Non-Veg">Non-Veg</option>
-                  <option value="Beverage">Beverage</option>
-                  <option value="Dessert">Dessert</option>
-                  <option value="Others">Others</option>
+                <select id="item-category" formControlName="category" class="input-field appearance-none dark:bg-[#1E293B] dark:text-white">
+                  @for (cat of categories; track cat) {
+                    <option [value]="cat">{{ cat }}</option>
+                  }
                 </select>
               </div>
               <div>
@@ -152,13 +150,15 @@ export class MenuEditor {
   fb = inject(FormBuilder);
   imageUpload = inject(ImageUploadService);
 
+  categories = MENU_CATEGORIES;
+
   showModal = signal(false);
   editingItemId = signal<number | null>(null);
   isUploading = signal(false);
 
   itemForm = this.fb.group({
     name: ['', [Validators.required]],
-    category: ['Veg', [Validators.required]],
+    category: ['Veg biryani', [Validators.required]],
     price: [0, [Validators.required, Validators.min(0)]],
     image_url: ['']
   });
@@ -176,13 +176,14 @@ export class MenuEditor {
       this.editingItemId.set(null);
       this.itemForm.reset({
         name: '',
-        category: 'Veg',
+        category: 'Veg biryani',
         price: 0,
         image_url: ''
       });
     }
     this.showModal.set(true);
   }
+
 
   closeModal() {
     this.showModal.set(false);

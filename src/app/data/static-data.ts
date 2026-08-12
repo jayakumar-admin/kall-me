@@ -3,6 +3,29 @@ import { Hotel, MenuItem } from '../models';
 
 export type { Hotel, MenuItem };
 
+export const MENU_CATEGORIES: string[] = [
+  'Veg biryani',
+  'Non veg biryani',
+  'Veg soups',
+  'Non veg soup',
+  'Veg rices',
+  'Non veg rices',
+  'Veg staters',
+  'Non veg staters',
+  'Veg curries',
+  'Non veg curries',
+  'Starters',
+  'Main Course',
+  'Desserts',
+  'Beverages',
+  'Veg',
+  'Non-Veg',
+  'Beverage',
+  'Dessert',
+  'Others'
+];
+
+
 export const HOTELS: Hotel[] = [
   {
     id: 1,

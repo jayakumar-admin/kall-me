@@ -41,8 +41,73 @@ try {
         ADD COLUMN IF NOT EXISTS license_number VARCHAR(100);
         ALTER TABLE hotels
         ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
+        ALTER TABLE hotels
+        ADD COLUMN IF NOT EXISTS order_sequence INTEGER;
+
+        CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+        CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_orders_hotel_id ON orders(hotel_id);
+        CREATE INDEX IF NOT EXISTS idx_orders_delivery_person_id ON orders(delivery_person_id);
+
+        CREATE TABLE IF NOT EXISTS backup_metadata (
+            id SERIAL PRIMARY KEY,
+            backup_name VARCHAR(255) NOT NULL UNIQUE,
+            storage_path TEXT NOT NULL,
+            backup_type VARCHAR(50) DEFAULT 'manual',
+            status VARCHAR(50) DEFAULT 'success',
+            backup_size_bytes BIGINT DEFAULT 0,
+            duration_ms INTEGER DEFAULT 0,
+            table_count INTEGER DEFAULT 0,
+            sha256_checksum VARCHAR(64),
+            format_version VARCHAR(20) DEFAULT 'v1.0',
+            manifest_json JSONB,
+            verification_status VARCHAR(50) DEFAULT 'unverified',
+            verified_at TIMESTAMP,
+            restore_status VARCHAR(50),
+            restored_at TIMESTAMP,
+            error_message TEXT,
+            created_by VARCHAR(255) DEFAULT 'System Administrator',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS backup_schedule_config (
+            id SERIAL PRIMARY KEY,
+            is_enabled BOOLEAN DEFAULT TRUE,
+            frequency VARCHAR(50) DEFAULT 'twice_weekly',
+            days_of_week JSONB DEFAULT '["Wednesday", "Sunday"]'::jsonb,
+            execution_time VARCHAR(10) DEFAULT '02:00',
+            timezone VARCHAR(50) DEFAULT 'Asia/Kolkata',
+            retention_count INTEGER DEFAULT 8,
+            max_backup_size_mb INTEGER DEFAULT 500,
+            storage_folder VARCHAR(255) DEFAULT 'db_backups/',
+            auto_verify_after_backup BOOLEAN DEFAULT TRUE,
+            notification_enabled BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS backup_audit_logs (
+            id SERIAL PRIMARY KEY,
+            action VARCHAR(100) NOT NULL,
+            operator VARCHAR(255),
+            details JSONB,
+            status VARCHAR(20) DEFAULT 'success',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        INSERT INTO backup_schedule_config (id, is_enabled, frequency, days_of_week, execution_time, timezone, retention_count, storage_folder)
+        VALUES (1, TRUE, 'twice_weekly', '["Wednesday", "Sunday"]'::jsonb, '02:00', 'Asia/Kolkata', 8, 'db_backups/')
+        ON CONFLICT (id) DO NOTHING;
       `)
-      .then(() => console.log('Database migrations completed successfully'))
+      .then(() => {
+        console.log('Database migrations completed successfully');
+        try {
+          const { initScheduler } = require('./utils/backupScheduler');
+          initScheduler();
+        } catch (schedErr) {
+          console.warn('Backup scheduler init deferred:', schedErr.message);
+        }
+      })
       .catch((err) => console.error('Error running database migrations:', err));
     });
 } catch (e) {

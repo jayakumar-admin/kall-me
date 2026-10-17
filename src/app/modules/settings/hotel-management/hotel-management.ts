@@ -8,6 +8,7 @@ import { ImageUploadService } from '../../../services/image-upload.service';
 import { ApiService } from '../../../services/api.service';
 import { SearchService } from '../../../services/search.service';
 import { Hotel } from '../../../models';
+import { sortHotels } from '../../../utils/hotel-sort';
 
 interface ParsedHotelCSV {
   name: string;
@@ -252,6 +253,12 @@ interface ParsedHotelCSV {
                 <label for="hotelAddress" class="text-xs font-bold text-slate-500 mb-2 block">Address</label>
                 <textarea id="hotelAddress" [(ngModel)]="formData.address" class="input-field py-2 text-sm resize-none h-20" placeholder="Full address..."></textarea>
               </div>
+
+              <div>
+                <label for="hotelOrderSeq" class="text-xs font-bold text-slate-500 mb-2 block">Order Sequence (Display Order)</label>
+                <input id="hotelOrderSeq" type="number" min="1" [(ngModel)]="formData.order_sequence" class="input-field py-2 text-sm" placeholder="e.g. 1, 2, 3... (Leave empty for default alphabetical order)">
+                <p class="text-[10px] text-slate-400 mt-1">Lower numbers appear first. Hotels without sequence are sorted alphabetically.</p>
+              </div>
               
               <div>
                 <label for="imagesInput" class="text-xs font-bold text-slate-500 mb-2 block">Hotel Image</label>
@@ -406,7 +413,8 @@ export class HotelManagement {
     category: '',
     address: '',
     status: 'active' as 'active' | 'inactive',
-    image_url: 'https://picsum.photos/seed/hotel/400/300'
+    image_url: 'https://picsum.photos/seed/hotel/400/300',
+    order_sequence: null as number | null
   };
 
   openAddModal() {
@@ -422,7 +430,8 @@ export class HotelManagement {
       category: hotel.category,
       address: hotel.address || '',
       status: hotel.status || 'active',
-      image_url: hotel.image_url || 'https://picsum.photos/seed/hotel/400/300'
+      image_url: hotel.image_url || 'https://picsum.photos/seed/hotel/400/300',
+      order_sequence: hotel.order_sequence ?? null
     };
     this.isModalOpen.set(true);
   }
@@ -438,7 +447,8 @@ export class HotelManagement {
       category: '',
       address: '',
       status: 'active',
-      image_url: 'https://picsum.photos/seed/hotel/400/300'
+      image_url: 'https://picsum.photos/seed/hotel/400/300',
+      order_sequence: null
     };
   }
 
@@ -477,8 +487,13 @@ export class HotelManagement {
       return;
     }
 
+    const orderSeq = (this.formData.order_sequence !== undefined && this.formData.order_sequence !== null && (this.formData.order_sequence as any) !== '')
+      ? Number(this.formData.order_sequence)
+      : null;
+
     const hotelData = {
       ...this.formData,
+      order_sequence: orderSeq,
       rating: this.editingHotel()?.rating || 4.5,
       reviews: this.editingHotel()?.reviews || 0
     };
@@ -486,7 +501,7 @@ export class HotelManagement {
     if (this.editingHotel()) {
       this.catalog.updateHotel(this.editingHotel()!.id, hotelData as Partial<Hotel>).subscribe({
         next: (updated) => {
-          this.catalog.hotels.update(current => current.map(m => m.id === updated.id ? updated : m));
+          this.catalog.hotels.update(current => sortHotels(current.map(m => m.id === updated.id ? updated : m)));
           this.toast.success(`${updated.name} updated successfully`);
           this.closeModal();
         },
@@ -495,7 +510,7 @@ export class HotelManagement {
     } else {
       this.catalog.addHotel(hotelData as Partial<Hotel>).subscribe({
         next: (newHotel) => {
-          this.catalog.hotels.update(current => [...current, newHotel]);
+          this.catalog.hotels.update(current => sortHotels([...current, newHotel]));
           this.toast.success(`${newHotel.name} added successfully`);
           this.closeModal();
         },

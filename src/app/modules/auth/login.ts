@@ -5,6 +5,7 @@ import { RouterLink, ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -17,6 +18,7 @@ export class Login implements OnInit {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private route = inject(ActivatedRoute);
+  private toast = inject(ToastService);
   theme = inject(ThemeService);
 
   loginForm = this.fb.group({
@@ -44,7 +46,7 @@ export class Login implements OnInit {
         },
         error: (err) => {
           console.error('Login failed', err);
-          alert('Invalid credentials or server error');
+          this.toast.error(err?.error?.message || 'Invalid credentials or server error');
           this.loading.set(false);
         }
       });

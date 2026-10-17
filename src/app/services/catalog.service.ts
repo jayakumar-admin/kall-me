@@ -3,6 +3,7 @@ import { MenuItem } from '../data/static-data';
 import { ApiService } from './api.service';
 import { Hotel } from '../models';
 import { ToastService } from './toast.service';
+import { sortHotels } from '../utils/hotel-sort';
 
 export interface HotelMenuItem extends MenuItem {
   hotelPrice?: number;
@@ -15,6 +16,8 @@ export interface HotelMenuItem extends MenuItem {
 export class CatalogService {
   private api = inject(ApiService);
   private toast = inject(ToastService);
+
+  private readonly LOCAL_STORAGE_KEY = 'kallme_hotel_order_sequences';
 
   // Global repository of all available menu items
   globalMenu = signal<MenuItem[]>([]);
@@ -30,11 +33,35 @@ export class CatalogService {
     this.loadInitialData();
   }
 
+  private getStoredSequences(): Record<number, number> {
+    try {
+      const data = localStorage.getItem(this.LOCAL_STORAGE_KEY);
+      return data ? JSON.parse(data) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private setStoredSequences(map: Record<number, number>) {
+    try {
+      localStorage.setItem(this.LOCAL_STORAGE_KEY, JSON.stringify(map));
+    } catch {
+      // ignore
+    }
+  }
+
   loadInitialData() {
     this.loading.set(true);
     this.api.getHotels().subscribe({
       next: (hotels) => {
-        this.hotels.set(hotels);
+        const stored = this.getStoredSequences();
+        const merged = hotels.map(h => {
+          if ((h.order_sequence === undefined || h.order_sequence === null) && stored[h.id] !== undefined) {
+            return { ...h, order_sequence: stored[h.id] };
+          }
+          return h;
+        });
+        this.hotels.set(sortHotels(merged));
         // Load menus for each hotel
         hotels.forEach(hotel => this.loadHotelMenu(hotel.id));
         this.loading.set(false);
@@ -73,6 +100,31 @@ export class CatalogService {
   // Update hotel
   updateHotel(id: number, hotel: Partial<Hotel>) {
     return this.api.updateHotel(id, hotel);
+  }
+
+  // Update hotel order sequences
+  updateHotelSequence(sequences: { id: number; order_sequence: number }[]) {
+    // 1. Update localStorage cache
+    const stored = this.getStoredSequences();
+    sequences.forEach(s => {
+      stored[s.id] = s.order_sequence;
+    });
+    this.setStoredSequences(stored);
+
+    // 2. Update local signal immediately
+    this.hotels.update(current => {
+      const map = new Map(sequences.map(s => [s.id, s.order_sequence]));
+      const updated = current.map(h => {
+        if (map.has(h.id)) {
+          return { ...h, order_sequence: map.get(h.id)! };
+        }
+        return h;
+      });
+      return sortHotels(updated);
+    });
+
+    // 3. Call backend API
+    return this.api.reorderHotels(sequences);
   }
 
   getHotel(id: number) {

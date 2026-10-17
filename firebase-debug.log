@@ -1,0 +1,126 @@
+[debug] [2026-10-17T15:12:52.785Z] ----------------------------------------------------------------------
+[debug] [2026-10-17T15:12:52.787Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Admin\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions
+[debug] [2026-10-17T15:12:52.787Z] CLI Version:   15.19.1
+[debug] [2026-10-17T15:12:52.787Z] Platform:      win32
+[debug] [2026-10-17T15:12:52.787Z] Node Version:  v22.22.3
+[debug] [2026-10-17T15:12:52.788Z] Time:          Sat Oct 17 2026 20:42:52 GMT+0530 (India Standard Time)
+[debug] [2026-10-17T15:12:52.788Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-10-17T15:13:17.076Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-10-17T15:13:17.077Z] > authorizing via signed-in user (ajrgroupconnect@gmail.com)
+[debug] [2026-10-17T15:13:17.077Z] [iam] checking project kallmee for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-10-17T15:13:17.078Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:17.078Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:17.079Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions [none]
+[debug] [2026-10-17T15:13:17.079Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions  x-goog-user-project=kallmee
+[debug] [2026-10-17T15:13:17.079Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-10-17T15:13:18.426Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions 200
+[debug] [2026-10-17T15:13:18.426Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-10-17T15:13:18.427Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:18.427Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:18.427Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/kallmee/serviceAccounts/kallmee@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-10-17T15:13:18.427Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/kallmee/serviceAccounts/kallmee@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-10-17T15:13:20.025Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/kallmee/serviceAccounts/kallmee@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-10-17T15:13:20.025Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/kallmee/serviceAccounts/kallmee@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'kallmee'...
+[info] 
+[info] i  deploying functions 
+[info] +  functions: Finished running predeploy script. 
+[debug] [2026-10-17T15:13:20.030Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:20.030Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:20.030Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/kallmee [none]
+[debug] [2026-10-17T15:13:20.362Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/kallmee 200
+[debug] [2026-10-17T15:13:20.362Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/kallmee {"projectNumber":"116889419393","projectId":"kallmee","lifecycleState":"ACTIVE","name":"kallme","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-02-15T10:54:03.926281Z","parent":{"type":"organization","id":"628429620252"}}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-10-17T15:13:20.366Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:20.366Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:20.366Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/kallmee/adminSdkConfig [none]
+[debug] [2026-10-17T15:13:19.235Z] ----------------------------------------------------------------------
+[debug] [2026-10-17T15:13:19.237Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Admin\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting
+[debug] [2026-10-17T15:13:19.237Z] CLI Version:   15.19.1
+[debug] [2026-10-17T15:13:19.237Z] Platform:      win32
+[debug] [2026-10-17T15:13:19.237Z] Node Version:  v22.22.3
+[debug] [2026-10-17T15:13:19.238Z] Time:          Sat Oct 17 2026 20:43:19 GMT+0530 (India Standard Time)
+[debug] [2026-10-17T15:13:19.238Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-10-17T15:13:20.437Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-10-17T15:13:20.438Z] > authorizing via signed-in user (ajrgroupconnect@gmail.com)
+[debug] [2026-10-17T15:13:20.438Z] [iam] checking project kallmee for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-10-17T15:13:20.439Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:20.439Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:20.440Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions [none]
+[debug] [2026-10-17T15:13:20.440Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions  x-goog-user-project=kallmee
+[debug] [2026-10-17T15:13:20.440Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-10-17T15:13:21.422Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/kallmee/adminSdkConfig 200
+[debug] [2026-10-17T15:13:21.422Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/kallmee/adminSdkConfig {"projectId":"kallmee","storageBucket":"kallmee.firebasestorage.app"}
+[debug] [2026-10-17T15:13:21.792Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions 200
+[debug] [2026-10-17T15:13:21.792Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/kallmee:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-10-17T15:13:21.792Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:21.793Z] Checked if tokens are valid: true, expires at: 1792253399628
+[debug] [2026-10-17T15:13:21.793Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/kallmee [none]
+[debug] [2026-10-17T15:13:22.478Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/kallmee 200
+[debug] [2026-10-17T15:13:22.478Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/kallmee {"projectId":"kallmee","projectNumber":"116889419393","displayName":"kallme","name":"projects/kallmee","resources":{"hostingSite":"kallmee"},"state":"ACTIVE","labels":{"firebase":"enabled","firebase/storage-default-bucket":"created"},"etag":"1_107bc1d8-c29e-4fdf-9244-65bde8b88d51"}
+[info] 
+[info] === Deploying to 'kallmee'...
+[info] 
+[info] i  deploying hosting 
+[info] Running command: npm run build
+[debug] [2026-10-17T15:13:21.423Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[debug] [2026-10-17T15:13:22.583Z] > [functions] package.json contents: {
+  "name": "kallMe-backend",
+  "version": "1.0.0",
+  "description": "Backend for Kall Me",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "format": "prettier --write .",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "dev": "nodemon local-server.js"
+  },
+  "engines": {
+    "node": "24"
+  },
+  "dependencies": {
+    "adm-zip": "^0.6.1",
+    "axios": "^1.13.6",
+    "bcryptjs": "^3.0.3",
+    "busboy": "^1.6.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.7.0",
+    "firebase-functions": "^7.1.1",
+    "jsonwebtoken": "^9.0.3",
+    "node-cron": "^4.6.0",
+    "pdfkit": "^0.17.2",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
+[debug] [2026-10-17T15:13:22.583Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2026-10-17T15:13:22.583Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-10-17T15:13:22.592Z] Found firebase-functions binary at 'D:\Web Dev\kall-me\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8970
+
+[info] ◇ injected env (12) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+[info] ◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+[info] ◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+
+[error] WARNING: Angular build not found at D:\Web Dev\kall-me\dist\app\browser\index.html. Run 'npm run build' from the repo root to generate it.
+
+[debug] [2026-10-17T15:13:24.089Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"httpsTrigger":{},"entryPoint":"api"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}

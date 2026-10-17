@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS hotels (
     rating DECIMAL(2,1),
     commission_rate INTEGER,
     image_url TEXT,
+    order_sequence INTEGER,
     status VARCHAR(20) DEFAULT 'active'
 );
 
@@ -114,6 +115,11 @@ CREATE TABLE IF NOT EXISTS order_items (
     price DECIMAL(10,2) NOT NULL,
     total DECIMAL(10,2) NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_hotel_id ON orders(hotel_id);
+CREATE INDEX IF NOT EXISTS idx_orders_delivery_person_id ON orders(delivery_person_id);
 
 -- Merchant Menus table (for linking menus to hotels with custom prices)
 CREATE TABLE IF NOT EXISTS merchant_menus (
@@ -208,3 +214,55 @@ INSERT INTO orders (order_number, hotel_id, customer_name, grand_total, status, 
 ('#KL-9822', 2, 'Anjali Gupta', 28.90, 'in-transit', 2),
 ('#KL-9823', 3, 'Arjun Singh', 15.20, 'preparing', 1)
 ON CONFLICT (order_number) DO NOTHING;
+
+-- Database Backup & Disaster Recovery Tables
+CREATE TABLE IF NOT EXISTS backup_metadata (
+    id SERIAL PRIMARY KEY,
+    backup_name VARCHAR(255) NOT NULL UNIQUE,
+    storage_path TEXT NOT NULL,
+    backup_type VARCHAR(50) DEFAULT 'manual', -- 'manual', 'scheduled', 'imported', 'safety'
+    status VARCHAR(50) DEFAULT 'success',     -- 'pending', 'in_progress', 'success', 'failed'
+    backup_size_bytes BIGINT DEFAULT 0,
+    duration_ms INTEGER DEFAULT 0,
+    table_count INTEGER DEFAULT 0,
+    sha256_checksum VARCHAR(64),
+    format_version VARCHAR(20) DEFAULT 'v1.0',
+    manifest_json JSONB,
+    verification_status VARCHAR(50) DEFAULT 'unverified', -- 'unverified', 'verified', 'failed'
+    verified_at TIMESTAMP,
+    restore_status VARCHAR(50),
+    restored_at TIMESTAMP,
+    error_message TEXT,
+    created_by VARCHAR(255) DEFAULT 'System Administrator',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS backup_schedule_config (
+    id SERIAL PRIMARY KEY,
+    is_enabled BOOLEAN DEFAULT TRUE,
+    frequency VARCHAR(50) DEFAULT 'twice_weekly',
+    days_of_week JSONB DEFAULT '["Wednesday", "Sunday"]'::jsonb,
+    execution_time VARCHAR(10) DEFAULT '02:00',
+    timezone VARCHAR(50) DEFAULT 'Asia/Kolkata',
+    retention_count INTEGER DEFAULT 8,
+    max_backup_size_mb INTEGER DEFAULT 500,
+    storage_folder VARCHAR(255) DEFAULT 'db_backups/',
+    auto_verify_after_backup BOOLEAN DEFAULT TRUE,
+    notification_enabled BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS backup_audit_logs (
+    id SERIAL PRIMARY KEY,
+    action VARCHAR(100) NOT NULL,
+    operator VARCHAR(255),
+    details JSONB,
+    status VARCHAR(20) DEFAULT 'success',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO backup_schedule_config (id, is_enabled, frequency, days_of_week, execution_time, timezone, retention_count, storage_folder)
+VALUES (1, TRUE, 'twice_weekly', '["Wednesday", "Sunday"]'::jsonb, '02:00', 'Asia/Kolkata', 8, 'db_backups/')
+ON CONFLICT (id) DO NOTHING;
+

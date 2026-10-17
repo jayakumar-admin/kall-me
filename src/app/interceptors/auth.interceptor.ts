@@ -26,7 +26,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(newReq);
           }),
           catchError((err) => {
-            authService.logout();
+            authService.logout('Session expired. Please log in again.');
             return throwError(() => err);
           })
         );

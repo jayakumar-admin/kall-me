@@ -53,5 +53,10 @@ export const SETTINGS_ROUTES: Routes = [
   {
     path: 'user-management',
     loadComponent: () => import('./user-management/user-management').then(m => m.UserManagement)
+  },
+  {
+    path: 'database-backup',
+    loadComponent: () => import('./database-backup/database-backup').then(m => m.DatabaseBackupComponent)
   }
 ];
+

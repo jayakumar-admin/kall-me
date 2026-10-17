@@ -1,0 +1,1097 @@
+<div class="p-6 md:p-8 space-y-8 max-w-7xl mx-auto">
+
+  <!-- ========================================== -->
+  <!-- 1. PAGE HEADER                             -->
+  <!-- ========================================== -->
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-white/10">
+    <div class="space-y-1.5">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+          <mat-icon class="text-2xl">security</mat-icon>
+        </div>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-display font-black text-[#1A1A1A] dark:text-white tracking-tight uppercase">
+            DATABASE BACKUP & DISASTER RECOVERY
+          </h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            Automated snapshot vault, cryptographic verification, and disaster recovery for PostgreSQL.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Badge & Refresh -->
+    <div class="flex items-center gap-3 self-start lg:self-auto">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-colors"
+           [ngClass]="stats?.systemHealth === 'Healthy' 
+             ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
+             : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'">
+        <span class="w-2 h-2 rounded-full relative"
+              [ngClass]="stats?.systemHealth === 'Healthy' ? 'bg-emerald-500' : 'bg-amber-500'">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                [ngClass]="stats?.systemHealth === 'Healthy' ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+        </span>
+        <span>{{ stats?.systemHealth === 'Healthy' ? 'SYSTEM HEALTHY & OPERATIONAL' : 'SYSTEM CHECK REQUIRED' }}</span>
+      </div>
+
+      <button 
+        (click)="refreshAll()" 
+        title="Refresh data"
+        class="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300 transition-all flex items-center justify-center active:rotate-180 duration-300"
+      >
+        <mat-icon class="text-xl">sync</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 2. MAIN ACTION TOOLBAR                     -->
+  <!-- ========================================== -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-[#1E293B] border border-slate-200/80 dark:border-white/5 shadow-sm">
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Backup Now Button -->
+      <button 
+        (click)="triggerBackupNow()"
+        [disabled]="isBackingUp"
+        class="btn-primary flex items-center gap-2 text-sm shadow-amber-500/20"
+      >
+        <mat-icon *ngIf="!isBackingUp" class="text-xl">cloud_upload</mat-icon>
+        <mat-icon *ngIf="isBackingUp" class="text-xl animate-spin">refresh</mat-icon>
+        <span>{{ isBackingUp ? 'Creating Backup Snapshot...' : 'Backup Now' }}</span>
+      </button>
+
+      <!-- Upload Backup ZIP Button -->
+      <button 
+        (click)="openUploadModal()"
+        class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all flex items-center gap-2 border border-slate-200/60 dark:border-white/5"
+      >
+        <mat-icon class="text-xl">file_upload</mat-icon>
+        <span>Upload Backup ZIP</span>
+      </button>
+
+      <!-- System Health Check Button -->
+      <button 
+        (click)="openHealthModal()"
+        class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white transition-all flex items-center gap-2 border border-slate-200/60 dark:border-white/5"
+      >
+        <mat-icon class="text-xl text-emerald-500">health_and_safety</mat-icon>
+        <span>System Health Check</span>
+      </button>
+    </div>
+
+    <!-- Storage Vault Root Badge -->
+    <div class="flex items-center gap-2 text-xs font-mono bg-slate-50 dark:bg-white/5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-300">
+      <mat-icon class="text-base text-amber-500">lock</mat-icon>
+      <span>VAULT ROOT:</span>
+      <span class="font-bold text-slate-900 dark:text-white">{{ stats?.storageUsed?.storageFolder || 'db_backups/' }}</span>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 3. DASHBOARD SUMMARY CARDS (6 CARDS)       -->
+  <!-- ========================================== -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    
+    <!-- 1. Last Backup Card -->
+    <div class="card p-5 relative overflow-hidden group hover:border-amber-400/50 transition-all">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Last Backup</span>
+        <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
+          <mat-icon class="text-lg">history</mat-icon>
+        </div>
+      </div>
+      <div class="space-y-1">
+        <div class="text-lg font-display font-black text-slate-900 dark:text-white truncate"
+             [title]="stats?.lastBackup?.backupName || 'No backups yet'">
+          {{ stats?.lastBackup?.hasBackup ? (stats?.lastBackup?.createdAt | date:'shortTime') : 'None' }}
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          {{ stats?.lastBackup?.hasBackup ? (stats?.lastBackup?.createdAt | date:'mediumDate') : 'No backups registered' }}
+        </p>
+      </div>
+      <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] text-slate-500">
+        <span>TZ: {{ stats?.lastBackup?.timezone || 'Asia/Kolkata' }}</span>
+        <span *ngIf="stats?.lastBackup?.verificationStatus === 'verified'" class="text-emerald-500 font-bold flex items-center gap-0.5">
+          <mat-icon class="text-[14px] w-3.5 h-3.5">verified</mat-icon> Verified
+        </span>
+      </div>
+    </div>
+
+    <!-- 2. Next Schedule Card -->
+    <div class="card p-5 relative overflow-hidden group hover:border-amber-400/50 transition-all">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Next Schedule</span>
+        <button (click)="openScheduleModal()" title="Configure Schedule" class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 flex items-center justify-center transition-colors">
+          <mat-icon class="text-lg">edit_calendar</mat-icon>
+        </button>
+      </div>
+      <div class="space-y-1">
+        <div class="text-lg font-display font-black text-slate-900 dark:text-white">
+          {{ stats?.nextSchedule?.frequency || 'Twice a Week' }}
+        </div>
+        <p class="text-xs text-purple-600 dark:text-purple-400 font-medium">
+          {{ stats?.nextSchedule?.nextRunAt ? (stats?.nextSchedule?.nextRunAt | date:'EEE, MMM d, h:mm a') : 'Scheduled' }}
+        </p>
+      </div>
+      <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] text-slate-500">
+        <span class="truncate">{{ stats?.nextSchedule?.description || 'Wed, Sun at 02:00' }}</span>
+      </div>
+    </div>
+
+    <!-- 3. Total Backups Card -->
+    <div class="card p-5 relative overflow-hidden group hover:border-amber-400/50 transition-all">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Backups</span>
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+          <mat-icon class="text-lg">inventory_2</mat-icon>
+        </div>
+      </div>
+      <div class="space-y-1">
+        <div class="text-2xl font-display font-black text-slate-900 dark:text-white">
+          {{ stats?.totalBackups?.total || 0 }}
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          {{ stats?.totalBackups?.retained || 0 }} Snapshots Active
+        </p>
+      </div>
+      <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] text-slate-500">
+        <span class="font-bold text-amber-600 dark:text-amber-400">{{ stats?.totalBackups?.retentionPolicyText || 'Retention: 8' }}</span>
+      </div>
+    </div>
+
+    <!-- 4. Storage Used Card -->
+    <div class="card p-5 relative overflow-hidden group hover:border-amber-400/50 transition-all">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Storage Used</span>
+        <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
+          <mat-icon class="text-lg">cloud_done</mat-icon>
+        </div>
+      </div>
+      <div class="space-y-1">
+        <div class="text-2xl font-display font-black text-slate-900 dark:text-white">
+          {{ stats?.storageUsed?.formatted || '0 B' }}
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Firebase Storage Vault
+        </p>
+      </div>
+      <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] text-slate-500">
+        <span class="text-emerald-500 font-medium">Synced with Bucket</span>
+      </div>
+    </div>
+
+    <!-- 5. DB Tables Card -->
+    <div class="card p-5 relative overflow-hidden group hover:border-amber-400/50 transition-all">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">DB Tables</span>
+        <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+          <mat-icon class="text-lg">table_chart</mat-icon>
+        </div>
+      </div>
+      <div class="space-y-1">
+        <div class="text-2xl font-display font-black text-slate-900 dark:text-white">
+          {{ stats?.dbTables?.tablesInLatestBackup || stats?.dbTables?.currentTableCount || 0 }}
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Current Schema: {{ stats?.dbTables?.currentTableCount || 0 }} Tables
+        </p>
+      </div>
+      <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] text-slate-500">
+        <span>Public Schema</span>
+        <span class="text-indigo-500 font-bold">100% Covered</span>
+      </div>
+    </div>
+
+    <!-- 6. Last Size Card -->
+    <div class="card p-5 relative overflow-hidden group hover:border-amber-400/50 transition-all">
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Last Size</span>
+        <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
+          <mat-icon class="text-lg">speed</mat-icon>
+        </div>
+      </div>
+      <div class="space-y-1">
+        <div class="text-2xl font-display font-black text-slate-900 dark:text-white">
+          {{ stats?.lastSize?.formatted || '0 B' }}
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Duration: {{ stats?.lastSize?.durationFormatted || '0ms' }}
+        </p>
+      </div>
+      <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-[11px] text-slate-500">
+        <span class="text-rose-500 font-medium">ZIP Compressed</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. BACKUP HISTORY & VAULT SNAPSHOTS        -->
+  <!-- ========================================== -->
+  <div class="card space-y-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-white/5">
+      <div>
+        <h2 class="text-xl font-display font-black text-[#1A1A1A] dark:text-white tracking-tight uppercase">
+          BACKUP HISTORY & VAULT SNAPSHOTS
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          Download, cryptographically verify, or restore PostgreSQL database snapshots from Firebase Storage.
+        </p>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <!-- Search Input -->
+        <div class="relative">
+          <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</mat-icon>
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery" 
+            (ngModelChange)="onSearchChange()"
+            placeholder="Search backups..."
+            class="pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 w-full sm:w-60"
+          />
+        </div>
+
+        <!-- Filter Pills -->
+        <div class="inline-flex rounded-xl bg-slate-100 dark:bg-white/5 p-1 border border-slate-200/60 dark:border-white/5">
+          <button 
+            (click)="onFilterChange('all')" 
+            [class.bg-white]="selectedFilter === 'all'"
+            [class.dark:bg-[#1E293B]]="selectedFilter === 'all'"
+            [class.shadow-sm]="selectedFilter === 'all'"
+            [class.text-amber-500]="selectedFilter === 'all'"
+            class="px-3 py-1 text-xs font-bold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
+          >
+            All
+          </button>
+          <button 
+            (click)="onFilterChange('manual')" 
+            [class.bg-white]="selectedFilter === 'manual'"
+            [class.dark:bg-[#1E293B]]="selectedFilter === 'manual'"
+            [class.shadow-sm]="selectedFilter === 'manual'"
+            [class.text-amber-500]="selectedFilter === 'manual'"
+            class="px-3 py-1 text-xs font-bold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
+          >
+            Manual
+          </button>
+          <button 
+            (click)="onFilterChange('scheduled')" 
+            [class.bg-white]="selectedFilter === 'scheduled'"
+            [class.dark:bg-[#1E293B]]="selectedFilter === 'scheduled'"
+            [class.shadow-sm]="selectedFilter === 'scheduled'"
+            [class.text-amber-500]="selectedFilter === 'scheduled'"
+            class="px-3 py-1 text-xs font-bold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
+          >
+            Scheduled
+          </button>
+          <button 
+            (click)="onFilterChange('safety')" 
+            [class.bg-white]="selectedFilter === 'safety'"
+            [class.dark:bg-[#1E293B]]="selectedFilter === 'safety'"
+            [class.shadow-sm]="selectedFilter === 'safety'"
+            [class.text-amber-500]="selectedFilter === 'safety'"
+            class="px-3 py-1 text-xs font-bold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
+          >
+            Safety
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-white/5">
+      <table class="w-full text-left text-sm text-slate-700 dark:text-slate-300">
+        <thead class="bg-slate-50 dark:bg-white/5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-white/5">
+          <tr>
+            <th class="py-3.5 px-4">Backup Name & Timestamp</th>
+            <th class="py-3.5 px-3">Type</th>
+            <th class="py-3.5 px-3">Status</th>
+            <th class="py-3.5 px-3">Size</th>
+            <th class="py-3.5 px-3">Tables</th>
+            <th class="py-3.5 px-3">Duration</th>
+            <th class="py-3.5 px-4">SHA-256 Checksum</th>
+            <th class="py-3.5 px-3">Created By</th>
+            <th class="py-3.5 px-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+
+          <!-- Loading Row -->
+          <tr *ngIf="isLoading">
+            <td colspan="9" class="py-12 text-center text-slate-400">
+              <mat-icon class="animate-spin text-3xl mb-2 text-amber-500">refresh</mat-icon>
+              <p class="font-medium text-xs">Loading backup snapshots...</p>
+            </td>
+          </tr>
+
+          <!-- Empty State -->
+          <tr *ngIf="!isLoading && backups.length === 0">
+            <td colspan="9" class="py-12 text-center text-slate-400">
+              <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/5 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                <mat-icon class="text-2xl">folder_off</mat-icon>
+              </div>
+              <p class="font-bold text-slate-700 dark:text-slate-200">No backup snapshots found</p>
+              <p class="text-xs text-slate-500 mt-1">Click "Backup Now" above to trigger your first snapshot.</p>
+            </td>
+          </tr>
+
+          <!-- Data Rows -->
+          <tr *ngFor="let backup of backups" class="hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors">
+            
+            <!-- 1. Name & Timestamp -->
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                  <mat-icon class="text-base">folder_zip</mat-icon>
+                </div>
+                <div class="space-y-0.5">
+                  <button (click)="openDetailsModal(backup)" class="font-bold text-slate-900 dark:text-white hover:text-amber-500 transition-colors text-xs font-mono text-left block">
+                    {{ backup.backup_name }}
+                  </button>
+                  <p class="text-[11px] text-slate-400">
+                    {{ backup.created_at | date:'medium' }}
+                  </p>
+                </div>
+              </div>
+            </td>
+
+            <!-- 2. Type Badge -->
+            <td class="py-3 px-3">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider"
+                    [ngClass]="{
+                      'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400': backup.backup_type === 'manual',
+                      'bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400': backup.backup_type === 'scheduled',
+                      'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400': backup.backup_type === 'safety',
+                      'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400': backup.backup_type === 'imported'
+                    }">
+                {{ backup.backup_type }}
+              </span>
+            </td>
+
+            <!-- 3. Status Badge -->
+            <td class="py-3 px-3">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold"
+                    [ngClass]="{
+                      'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400': backup.status === 'success',
+                      'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400': backup.status === 'failed',
+                      'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 animate-pulse': backup.status === 'in_progress'
+                    }">
+                <span class="w-1.5 h-1.5 rounded-full"
+                      [ngClass]="backup.status === 'success' ? 'bg-emerald-500' : 'bg-red-500'"></span>
+                {{ backup.status === 'success' ? 'Success' : backup.status }}
+              </span>
+            </td>
+
+            <!-- 4. Size -->
+            <td class="py-3 px-3 font-medium text-xs">
+              {{ formatBytes(backup.backup_size_bytes) }}
+            </td>
+
+            <!-- 5. Tables -->
+            <td class="py-3 px-3 text-xs">
+              <span class="font-bold text-slate-800 dark:text-slate-200">{{ backup.table_count }}</span>
+              <span class="text-slate-400"> tables</span>
+            </td>
+
+            <!-- 6. Duration -->
+            <td class="py-3 px-3 text-xs text-slate-500">
+              {{ formatDuration(backup.duration_ms) }}
+            </td>
+
+            <!-- 7. SHA-256 Checksum -->
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-[11px] text-slate-500 bg-slate-100 dark:bg-white/5 px-2 py-1 rounded" 
+                      [title]="backup.sha256_checksum">
+                  {{ backup.sha256_checksum ? (backup.sha256_checksum | slice:0:8) + '...' + (backup.sha256_checksum | slice:-6) : 'N/A' }}
+                </span>
+                <button 
+                  *ngIf="backup.sha256_checksum" 
+                  (click)="copyToClipboard(backup.sha256_checksum, 'SHA-256 Checksum')" 
+                  title="Copy full Checksum"
+                  class="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
+                >
+                  <mat-icon class="text-[16px] w-4 h-4">content_copy</mat-icon>
+                </button>
+                <span *ngIf="backup.verification_status === 'verified'" 
+                      title="Cryptographically verified"
+                      class="text-emerald-500 flex items-center">
+                  <mat-icon class="text-[16px] w-4 h-4">verified</mat-icon>
+                </span>
+              </div>
+            </td>
+
+            <!-- 8. Created By -->
+            <td class="py-3 px-3 text-xs text-slate-500 truncate max-w-[120px]" [title]="backup.created_by">
+              {{ backup.created_by || 'System' }}
+            </td>
+
+            <!-- 9. Actions -->
+            <td class="py-3 px-4 text-right">
+              <div class="inline-flex items-center gap-1">
+                <!-- Download -->
+                <button 
+                  (click)="downloadBackup(backup)" 
+                  title="Download Backup ZIP"
+                  class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                >
+                  <mat-icon class="text-lg">download</mat-icon>
+                </button>
+
+                <!-- Verify -->
+                <button 
+                  (click)="verifyBackup(backup)" 
+                  [disabled]="isVerifying[backup.id]"
+                  title="Verify SHA-256 Checksum"
+                  class="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
+                >
+                  <mat-icon *ngIf="!isVerifying[backup.id]" class="text-lg">verified_user</mat-icon>
+                  <mat-icon *ngIf="isVerifying[backup.id]" class="text-lg animate-spin text-emerald-500">sync</mat-icon>
+                </button>
+
+                <!-- Restore (Danger Action) -->
+                <button 
+                  (click)="openRestoreModal(backup)" 
+                  title="Restore Database from Snapshot"
+                  class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors font-bold"
+                >
+                  <mat-icon class="text-lg">restore</mat-icon>
+                </button>
+              </div>
+            </td>
+
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" class="flex items-center justify-between pt-2">
+      <p class="text-xs text-slate-500">
+        Showing Page {{ currentPage }} of {{ totalPages }} ({{ totalItems }} Total Backups)
+      </p>
+      <div class="flex items-center gap-2">
+        <button 
+          (click)="goToPage(currentPage - 1)" 
+          [disabled]="currentPage === 1"
+          class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-xs font-bold disabled:opacity-40"
+        >
+          Previous
+        </button>
+        <button 
+          (click)="goToPage(currentPage + 1)" 
+          [disabled]="currentPage === totalPages"
+          class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-xs font-bold disabled:opacity-40"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 1: DATABASE HEALTH & RELATIONAL INTEGRITY               -->
+<!-- ============================================================== -->
+<div *ngIf="showHealthModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+  <div class="bg-white dark:bg-[#1E293B] rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+    
+    <!-- Modal Header -->
+    <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+          <mat-icon>health_and_safety</mat-icon>
+        </div>
+        <div>
+          <h3 class="text-lg font-display font-black text-slate-900 dark:text-white uppercase">
+            DATABASE HEALTH & RELATIONAL INTEGRITY
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Real-time PostgreSQL engine connectivity, schema validation, and foreign key audits.
+          </p>
+        </div>
+      </div>
+      <button (click)="closeHealthModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+      
+      <!-- System Status Banner -->
+      <div class="p-4 rounded-xl border flex items-center justify-between"
+           [ngClass]="healthReport?.healthRating === 'Healthy' 
+             ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-300'
+             : 'bg-amber-50/80 border-amber-200 text-amber-900 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-300'">
+        <div class="flex items-center gap-3">
+          <mat-icon class="text-2xl text-emerald-500">check_circle</mat-icon>
+          <div>
+            <h4 class="font-display font-black text-sm uppercase tracking-wide">
+              {{ healthReport?.overallStatus || 'DATABASE SYSTEM OPERATIONAL & HEALTHY' }}
+            </h4>
+            <p class="text-xs opacity-80">
+              Latency: {{ dbLatency }}ms | Checked: {{ healthReport?.checkedAt | date:'mediumTime' }}
+            </p>
+          </div>
+        </div>
+        <button (click)="runHealthCheck()" [disabled]="isHealthChecking" class="px-3 py-1.5 rounded-lg bg-white dark:bg-white/10 text-xs font-bold shadow-sm flex items-center gap-1.5">
+          <mat-icon [class.animate-spin]="isHealthChecking" class="text-sm">refresh</mat-icon>
+          Re-Check
+        </button>
+      </div>
+
+      <!-- System Connectivity Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <!-- PostgreSQL Check -->
+        <div class="p-3.5 rounded-xl border border-slate-200/80 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] space-y-1">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-500">
+            <span>PostgreSQL DB</span>
+            <span class="text-emerald-500 font-bold flex items-center gap-1">
+              <mat-icon class="text-xs">check</mat-icon> Online
+            </span>
+          </div>
+          <p class="text-sm font-bold text-slate-900 dark:text-white">
+            {{ dbVersion }}
+          </p>
+          <p class="text-[11px] text-slate-400">Response in {{ dbLatency }}ms</p>
+        </div>
+
+        <!-- Firebase Storage Check -->
+        <div class="p-3.5 rounded-xl border border-slate-200/80 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] space-y-1">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-500">
+            <span>Storage Vault</span>
+            <span class="text-emerald-500 font-bold flex items-center gap-1">
+              <mat-icon class="text-xs">check</mat-icon> Connected
+            </span>
+          </div>
+          <p class="text-sm font-bold text-slate-900 dark:text-white truncate" [title]="storageVaultFolder">
+            {{ storageVaultFolder }}
+          </p>
+          <p class="text-[11px] text-slate-400">Read & Write Authorized</p>
+        </div>
+
+        <!-- Background Scheduler Check -->
+        <div class="p-3.5 rounded-xl border border-slate-200/80 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] space-y-1">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-500">
+            <span>Scheduler Cron</span>
+            <span class="text-emerald-500 font-bold flex items-center gap-1">
+              <mat-icon class="text-xs">check</mat-icon> Active
+            </span>
+          </div>
+          <p class="text-sm font-bold text-slate-900 dark:text-white">
+            Twice a Week
+          </p>
+          <p class="text-[11px] text-slate-400">Wed & Sun @ 02:00 AM</p>
+        </div>
+      </div>
+
+      <!-- Entity Counts Section -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Database Entity Counts
+        </h4>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+            <span class="text-[11px] text-slate-500 block">Orders</span>
+            <span class="text-lg font-black text-slate-900 dark:text-white">{{ healthReport?.entityCounts?.orders || 0 }}</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+            <span class="text-[11px] text-slate-500 block">Order Items</span>
+            <span class="text-lg font-black text-slate-900 dark:text-white">{{ healthReport?.entityCounts?.orderItems || 0 }}</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+            <span class="text-[11px] text-slate-500 block">Hotels</span>
+            <span class="text-lg font-black text-slate-900 dark:text-white">{{ healthReport?.entityCounts?.hotels || 0 }}</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+            <span class="text-[11px] text-slate-500 block">Menus</span>
+            <span class="text-lg font-black text-slate-900 dark:text-white">{{ healthReport?.entityCounts?.menus || 0 }}</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+            <span class="text-[11px] text-slate-500 block">Delivery Persons</span>
+            <span class="text-lg font-black text-slate-900 dark:text-white">{{ healthReport?.entityCounts?.deliveryPersons || 0 }}</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+            <span class="text-[11px] text-slate-500 block">Users</span>
+            <span class="text-lg font-black text-slate-900 dark:text-white">{{ healthReport?.entityCounts?.users || 0 }}</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+            <span class="text-[11px] text-slate-500 block">Shipping Ranges</span>
+            <span class="text-lg font-black text-slate-900 dark:text-white">{{ healthReport?.entityCounts?.shippingRanges || 0 }}</span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+            <span class="text-[11px] text-slate-500 block">WhatsApp Logs</span>
+            <span class="text-lg font-black text-slate-900 dark:text-white">{{ healthReport?.entityCounts?.whatsappLogs || 0 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Referential Integrity Audits -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Referential Integrity Checks
+        </h4>
+        <div class="space-y-2">
+          <div *ngFor="let check of healthReport?.referentialIntegrity" 
+               class="p-3 rounded-xl border border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between text-xs">
+            <div class="flex items-center gap-3">
+              <mat-icon [class.text-emerald-500]="check.passed" [class.text-amber-500]="!check.passed" class="text-lg">
+                {{ check.passed ? 'check_circle' : 'warning' }}
+              </mat-icon>
+              <div>
+                <span class="font-bold text-slate-900 dark:text-white">{{ check.name }}</span>
+                <p class="text-slate-400 text-[11px]">{{ check.description }}</p>
+              </div>
+            </div>
+            <span class="font-bold" [ngClass]="check.passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'">
+              {{ check.passed ? 'PASSED (0 Orphans)' : check.orphanCount + ' Orphans Found' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="p-4 border-t border-slate-100 dark:border-white/5 flex justify-end">
+      <button (click)="closeHealthModal()" class="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white font-bold text-sm">
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 2: SAFE RESTORE CONFIRMATION                            -->
+<!-- ============================================================== -->
+<div *ngIf="showRestoreModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+  <div class="bg-white dark:bg-[#1E293B] rounded-2xl max-w-xl w-full flex flex-col shadow-2xl border border-rose-200 dark:border-rose-500/20 overflow-hidden">
+    
+    <!-- Modal Header -->
+    <div class="p-6 border-b border-rose-100 dark:border-rose-500/10 flex items-center justify-between bg-rose-50/50 dark:bg-rose-500/5">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div>
+          <h3 class="text-lg font-display font-black text-rose-700 dark:text-rose-400 uppercase">
+            RESTORE DATABASE SNAPSHOT
+          </h3>
+          <p class="text-xs text-rose-600/80 dark:text-rose-400/80">
+            Controlled restoration with automated pre-restore safety backup
+          </p>
+        </div>
+      </div>
+      <button (click)="closeRestoreModal()" [disabled]="isRestoring" class="text-slate-400 hover:text-slate-600">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6 space-y-5">
+      <div class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+        <strong>Important Safety Notice:</strong> Restoring this snapshot will replace tables in the active PostgreSQL database with the contents of this archive. An automatic safety backup of the database will be captured before restoration begins.
+      </div>
+
+      <!-- Snapshot Details -->
+      <div class="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 space-y-2 text-xs">
+        <div class="flex justify-between">
+          <span class="text-slate-500">Snapshot File:</span>
+          <span class="font-mono font-bold text-slate-900 dark:text-white truncate max-w-[280px]">
+            {{ selectedBackupForRestore?.backup_name }}
+          </span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Created At:</span>
+          <span class="text-slate-900 dark:text-white font-medium">{{ selectedBackupForRestore?.created_at | date:'medium' }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Snapshot Size:</span>
+          <span class="text-slate-900 dark:text-white font-medium">{{ formatBytes(selectedBackupForRestore?.backup_size_bytes || 0) }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Included Tables:</span>
+          <span class="text-slate-900 dark:text-white font-medium">{{ selectedBackupForRestore?.table_count }} managed tables</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Target Engine:</span>
+          <span class="text-slate-900 dark:text-white font-medium">PostgreSQL (public schema)</span>
+        </div>
+      </div>
+
+      <!-- Explicit Confirmation Checkbox -->
+      <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer select-none">
+        <input 
+          type="checkbox" 
+          [(ngModel)]="restoreConfirmed" 
+          [disabled]="isRestoring"
+          class="mt-0.5 rounded text-rose-600 focus:ring-rose-500"
+        />
+        <span class="text-xs text-slate-700 dark:text-slate-300 font-medium">
+          I understand that this action replaces database data with this snapshot. A pre-restore safety backup will be created automatically.
+        </span>
+      </label>
+
+      <!-- Restore Progress Result -->
+      <div *ngIf="restoreResult" class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
+        <div class="font-bold flex items-center gap-1.5">
+          <mat-icon class="text-sm">check_circle</mat-icon> Restore Completed Successfully!
+        </div>
+        <p>Safety Snapshot: <code class="font-mono text-[11px]">{{ restoreResult.safetyBackupName }}</code></p>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="p-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-end gap-3">
+      <button 
+        (click)="closeRestoreModal()" 
+        [disabled]="isRestoring"
+        class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-700 dark:text-white font-bold text-sm"
+      >
+        Cancel
+      </button>
+
+      <button 
+        (click)="executeRestore()"
+        [disabled]="!restoreConfirmed || isRestoring"
+        class="px-6 py-2.5 rounded-xl font-bold text-sm text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:pointer-events-none transition-all flex items-center gap-2 shadow-lg shadow-rose-600/20"
+      >
+        <mat-icon *ngIf="!isRestoring" class="text-base">restore</mat-icon>
+        <mat-icon *ngIf="isRestoring" class="text-base animate-spin">refresh</mat-icon>
+        <span>{{ isRestoring ? 'Restoring Snapshot...' : 'Proceed with Safe Restore' }}</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 3: UPLOAD BACKUP ZIP                                     -->
+<!-- ============================================================== -->
+<div *ngIf="showUploadModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+  <div class="bg-white dark:bg-[#1E293B] rounded-2xl max-w-lg w-full flex flex-col shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+    
+    <!-- Modal Header -->
+    <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+          <mat-icon>file_upload</mat-icon>
+        </div>
+        <div>
+          <h3 class="text-lg font-display font-black text-slate-900 dark:text-white uppercase">
+            UPLOAD BACKUP ZIP
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Import and register external PostgreSQL backup archive
+          </p>
+        </div>
+      </div>
+      <button (click)="closeUploadModal()" [disabled]="isUploading" class="text-slate-400 hover:text-slate-600">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6 space-y-5">
+      <!-- Drag & Drop Zone -->
+      <div 
+        (dragover)="$event.preventDefault(); uploadDragOver = true"
+        (dragleave)="uploadDragOver = false"
+        (drop)="onFileDropped($event)"
+        [ngClass]="uploadDragOver ? 'border-amber-500 bg-amber-500/5' : 'border-slate-300 dark:border-white/10'"
+        class="border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer hover:border-amber-500 transition-colors"
+      >
+        <input 
+          type="file" 
+          #fileInput 
+          (change)="onFileSelected($event)" 
+          accept=".zip" 
+          class="hidden" 
+        />
+
+        <div *ngIf="!selectedFile" (click)="fileInput.click()" class="space-y-2">
+          <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/5 text-slate-400 flex items-center justify-center mx-auto">
+            <mat-icon class="text-2xl">cloud_upload</mat-icon>
+          </div>
+          <p class="text-sm font-bold text-slate-700 dark:text-slate-300">
+            Click to browse or drag & drop backup .zip
+          </p>
+          <p class="text-xs text-slate-400">
+            Maximum file size: 500 MB (PostgreSQL dump ZIP format)
+          </p>
+        </div>
+
+        <div *ngIf="selectedFile" class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/5 text-left">
+          <div class="flex items-center gap-3">
+            <mat-icon class="text-amber-500">folder_zip</mat-icon>
+            <div>
+              <p class="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[240px]">{{ selectedFile.name }}</p>
+              <p class="text-[11px] text-slate-400">{{ formatBytes(selectedFile.size) }}</p>
+            </div>
+          </div>
+          <button (click)="selectedFile = null; $event.stopPropagation()" class="text-rose-500 hover:text-rose-700">
+            <mat-icon class="text-sm">close</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Operator Name Input -->
+      <div>
+        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+          Operator / Imported By
+        </label>
+        <input 
+          type="text" 
+          [(ngModel)]="uploadOperator" 
+          placeholder="System Administrator"
+          class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+        />
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="p-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-end gap-3">
+      <button 
+        (click)="closeUploadModal()" 
+        [disabled]="isUploading"
+        class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-700 dark:text-white font-bold text-sm"
+      >
+        Cancel
+      </button>
+
+      <button 
+        (click)="submitUpload()" 
+        [disabled]="!selectedFile || isUploading"
+        class="btn-primary text-sm flex items-center gap-2"
+      >
+        <mat-icon *ngIf="!isUploading" class="text-base">upload</mat-icon>
+        <mat-icon *ngIf="isUploading" class="text-base animate-spin">refresh</mat-icon>
+        <span>{{ isUploading ? 'Uploading & Verifying...' : 'Upload & Register' }}</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 4: CONFIGURE BACKUP SCHEDULE                             -->
+<!-- ============================================================== -->
+<div *ngIf="showScheduleModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+  <div class="bg-white dark:bg-[#1E293B] rounded-2xl max-w-lg w-full flex flex-col shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+    
+    <!-- Modal Header -->
+    <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <div>
+          <h3 class="text-lg font-display font-black text-slate-900 dark:text-white uppercase">
+            BACKUP SCHEDULE SETTINGS
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Configure automated snapshot frequency, days, and retention
+          </p>
+        </div>
+      </div>
+      <button (click)="closeScheduleModal()" class="text-slate-400 hover:text-slate-600">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6 space-y-5">
+      <!-- Enable Automated Backups Toggle -->
+      <div class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+        <div>
+          <span class="text-sm font-bold text-slate-900 dark:text-white">Enable Automated Backups</span>
+          <p class="text-xs text-slate-400">Persistent server-side background cron scheduler</p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" [(ngModel)]="scheduleConfig.is_enabled" class="sr-only peer">
+          <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+        </label>
+      </div>
+
+      <!-- Days of Week Selector -->
+      <div>
+        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">
+          Backup Execution Days (Default: Twice a Week)
+        </label>
+        <div class="flex flex-wrap gap-1.5">
+          <button 
+            *ngFor="let day of availableDays"
+            type="button"
+            (click)="toggleDay(day)"
+            [ngClass]="scheduleConfig.days_of_week.includes(day)
+              ? 'bg-amber-500 text-black font-bold border-amber-500'
+              : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border-slate-200/60 dark:border-white/5'"
+            class="px-3 py-1.5 rounded-lg text-xs border transition-all"
+          >
+            {{ day | slice:0:3 }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Execution Time & Timezone -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Execution Time</label>
+          <input 
+            type="time" 
+            [(ngModel)]="scheduleConfig.execution_time" 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Timezone</label>
+          <select 
+            [(ngModel)]="scheduleConfig.timezone"
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none"
+          >
+            <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+            <option value="UTC">UTC</option>
+            <option value="America/New_York">America/New_York (EST)</option>
+            <option value="Europe/London">Europe/London (GMT)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Retention Count & Storage Folder -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Retention Count</label>
+          <input 
+            type="number" 
+            min="1" 
+            max="100" 
+            [(ngModel)]="scheduleConfig.retention_count" 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Vault Folder</label>
+          <input 
+            type="text" 
+            [(ngModel)]="scheduleConfig.storage_folder" 
+            class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <!-- Auto Verify Toggle -->
+      <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-white/5 cursor-pointer">
+        <input type="checkbox" [(ngModel)]="scheduleConfig.auto_verify_after_backup" class="rounded text-amber-500" />
+        <span class="text-xs text-slate-700 dark:text-slate-300">
+          Automatically cryptographically verify SHA-256 immediately after backup completion
+        </span>
+      </label>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="p-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-end gap-3">
+      <button (click)="closeScheduleModal()" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 text-slate-700 dark:text-white font-bold text-sm">
+        Cancel
+      </button>
+      <button (click)="saveSchedule()" class="btn-primary text-sm">
+        Save Schedule Settings
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================== -->
+<!-- MODAL 5: BACKUP DETAILS & MANIFEST INSPECTOR                   -->
+<!-- ============================================================== -->
+<div *ngIf="showDetailsModal && selectedBackupDetails" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+  <div class="bg-white dark:bg-[#1E293B] rounded-2xl max-w-2xl w-full flex flex-col shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
+    
+    <!-- Modal Header -->
+    <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+          <mat-icon>info</mat-icon>
+        </div>
+        <div>
+          <h3 class="text-lg font-display font-black text-slate-900 dark:text-white uppercase truncate max-w-[400px]">
+            {{ selectedBackupDetails.backup_name }}
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Snapshot Vault Metadata & Cryptographic Details
+          </p>
+        </div>
+      </div>
+      <button (click)="closeDetailsModal()" class="text-slate-400 hover:text-slate-600">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6 space-y-4 text-xs">
+      <div class="grid grid-cols-2 gap-4">
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+          <span class="text-slate-400 block mb-1">Storage Path</span>
+          <span class="font-mono font-bold text-slate-900 dark:text-white break-all">{{ selectedBackupDetails.storage_path }}</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+          <span class="text-slate-400 block mb-1">Backup Type</span>
+          <span class="font-bold uppercase text-slate-900 dark:text-white">{{ selectedBackupDetails.backup_type }}</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+          <span class="text-slate-400 block mb-1">Archive Size</span>
+          <span class="font-bold text-slate-900 dark:text-white">{{ formatBytes(selectedBackupDetails.backup_size_bytes) }}</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+          <span class="text-slate-400 block mb-1">Creation Duration</span>
+          <span class="font-bold text-slate-900 dark:text-white">{{ formatDuration(selectedBackupDetails.duration_ms) }}</span>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+        <span class="text-slate-400 block mb-1">Full SHA-256 Checksum</span>
+        <div class="flex items-center justify-between font-mono font-bold text-slate-900 dark:text-white break-all">
+          <span>{{ selectedBackupDetails.sha256_checksum }}</span>
+          <button (click)="copyToClipboard(selectedBackupDetails.sha256_checksum, 'SHA-256 Checksum')" class="text-amber-500 hover:text-amber-600 ml-2">
+            <mat-icon class="text-sm">content_copy</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-xl bg-slate-50 dark:bg-white/5 flex items-center justify-between">
+        <div>
+          <span class="text-slate-400 block mb-1">Verification Status</span>
+          <span class="font-bold uppercase text-emerald-500">{{ selectedBackupDetails.verification_status }}</span>
+        </div>
+        <div>
+          <span class="text-slate-400 block mb-1">Created By</span>
+          <span class="font-bold text-slate-900 dark:text-white">{{ selectedBackupDetails.created_by }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="p-4 border-t border-slate-100 dark:border-white/5 flex items-center justify-end gap-3">
+      <button (click)="downloadBackup(selectedBackupDetails)" class="btn-primary text-xs flex items-center gap-1.5">
+        <mat-icon class="text-sm">download</mat-icon> Download ZIP
+      </button>
+      <button (click)="closeDetailsModal()" class="px-5 py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-white font-bold text-xs">
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>

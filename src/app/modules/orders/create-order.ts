@@ -20,6 +20,7 @@ import { Hotel, DeliveryPerson, Order } from "../../models";
 import { OrderService } from "../../services/order.service";
 import { SettingsService } from "../../services/settings.service";
 import { InvoiceService } from "../../services/invoice.service";
+import { sortHotels, HotelSortOption } from "../../utils/hotel-sort";
 
 @Component({
   selector: "app-create-order",
@@ -108,17 +109,35 @@ import { InvoiceService } from "../../services/invoice.service";
           </p>
         </div>
 
-        <div class="relative shrink-0">
-          <mat-icon
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
-            >filter_list</mat-icon
-          >
-          <input
-            type="text"
-            [(ngModel)]="hotelFilter"
-            placeholder="Filter hotels..."
-            class="w-full bg-white dark:bg-[#334155] border border-slate-200 dark:border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
-          />
+        <div class="space-y-2 shrink-0">
+          <div class="relative">
+            <mat-icon
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+              >filter_list</mat-icon
+            >
+            <input
+              type="text"
+              [(ngModel)]="hotelFilter"
+              placeholder="Filter hotels..."
+              class="w-full bg-white dark:bg-[#334155] border border-slate-200 dark:border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
+            />
+          </div>
+
+          <div class="flex items-center justify-between px-1">
+            <span class="text-[11px] font-bold text-slate-400">Order by:</span>
+            <div class="relative">
+              <select
+                [ngModel]="hotelSortMode()"
+                (ngModelChange)="hotelSortMode.set($event)"
+                class="appearance-none bg-slate-100 dark:bg-[#334155] border border-slate-200 dark:border-white/10 rounded-lg pl-2 pr-6 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer focus:ring-1 focus:ring-[#FFC107]"
+              >
+                <option value="sequence">Sequence (Default)</option>
+                <option value="name-asc">Alphabetical (A - Z)</option>
+                <option value="name-desc">Alphabetical (Z - A)</option>
+              </select>
+              <mat-icon class="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs w-3 h-3 flex items-center justify-center">expand_more</mat-icon>
+            </div>
+          </div>
         </div>
 
         <div
@@ -129,7 +148,7 @@ import { InvoiceService } from "../../services/invoice.service";
               (click)="selectHotel(hotel)"
               (keydown.enter)="selectHotel(hotel)"
               tabindex="0"
-              class="group cursor-pointer bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 rounded-xl overflow-hidden transition-all hover:shadow-md shrink-0 w-32 lg:w-auto"
+              class="group cursor-pointer bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 rounded-xl overflow-hidden transition-all hover:shadow-md shrink-0 w-32 lg:w-auto relative"
               [class.border-[#FFC107]]="selectedHotel()?.id === hotel.id"
               [class.ring-2]="selectedHotel()?.id === hotel.id"
               [class.ring-[#FFC107]/20]="selectedHotel()?.id === hotel.id"
@@ -143,6 +162,11 @@ import { InvoiceService } from "../../services/invoice.service";
                   [alt]="hotel.name"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
+                @if (hotel.order_sequence && hotel.order_sequence > 0) {
+                  <div class="absolute top-2 left-2 bg-black/70 backdrop-blur-sm text-[#FFC107] text-[10px] font-black px-1.5 py-0.5 rounded shadow">
+                    #{{ hotel.order_sequence }}
+                  </div>
+                }
                 @if (selectedHotel()?.id === hotel.id) {
                   <div
                     class="absolute top-2 right-2 w-5 h-5 bg-[#FFC107] rounded-full flex items-center justify-center shadow-lg"
@@ -162,12 +186,17 @@ import { InvoiceService } from "../../services/invoice.service";
                   >
                 </div>
               }
-              <div class="p-2 lg:p-3 text-center lg:text-left">
+              <div class="p-2 lg:p-3 text-center lg:text-left flex items-center justify-between gap-1">
                 <h3
-                  class="font-bold text-xs lg:text-sm text-[#1A1A1A] dark:text-white truncate"
+                  class="font-bold text-xs lg:text-sm text-[#1A1A1A] dark:text-white truncate flex-1 min-w-0"
                 >
                   {{ hotel.name }}
                 </h3>
+                @if (hotel.order_sequence && hotel.order_sequence > 0) {
+                  <span class="lg:hidden shrink-0 text-[10px] font-bold text-[#FFC107] bg-[#FFC107]/10 px-1 py-0.2 rounded">
+                    #{{ hotel.order_sequence }}
+                  </span>
+                }
               </div>
             </div>
           }
@@ -1018,9 +1047,12 @@ export class CreateOrder implements OnInit {
     ),
   );
 
+  hotelSortMode = signal<HotelSortOption>("sequence");
+
   filteredHotels = computed(() => {
-    const filter = this.hotelFilter().toLowerCase();
-    const globalSearch = this.search.searchTerm().toLowerCase();
+    const filter = this.hotelFilter().toLowerCase().trim();
+    const globalSearch = this.search.searchTerm().toLowerCase().trim();
+    const sortMode = this.hotelSortMode();
     const othersHotel: Hotel = {
       id: -1,
       name: "Manual Order",
@@ -1029,12 +1061,14 @@ export class CreateOrder implements OnInit {
       rating: 0,
       image_url: "",
       status: "active",
+      order_sequence: 0,
     };
-    const hotels = [othersHotel, ...this.catalog.hotels()];
+    const sortedCatalog = sortHotels(this.catalog.hotels(), sortMode);
+    const hotels = [othersHotel, ...sortedCatalog];
     return hotels.filter(
       (h) =>
-        h.name.toLowerCase().includes(filter) &&
-        h.name.toLowerCase().includes(globalSearch),
+        (h.name && h.name.toLowerCase().includes(filter)) &&
+        (h.name && h.name.toLowerCase().includes(globalSearch)),
     );
   });
 

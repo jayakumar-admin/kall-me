@@ -9,6 +9,7 @@ export interface Hotel {
   image_url: string;
   images?: string[];
   status: 'active' | 'inactive';
+  order_sequence?: number | null;
 }
 
 export interface MenuItem {
@@ -103,3 +104,6 @@ export interface CommissionRange {
   commission_percentage: number;
   calculation_type: 'percentage' | 'fixed';
 }
+
+export * from './backup.model';
+

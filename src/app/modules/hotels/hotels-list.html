@@ -2,24 +2,80 @@
       <app-main-skeleton />
     } @else {
       <div class="h-full overflow-y-auto p-6 custom-scrollbar space-y-8">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white">Manage Hotels</h1>
-            <p class="text-slate-500 dark:text-slate-400">Add and manage hotel partners.</p>
+            <p class="text-slate-500 dark:text-slate-400">Add and manage hotel partners with custom display sequence.</p>
           </div>
-          <a routerLink="/app/hotels/create" class="btn-primary flex items-center gap-2">
-            <mat-icon>add</mat-icon>
-            Add Hotel
-          </a>
+          <div class="flex items-center gap-3 flex-wrap">
+            <button 
+              type="button" 
+              (click)="openReorderModal()" 
+              class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1E293B] hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-200 font-bold text-sm shadow-sm flex items-center gap-2 transition-all hover:border-[#FFC107]/50 active:scale-95"
+              title="Set display order sequence for hotels"
+            >
+              <mat-icon class="text-[#FFC107]">format_list_numbered</mat-icon>
+              <span>Order Sequence</span>
+            </button>
+            <a routerLink="/app/hotels/create" class="btn-primary flex items-center gap-2 shadow-md shadow-[#FFC107]/20">
+              <mat-icon>add</mat-icon>
+              Add Hotel
+            </a>
+          </div>
+        </div>
+
+        <!-- Filter & Sort Bar -->
+        <div class="bg-white dark:bg-[#1E293B] p-4 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="relative w-full sm:w-80">
+            <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+            <input
+              type="text"
+              [ngModel]="searchTerm()"
+              (ngModelChange)="searchTerm.set($event)"
+              placeholder="Search hotels..."
+              class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
+            />
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Sort by:</span>
+            <div class="relative">
+              <select
+                [ngModel]="sortMode()"
+                (ngModelChange)="sortMode.set($event)"
+                class="appearance-none bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl pl-3 pr-8 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer focus:ring-2 focus:ring-[#FFC107]/20"
+              >
+                <option value="sequence">Order Sequence (Default)</option>
+                <option value="name-asc">Alphabetical (A - Z)</option>
+                <option value="name-desc">Alphabetical (Z - A)</option>
+              </select>
+              <mat-icon class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">expand_more</mat-icon>
+            </div>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          @for (hotel of catalog.hotels(); track hotel.id) {
-            <div class="card !p-0 overflow-hidden group hover:shadow-lg transition-all">
+          @for (hotel of displayedHotels(); track hotel.id) {
+            <div class="card !p-0 overflow-hidden group hover:shadow-lg transition-all relative">
               <div class="h-48 overflow-hidden relative">
                 <img [src]="hotel.image_url || 'https://picsum.photos/seed/' + hotel.name + '/400/300'" [alt]="hotel.name" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                
+                <!-- Sequence Badge on Top-Left -->
+                <div class="absolute top-4 left-4 flex items-center gap-1.5">
+                  @if (hotel.order_sequence && hotel.order_sequence > 0) {
+                    <span class="bg-black/75 backdrop-blur-md text-[#FFC107] border border-[#FFC107]/40 px-3 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1">
+                      <mat-icon class="text-xs">tag</mat-icon> {{ hotel.order_sequence }}
+                    </span>
+                  } @else {
+                    <span class="bg-black/60 backdrop-blur-md text-white/90 border border-white/10 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-md">
+                      #{{ $index + 1 }}
+                    </span>
+                  }
+                </div>
+
+                <!-- Status Badge on Top-Right -->
                 <div class="absolute top-4 right-4">
-                  <span [class]="hotel.status === 'active' ? 'bg-green-500' : 'bg-slate-500'" class="px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider">
+                  <span [class]="hotel.status === 'active' ? 'bg-green-500' : 'bg-slate-500'" class="px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider shadow-md">
                     {{ hotel.status }}
                   </span>
                 </div>
@@ -35,6 +91,9 @@
                 
                 <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-white/5">
                   <div>
+                    @if (hotel.order_sequence && hotel.order_sequence > 0) {
+                      <span class="text-[11px] font-semibold text-slate-400">Order: #{{ hotel.order_sequence }}</span>
+                    }
                   </div>
                   <div class="flex gap-2">
                     <a [routerLink]="['/app/hotels', hotel.id]" class="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-indigo-500 hover:text-white transition-all" title="View Details">
@@ -49,6 +108,12 @@
                   </div>
                 </div>
               </div>
+            </div>
+          } @empty {
+            <div class="col-span-full py-16 text-center bg-white dark:bg-[#1E293B] rounded-2xl border border-slate-100 dark:border-white/5">
+              <mat-icon class="text-5xl text-slate-300 mb-3">storefront</mat-icon>
+              <h3 class="text-lg font-bold text-slate-700 dark:text-slate-200">No hotels found</h3>
+              <p class="text-xs text-slate-400 mt-1">Try adjusting your search filter.</p>
             </div>
           }
         </div>
@@ -211,3 +276,154 @@
         (cancelled)="showDeleteConfirm.set(false)">
       </app-confirm-dialog>
     }
+
+    <!-- Reorder Sequence Modal -->
+    @if (showReorderModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div class="bg-white dark:bg-[#1E293B] rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl border border-slate-100 dark:border-white/10 overflow-hidden">
+          
+          <!-- Modal Header -->
+          <div class="p-6 border-b border-slate-100 dark:border-white/10 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-[#FFC107]/20 flex items-center justify-center text-[#FFC107]">
+                <mat-icon>format_list_numbered</mat-icon>
+              </div>
+              <div>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Order Hotel Sequence</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Set the display order for hotels across the app (Create Order & Hotels list).</p>
+              </div>
+            </div>
+            <button (click)="closeReorderModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <!-- Quick Action Bar -->
+          <div class="px-6 py-3 bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 shrink-0">
+            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Drag or use arrows to rearrange sequence:
+            </span>
+            <div class="flex items-center gap-2">
+              <button 
+                type="button" 
+                (click)="autoSortAlphabetical()" 
+                class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1E293B] hover:bg-slate-50 dark:hover:bg-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 shadow-sm transition-all"
+                title="Sort all hotels from A to Z and number them sequentially"
+              >
+                <mat-icon class="text-xs text-[#FFC107]">sort_by_alpha</mat-icon>
+                <span>Reset to A - Z</span>
+              </button>
+              <button 
+                type="button" 
+                (click)="normalizeSequences()" 
+                class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1E293B] hover:bg-slate-50 dark:hover:bg-white/10 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 shadow-sm transition-all"
+                title="Re-index sequence numbers to 1, 2, 3..."
+              >
+                <mat-icon class="text-xs text-[#FFC107]">sync</mat-icon>
+                <span>Normalize 1..N</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hotel Sequence List -->
+          <div class="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-2.5">
+            @for (item of reorderList(); track item.id; let i = $index) {
+              <div class="p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0F172A] flex items-center justify-between gap-4 shadow-sm hover:border-[#FFC107]/40 transition-all">
+                
+                <!-- Left: Sequence number & Reorder arrows -->
+                <div class="flex items-center gap-2 shrink-0">
+                  <div class="flex flex-col gap-0.5">
+                    <button 
+                      type="button"
+                      [disabled]="i === 0" 
+                      (click)="moveHotelUp(i)"
+                      class="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                      title="Move Up"
+                    >
+                      <mat-icon class="text-sm">arrow_upward</mat-icon>
+                    </button>
+                    <button 
+                      type="button"
+                      [disabled]="i === reorderList().length - 1" 
+                      (click)="moveHotelDown(i)"
+                      class="w-6 h-6 rounded flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                      title="Move Down"
+                    >
+                      <mat-icon class="text-sm">arrow_downward</mat-icon>
+                    </button>
+                  </div>
+
+                  <!-- Editable Sequence Number Input -->
+                  <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1">
+                    <span class="text-xs font-bold text-slate-400">#</span>
+                    <input 
+                      type="number" 
+                      min="1"
+                      [ngModel]="item.order_sequence" 
+                      (ngModelChange)="onItemSequenceChange(item.id, $event)"
+                      class="w-10 bg-transparent text-xs font-black text-center text-slate-900 dark:text-white outline-none"
+                    />
+                  </div>
+                </div>
+
+                <!-- Middle: Hotel info -->
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200 dark:border-white/10">
+                    <img [src]="item.image_url || 'https://picsum.photos/seed/' + item.name + '/80/80'" [alt]="item.name" class="w-full h-full object-cover">
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-sm text-slate-900 dark:text-white truncate">{{ item.name }}</h4>
+                    <p class="text-xs text-slate-400 flex items-center gap-1 truncate">
+                      <mat-icon class="text-[12px] w-3 h-3 flex items-center justify-center">restaurant</mat-icon>
+                      {{ item.category }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Right: Status badge -->
+                <div class="shrink-0">
+                  <span [class]="item.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-500'" class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">
+                    {{ item.status }}
+                  </span>
+                </div>
+              </div>
+            } @empty {
+              <div class="py-8 text-center text-slate-400">
+                No hotels available to reorder.
+              </div>
+            }
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="p-6 border-t border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5 flex items-center justify-between gap-4 shrink-0">
+            <p class="text-xs text-slate-400">
+              Hotels with sequence 1 appear first, followed by 2, 3, etc.
+            </p>
+            <div class="flex items-center gap-3">
+              <button 
+                type="button" 
+                (click)="closeReorderModal()" 
+                class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                (click)="saveReorderedSequence()" 
+                [disabled]="isSavingSequence()" 
+                class="btn-primary !py-2.5 !px-6 text-sm flex items-center gap-2 shadow-md shadow-[#FFC107]/20"
+              >
+                @if (isSavingSequence()) {
+                  <mat-icon class="animate-spin text-sm">refresh</mat-icon>
+                  <span>Saving...</span>
+                } @else {
+                  <mat-icon class="text-sm">check</mat-icon>
+                  <span>Save Sequence</span>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+

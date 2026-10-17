@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-reset-password',
@@ -78,6 +79,7 @@ export class ResetPasswordComponent {
   private fb = inject(FormBuilder);
   private auth = inject(AuthService);
   private router = inject(Router);
+  private toast = inject(ToastService);
   
   loading = signal(false);
   errorMessage = signal('');
@@ -98,7 +100,7 @@ export class ResetPasswordComponent {
     
     this.auth.resetPassword({ token: token!, newPassword: newPassword! }).subscribe({
       next: () => {
-        alert('Password reset successful! Please login with your new password.');
+        this.toast.success('Password reset successful! Please login with your new password.');
         this.router.navigate(['/login']);
       },
       error: (err) => {

@@ -17,10 +17,29 @@ router.get('/', authenticateToken, async (req, res) => {
     
     const orders = result.rows;
     
-    // Fetch items for each order
-    for (let order of orders) {
-      const itemsResult = await db.query('SELECT * FROM order_items WHERE order_id = $1', [order.id]);
-      order.items = itemsResult.rows;
+    if (orders.length === 0) {
+      return res.json([]);
+    }
+
+    // Batch fetch all items for all orders in a single query (resolves N+1 problem)
+    const orderIds = orders.map(o => o.id);
+    const itemsResult = await db.query(
+      'SELECT * FROM order_items WHERE order_id = ANY($1::int[]) ORDER BY id ASC',
+      [orderIds]
+    );
+
+    const itemsByOrderId = new Map();
+    for (const item of itemsResult.rows) {
+      let list = itemsByOrderId.get(item.order_id);
+      if (!list) {
+        list = [];
+        itemsByOrderId.set(item.order_id, list);
+      }
+      list.push(item);
+    }
+
+    for (const order of orders) {
+      order.items = itemsByOrderId.get(order.id) || [];
     }
     
     res.json(orders);

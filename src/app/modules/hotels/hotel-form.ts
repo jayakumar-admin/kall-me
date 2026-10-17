@@ -8,6 +8,8 @@ import { ToastService } from '../../services/toast.service';
 import { ImageUploadService } from '../../services/image-upload.service';
 import { Hotel } from '../../models';
 
+import { sortHotels } from '../../utils/hotel-sort';
+
 @Component({
   selector: 'app-hotel-form',
   standalone: true,
@@ -32,6 +34,7 @@ export class HotelForm implements OnInit {
     address: '',
     rating: 0,
     image_url: 'https://picsum.photos/seed/restaurant/800/600',
+    order_sequence: null,
     status: 'active'
   };
 
@@ -89,10 +92,16 @@ export class HotelForm implements OnInit {
       return;
     }
     
+    if (this.hotel.order_sequence !== undefined && this.hotel.order_sequence !== null && (this.hotel.order_sequence as any) !== '') {
+      this.hotel.order_sequence = Number(this.hotel.order_sequence);
+    } else {
+      this.hotel.order_sequence = null;
+    }
+
     if (this.isEditMode() && this.hotelId()) {
       this.catalog.updateHotel(this.hotelId()!, this.hotel).subscribe({
         next: (updated) => {
-          this.catalog.hotels.update(current => current.map(m => m.id === this.hotelId() ? updated : m));
+          this.catalog.hotels.update(current => sortHotels(current.map(m => m.id === this.hotelId() ? updated : m)));
           this.toast.success(`${updated.name} updated successfully`);
           this.router.navigate(['/app/hotels']);
         },
@@ -101,7 +110,7 @@ export class HotelForm implements OnInit {
     } else {
       this.catalog.addHotel(this.hotel).subscribe({
         next: (newHotel) => {
-          this.catalog.hotels.update(current => [...current, newHotel]);
+          this.catalog.hotels.update(current => sortHotels([...current, newHotel]));
           this.toast.success(`${newHotel.name} added successfully`);
           this.router.navigate(['/app/hotels']);
         },

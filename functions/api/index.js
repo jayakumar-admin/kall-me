@@ -15,6 +15,7 @@ const settingsRoutes = require('./settings.js');
 const shippingRoutes = require('./shipping.js');
 const commissionRoutes = require('./commission.js');
 const bulkRoutes = require('./bulk.js');
+const backupRoutes = require('./backups.js');
 
 const router = express.Router();
 
@@ -33,5 +34,7 @@ router.use('/settings', settingsRoutes);
 router.use('/shipping', shippingRoutes);
 router.use('/commission', commissionRoutes);
 router.use('/bulk', bulkRoutes);
+router.use('/admin/backups', backupRoutes);
+router.use('/backups', backupRoutes);
 
 module.exports = router;

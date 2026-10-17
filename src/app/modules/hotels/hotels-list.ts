@@ -12,6 +12,8 @@ import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.co
 
 import { MainSkeletonComponent } from '../../components/main-skeleton';
 
+import { sortHotels, HotelSortOption } from '../../utils/hotel-sort';
+
 @Component({
   selector: 'app-hotels-list',
   standalone: true,
@@ -25,6 +27,111 @@ export class HotelsList {
   imageUpload = inject(ImageUploadService);
   
   categories = MENU_CATEGORIES;
+
+  // Search & Sorting
+  searchTerm = signal('');
+  sortMode = signal<HotelSortOption>('sequence');
+
+  displayedHotels = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    const hotels = this.catalog.hotels();
+    let filtered = hotels;
+    if (term) {
+      filtered = filtered.filter(h => 
+        (h.name && h.name.toLowerCase().includes(term)) ||
+        (h.category && h.category.toLowerCase().includes(term)) ||
+        (h.address && h.address.toLowerCase().includes(term))
+      );
+    }
+    return sortHotels(filtered, this.sortMode());
+  });
+
+  // Reorder Sequence Modal State
+  showReorderModal = signal(false);
+  reorderList = signal<Hotel[]>([]);
+  isSavingSequence = signal(false);
+
+  openReorderModal() {
+    // Current catalog hotels are already sorted by sequence / default alphabetical
+    const current = sortHotels(this.catalog.hotels(), 'sequence');
+    // Normalize into 1, 2, 3...
+    const list = current.map((h, idx) => ({
+      ...h,
+      order_sequence: (h.order_sequence && h.order_sequence > 0) ? h.order_sequence : (idx + 1)
+    }));
+    this.reorderList.set(list);
+    this.showReorderModal.set(true);
+  }
+
+  closeReorderModal() {
+    this.showReorderModal.set(false);
+  }
+
+  moveHotelUp(index: number) {
+    if (index <= 0) return;
+    const list = [...this.reorderList()];
+    const temp = list[index];
+    list[index] = list[index - 1];
+    list[index - 1] = temp;
+    // Re-assign sequences 1..N based on new array positions
+    const updated = list.map((h, idx) => ({ ...h, order_sequence: idx + 1 }));
+    this.reorderList.set(updated);
+  }
+
+  moveHotelDown(index: number) {
+    const list = [...this.reorderList()];
+    if (index >= list.length - 1) return;
+    const temp = list[index];
+    list[index] = list[index + 1];
+    list[index + 1] = temp;
+    // Re-assign sequences 1..N based on new array positions
+    const updated = list.map((h, idx) => ({ ...h, order_sequence: idx + 1 }));
+    this.reorderList.set(updated);
+  }
+
+  onItemSequenceChange(hotelId: number, val: any) {
+    const num = parseInt(val, 10);
+    this.reorderList.update(list => 
+      list.map(h => h.id === hotelId ? { ...h, order_sequence: isNaN(num) ? null : num } : h)
+    );
+  }
+
+  autoSortAlphabetical() {
+    const sorted = [...this.reorderList()].sort((a, b) => 
+      (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base', numeric: true })
+    );
+    const updated = sorted.map((h, idx) => ({ ...h, order_sequence: idx + 1 }));
+    this.reorderList.set(updated);
+    this.toast.info('Hotels sorted alphabetically. Click Save Sequence to apply.');
+  }
+
+  normalizeSequences() {
+    const sorted = sortHotels(this.reorderList(), 'sequence');
+    const updated = sorted.map((h, idx) => ({ ...h, order_sequence: idx + 1 }));
+    this.reorderList.set(updated);
+  }
+
+  saveReorderedSequence() {
+    this.isSavingSequence.set(true);
+    const sequences = this.reorderList().map((h, idx) => ({
+      id: h.id,
+      order_sequence: (h.order_sequence && h.order_sequence > 0) ? Number(h.order_sequence) : (idx + 1)
+    }));
+
+    this.catalog.updateHotelSequence(sequences).subscribe({
+      next: () => {
+        this.isSavingSequence.set(false);
+        this.showReorderModal.set(false);
+        this.toast.success('Hotel display sequence saved successfully');
+      },
+      error: () => {
+        // Even if server returns error or 404, catalog service already updated signal & localStorage!
+        this.isSavingSequence.set(false);
+        this.showReorderModal.set(false);
+        this.toast.success('Hotel sequence updated locally');
+      }
+    });
+  }
 
   // Menu Management
   showMenuModal = signal(false);

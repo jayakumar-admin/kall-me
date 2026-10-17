@@ -18,8 +18,8 @@ router.post('/hotels', async (req, res) => {
       if (!name) continue;
 
       const result = await client.query(
-        `INSERT INTO hotels (name, address, phone, category, rating, commission_rate, image_url, status) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+        `INSERT INTO hotels (name, address, phone, category, rating, commission_rate, image_url, status, order_sequence) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
         [
           name.trim(), 
           h.address ? h.address.trim() : null, 
@@ -28,7 +28,8 @@ router.post('/hotels', async (req, res) => {
           parseFloat(h.rating) || 4.0, 
           parseInt(h.commission_rate) || 15, 
           h.image_url ? h.image_url.trim() : 'https://picsum.photos/seed/restaurant/800/600', 
-          h.status ? h.status.trim().toLowerCase() : 'active'
+          h.status ? h.status.trim().toLowerCase() : 'active',
+          h.order_sequence ? parseInt(h.order_sequence, 10) : null
         ]
       );
       inserted.push(result.rows[0]);

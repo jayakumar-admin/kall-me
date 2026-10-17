@@ -47,6 +47,7 @@
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Reports', link: '/app/reports', icon: 'bar_chart' }"></ng-container>
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Delivery Reports', link: '/app/delivery-reports', icon: 'assignment' }"></ng-container>
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Delivery Team', link: '/app/delivery', icon: 'delivery_dining' }"></ng-container>
+            <ng-container *ngTemplateOutlet="navLink; context: { label: 'Database Backup', link: '/app/database-backup', icon: 'backup' }"></ng-container>
             <ng-container *ngTemplateOutlet="navLink; context: { label: 'Settings', link: '/app/settings', icon: 'settings' }"></ng-container>
           } @else if (auth.isDelivery()) {
             @if (auth.permissions()['Dashboard'] !== false) {

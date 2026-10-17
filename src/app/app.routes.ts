@@ -106,6 +106,11 @@ export const routes: Routes = [
         loadChildren: () => import('./modules/settings/settings.routes').then(m => m.SETTINGS_ROUTES),
         canActivate: [roleGuard(['admin'])]
       },
+      {
+        path: 'database-backup',
+        loadComponent: () => import('./modules/settings/database-backup/database-backup').then(m => m.DatabaseBackupComponent),
+        canActivate: [roleGuard(['admin'])]
+      },
 
       // Delivery Portal Routes
       {

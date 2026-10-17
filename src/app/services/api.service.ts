@@ -25,7 +25,7 @@ interface BulkMenuResponse {
 export class ApiService {
   private http = inject(HttpClient);
   private loader = inject(LoaderService);
-public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
+  public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
   // public baseUrl = 'http://localhost:3000/api';
 
   private withLoader<T>(request: Observable<T>, message: string): Observable<T> {
@@ -64,6 +64,13 @@ public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
     );
   }
 
+  reorderHotels(sequences: { id: number; order_sequence: number }[]): Observable<Hotel[]> {
+    return this.withLoader(
+      this.http.put<Hotel[]>(`${this.baseUrl}/hotels/reorder`, { sequences }),
+      'Updating Hotel Sequence...'
+    );
+  }
+
   deleteHotel(id: number): Observable<void> {
     return this.withLoader(
       this.http.delete<void>(`${this.baseUrl}/hotels/${id}`),
@@ -73,8 +80,8 @@ public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
 
   // Menus
   getMenus(hotelId?: number): Observable<MenuItem[]> {
-    const url = hotelId 
-      ? `${this.baseUrl}/menus?hotel_id=${hotelId}` 
+    const url = hotelId
+      ? `${this.baseUrl}/menus?hotel_id=${hotelId}`
       : `${this.baseUrl}/menus`;
     return this.withLoader(
       this.http.get<MenuItem[]>(url),
@@ -262,13 +269,13 @@ public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
     );
   }
 
-  getDeliveryPersonReport(startDate?: string, endDate?: string): Observable<{name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, advance_amount: number, bonus: number, final_earnings: number, balance_pending: number}[]> {
+  getDeliveryPersonReport(startDate?: string, endDate?: string): Observable<{ name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, advance_amount: number, bonus: number, final_earnings: number, balance_pending: number }[]> {
     let url = `${this.baseUrl}/reports/delivery-person`;
     if (startDate && endDate) {
       url += `?startDate=${startDate}&endDate=${endDate}`;
     }
     return this.withLoader(
-      this.http.get<{name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, advance_amount: number, bonus: number, final_earnings: number, balance_pending: number}[]>(url),
+      this.http.get<{ name: string, total_orders: number, total_amount: number, item_total: number, delivery_total: number, below_30_count: number, total_commission: number, advance_amount: number, bonus: number, final_earnings: number, balance_pending: number }[]>(url),
       'Generating Delivery Report...'
     );
   }

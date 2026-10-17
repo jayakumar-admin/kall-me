@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, effect, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +11,24 @@ import { Order, DeliveryPerson } from '../../models';
 import { CatalogService } from '../../services/catalog.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+export interface ReportTabMeta {
+  name: string;
+  category: 'Financial' | 'Operations' | 'Analytics' | 'Menu & Sales';
+  badge: string;
+  icon: string;
+  shortDescription: string;
+  purpose: string;
+  metrics: string[];
+  businessValue: string;
+}
+
+export interface ReportSubTabMeta {
+  name: string;
+  icon: string;
+  description: string;
+  purpose: string;
+}
 
 @Component({
   selector: 'app-reports',
@@ -37,14 +55,20 @@ import autoTable from 'jspdf-autotable';
 
       <!-- Tabs - Mobile horizontal scrollable -->
       <div class="space-y-4">
-        <div class="flex flex-col gap-4 border-b border-slate-200 dark:border-white/10">
+        <div class="flex flex-col gap-3 border-b border-slate-200 dark:border-white/10">
           <div class="flex overflow-x-auto no-scrollbar -mb-px">
             @for (tab of tabs; track tab) {
               <button (click)="currentTab.set(tab)" 
+                (mouseenter)="showTabTooltip(tab, $event)"
+                (mouseleave)="hideTabTooltip()"
+                (focus)="showTabTooltip(tab, $event)"
+                (blur)="hideTabTooltip()"
                 [class.border-[#FFC107]]="currentTab() === tab" 
-                class="px-4 py-3 border-b-2 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0" 
+                class="px-4 py-3 border-b-2 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer" 
                 [class.text-[#FFC107]]="currentTab() === tab" 
-                [class.text-slate-500]="currentTab() !== tab">
+                [class.text-slate-500]="currentTab() !== tab"
+                [class.hover:text-[#1A1A1A]]="currentTab() !== tab"
+                [class.dark:hover:text-white]="currentTab() !== tab">
                 {{ tab }}
               </button>
             }
@@ -52,14 +76,49 @@ import autoTable from 'jspdf-autotable';
           <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
             @for (sub of subTabs; track sub) {
               <button (click)="currentSubTab.set(sub)" 
+                (mouseenter)="showSubTabTooltip(sub, $event)"
+                (mouseleave)="hideTabTooltip()"
+                (focus)="showSubTabTooltip(sub, $event)"
+                (blur)="hideTabTooltip()"
                 [class.bg-[#FFC107]]="currentSubTab() === sub" 
-                class="px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wider transition-colors shrink-0" 
+                class="px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wider transition-colors shrink-0 cursor-pointer" 
                 [class.text-black]="currentSubTab() === sub" 
                 [class.text-slate-500]="currentSubTab() !== sub"
                 [class.bg-slate-100]="currentSubTab() !== sub"
                 [class.dark:bg-white/5]="currentSubTab() !== sub">
                 {{ sub }}
               </button>
+            }
+          </div>
+        </div>
+
+        <!-- Active Tab Context Card -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-50 to-indigo-50/30 dark:from-amber-500/10 dark:via-[#1E293B]/70 dark:to-indigo-950/20 border border-slate-200/80 dark:border-white/5 shadow-xs">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-[#FFC107]/20 text-[#D99B00] dark:text-[#FFC107] flex items-center justify-center shrink-0">
+              <mat-icon class="text-base">{{ currentTabInfo().icon }}</mat-icon>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-black text-xs sm:text-sm text-[#1A1A1A] dark:text-white uppercase tracking-tight">
+                  {{ currentTabInfo().name }}
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-white dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/10">
+                  {{ currentTabInfo().badge }}
+                </span>
+                <span class="text-[10px] font-bold text-slate-400">({{ currentTabInfo().category }})</span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <span class="font-bold text-slate-700 dark:text-slate-300">Data Purpose:</span> {{ currentTabInfo().purpose }}
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1 hidden lg:inline">Metrics:</span>
+            @for (metric of currentTabInfo().metrics; track metric) {
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-white dark:bg-[#1E293B] border border-slate-200/80 dark:border-white/10 text-slate-600 dark:text-slate-300 shadow-2xs">
+                {{ metric }}
+              </span>
             }
           </div>
         </div>
@@ -316,6 +375,110 @@ import autoTable from 'jspdf-autotable';
           }
         }
       }
+      <!-- Floating Hover Popover for Tab Info -->
+      @if (hoveredTabInfo(); as info) {
+        <div 
+          class="fixed z-50 pointer-events-none transition-all duration-150 ease-out"
+          [style.top]="tooltipPosition().top"
+          [style.left]="tooltipPosition().left"
+          style="width: 360px; max-width: calc(100vw - 32px);"
+        >
+          <div class="relative bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/25 p-4 space-y-3 text-left animate-in fade-in zoom-in-95 duration-150">
+            
+            <!-- Top Arrow pointer -->
+            <div 
+              class="absolute -top-1.5 w-3 h-3 bg-white dark:bg-[#0F172A] border-t border-l border-slate-200/90 dark:border-white/10 rotate-45 transform"
+              [style.left]="tooltipPosition().arrowLeft"
+            ></div>
+
+            <!-- Header with Icon & Category Badge -->
+            <div class="flex items-start justify-between gap-2 relative z-10">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-[#FFC107]/20 text-[#D99B00] dark:text-[#FFC107] flex items-center justify-center shrink-0 shadow-inner">
+                  <mat-icon class="text-lg">{{ info.icon }}</mat-icon>
+                </div>
+                <div>
+                  <h4 class="font-black text-sm text-[#1A1A1A] dark:text-white tracking-tight">
+                    {{ info.name }}
+                  </h4>
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ info.category }}</span>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
+                [ngClass]="{
+                  'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300': info.category === 'Financial',
+                  'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300': info.category === 'Operations',
+                  'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300': info.category === 'Analytics',
+                  'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300': info.category === 'Menu & Sales'
+                }">
+                {{ info.badge }}
+              </span>
+            </div>
+
+            <!-- Purpose Section -->
+            <div class="space-y-1 relative z-10">
+              <div class="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#FFC107]">
+                <mat-icon class="text-xs">help_outline</mat-icon>
+                <span>Data Purpose</span>
+              </div>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                {{ info.purpose }}
+              </p>
+            </div>
+
+            <!-- Key Data Metrics -->
+            <div class="space-y-1.5 pt-1.5 border-t border-slate-100 dark:border-white/5 relative z-10">
+              <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Data Displayed</p>
+              <div class="flex flex-wrap gap-1">
+                @for (metric of info.metrics; track metric) {
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/5">
+                    {{ metric }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <!-- Business Value / Action -->
+            <div class="bg-amber-500/10 dark:bg-[#FFC107]/10 rounded-xl p-2.5 flex items-start gap-2 border border-[#FFC107]/20 relative z-10">
+              <mat-icon class="text-xs text-[#FFC107] shrink-0 mt-0.5">tips_and_updates</mat-icon>
+              <p class="text-[11px] text-slate-700 dark:text-slate-300 leading-snug">
+                <span class="font-bold text-[#1A1A1A] dark:text-white">Business Value:</span> {{ info.businessValue }}
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Floating Hover Popover for SubTab Info (Chart / Table) -->
+      @if (hoveredSubTabInfo(); as subInfo) {
+        <div 
+          class="fixed z-50 pointer-events-none transition-all duration-150 ease-out"
+          [style.top]="tooltipPosition().top"
+          [style.left]="tooltipPosition().left"
+          style="width: 290px; max-width: calc(100vw - 32px);"
+        >
+          <div class="relative bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-xl border border-slate-200/90 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/25 p-3.5 space-y-2 text-left animate-in fade-in zoom-in-95 duration-150">
+            <div 
+              class="absolute -top-1.5 w-3 h-3 bg-white dark:bg-[#0F172A] border-t border-l border-slate-200/90 dark:border-white/10 rotate-45 transform"
+              [style.left]="tooltipPosition().arrowLeft"
+            ></div>
+            <div class="flex items-center gap-2 relative z-10">
+              <div class="w-6 h-6 rounded-lg bg-[#FFC107]/20 text-[#FFC107] flex items-center justify-center shrink-0">
+                <mat-icon class="text-sm">{{ subInfo.icon }}</mat-icon>
+              </div>
+              <div>
+                <h4 class="font-black text-xs text-[#1A1A1A] dark:text-white uppercase tracking-wider">
+                  {{ subInfo.name }}
+                </h4>
+                <p class="text-[10px] text-slate-400 font-medium">{{ subInfo.description }}</p>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed font-medium relative z-10 pt-1 border-t border-slate-100 dark:border-white/5">
+              {{ subInfo.purpose }}
+            </p>
+          </div>
+        </div>
+      }
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -350,6 +513,256 @@ export class Reports implements OnInit {
   subTabs = ['Chart', 'Table'];
   currentSubTab = signal('Table');
   chartType = signal<'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'doughnut'>('bar');
+
+  // Tab Information Metadata
+  tabMetaMap: Record<string, ReportTabMeta> = {
+    'Overview': {
+      name: 'Overview',
+      category: 'Financial',
+      badge: 'Platform Summary',
+      icon: 'dashboard',
+      shortDescription: 'High-level executive financial summary of platform distributions.',
+      purpose: 'Summarizes gross revenue distribution across merchant hotel payouts, delivery rider salaries, and net platform admin commission.',
+      metrics: ['Hotel Earnings (Subtotal)', 'Delivery Salary (DC - Commission)', 'Admin Commission Retained'],
+      businessValue: 'Provides an instant health check on financial splits and overall platform gross margin.'
+    },
+    'Payment Sheet': {
+      name: 'Payment Sheet',
+      category: 'Financial',
+      badge: 'Daily Settlement',
+      icon: 'table_chart',
+      shortDescription: 'Cross-tabulated date-by-date food sales per hotel partner.',
+      purpose: 'Tracks daily order values generated for each restaurant to calculate vendor billings, payout schedules, and daily merchant settlements.',
+      metrics: ['Calendar Date', 'Hotel-by-Hotel Daily Subtotal', 'Daily Aggregate Revenue', 'Grand Total Settlement'],
+      businessValue: 'Used by accountants and managers for partner reconciliation and vendor invoice processing.'
+    },
+    'Master Chart View': {
+      name: 'Master Chart View',
+      category: 'Analytics',
+      badge: 'Multi-Chart Cockpit',
+      icon: 'insights',
+      shortDescription: 'Comprehensive side-by-side visual dashboard across all report dimensions.',
+      purpose: 'Renders 10 analytical charts simultaneously (Overview, Hotels, Delivery, Menus, Hours, Statuses) with interchangeable chart types (Bar, Line, Pie, Area, etc.).',
+      metrics: ['Multi-Dimensional Visual Trends', 'Interactive Chart Formats', 'Distribution Ratios'],
+      businessValue: 'Enables management to spot cross-functional trends, bottlenecks, and anomalies at a glance.'
+    },
+    'Hotel-wise': {
+      name: 'Hotel-wise',
+      category: 'Operations',
+      badge: 'Merchant Performance',
+      icon: 'storefront',
+      shortDescription: 'Order volumes, gross revenue, and average ticket size per hotel partner.',
+      purpose: 'Measures sales performance for each restaurant partner to identify top revenue generators and examine order volume trends.',
+      metrics: ['Total Orders', 'Gross Revenue', 'Average Order Value (AOV)'],
+      businessValue: 'Guides merchant partnership tiering, commission structuring, and targeted restaurant support.'
+    },
+    'Delivery Person-wise': {
+      name: 'Delivery Person-wise',
+      category: 'Operations',
+      badge: 'Rider Performance',
+      icon: 'two_wheeler',
+      shortDescription: 'Deliveries completed, net driver earnings, and cash collected per driver.',
+      purpose: 'Evaluates delivery partner productivity, tracks net compensation (Delivery Fee minus Admin Commission), and monitors cash collected on delivery.',
+      metrics: ['Completed Trips', 'Net Delivery Earnings', 'Advance / Cash Collected'],
+      businessValue: 'Ensures equitable order dispatching, driver performance auditing, and daily cash-in-hand reconciliation.'
+    },
+    'Monthly Salary': {
+      name: 'Monthly Salary',
+      category: 'Financial',
+      badge: 'Payroll Reconciliation',
+      icon: 'account_balance_wallet',
+      shortDescription: 'Monthly delivery earnings, trip counts, and advance deductions per rider.',
+      purpose: 'Aggregates monthly delivery driver earnings alongside advances/cash collected to prepare accurate driver payroll payouts.',
+      metrics: ['Billing Month & Year', 'Driver Name', 'Trip Volume', 'Gross Delivery Earnings', 'Advance Deductible'],
+      businessValue: 'Automates monthly driver payroll calculation and prevents cash collection leakage or overpayment.'
+    },
+    'Menu-wise': {
+      name: 'Menu-wise',
+      category: 'Menu & Sales',
+      badge: 'Item Velocity',
+      icon: 'restaurant_menu',
+      shortDescription: 'Sales volume and revenue generated by each dish in the catalog.',
+      purpose: 'Analyzes item-level sales velocity and revenue contribution to identify top-selling menu items and low-performing dishes.',
+      metrics: ['Menu Item Name', 'Quantity Sold (Units)', 'Gross Sales Revenue'],
+      businessValue: 'Assists restaurants with inventory purchasing, kitchen prep planning, and menu optimization.'
+    },
+    'Orders': {
+      name: 'Orders',
+      category: 'Operations',
+      badge: 'Transaction Ledger',
+      icon: 'receipt_long',
+      shortDescription: 'Chronological transaction register of individual customer orders.',
+      purpose: 'Provides a searchable, granular audit trail of every placed order with timestamps, destinations, fulfillment states, and billing totals.',
+      metrics: ['Order ID', 'Order Timestamp', 'Hotel Name', 'Delivery Address', 'Fulfillment Status', 'Grand Total'],
+      businessValue: 'Frontline audit tool for investigating customer disputes, verifying delivery SLA, and resolving order queries.'
+    },
+    'Commission / Earnings': {
+      name: 'Commission / Earnings',
+      category: 'Financial',
+      badge: 'Platform Profit',
+      icon: 'monetization_on',
+      shortDescription: 'Delivery charges (DC) collected vs. Admin Commission retained.',
+      purpose: 'Audits platform revenue margins by detailing delivery fees charged, applied commission percentages, and platform profit retention.',
+      metrics: ['Total Delivery Charges (DC)', 'Commission % Applied', 'Admin Commission Retained', 'Net Driver Payout'],
+      businessValue: 'Validates take-rate margins and ensures delivery charge structures adequately cover operational costs.'
+    },
+    'Top Performing Hotels': {
+      name: 'Top Performing Hotels',
+      category: 'Analytics',
+      badge: 'Top 5 Venues',
+      icon: 'workspace_premium',
+      shortDescription: 'Ranked leaderboard of the top 5 highest-grossing restaurant partners.',
+      purpose: 'Highlights premier restaurant partners contributing the highest sales volume across the platform during the filtered period.',
+      metrics: ['Hotel Rank', 'Hotel Name', 'Cumulative Gross Revenue'],
+      businessValue: 'Identifies anchor partners for co-marketing campaigns, priority dispatch, and partnership renewals.'
+    },
+    'Top Selling Menus': {
+      name: 'Top Selling Menus',
+      category: 'Menu & Sales',
+      badge: 'Top 5 Dishes',
+      icon: 'local_fire_department',
+      shortDescription: 'Leaderboard of the top 5 most frequently ordered menu items.',
+      purpose: 'Pinpoints customer favorite dishes and viral food items ordered in highest volume across all partner restaurants.',
+      metrics: ['Item Rank', 'Dish Name', 'Units Sold (Volume)'],
+      businessValue: 'Drives promotional banner placement, meal combo creation, and supplier demand forecasting.'
+    },
+    'Time-of-Day': {
+      name: 'Time-of-Day',
+      category: 'Analytics',
+      badge: 'Peak Rush Hours',
+      icon: 'schedule',
+      shortDescription: 'Hourly order volume distribution throughout the 24-hour cycle.',
+      purpose: 'Identifies peak ordering windows (e.g., lunch rush 12:00–14:00, dinner rush 19:00–22:00) and off-peak lull periods.',
+      metrics: ['Hourly Time Window', 'Order Frequency & Volume'],
+      businessValue: 'Guides fleet shift scheduling, active driver staffing, and optimal timing for promotional push alerts.'
+    },
+    'Status-wise': {
+      name: 'Status-wise',
+      category: 'Operations',
+      badge: 'Order Health',
+      icon: 'donut_large',
+      shortDescription: 'Order counts and revenue segmented by lifecycle fulfillment status.',
+      purpose: 'Monitors the health of the fulfillment funnel by breaking down orders into Delivered, In Progress, Placed, and Cancelled.',
+      metrics: ['Status Classification', 'Order Count', 'Associated Revenue Volume'],
+      businessValue: 'Detects fulfillment failure rates, cancellation patterns, and operational bottlenecks in the order pipeline.'
+    }
+  };
+
+  subTabMetaMap: Record<string, ReportSubTabMeta> = {
+    'Chart': {
+      name: 'Visual Chart View',
+      icon: 'bar_chart',
+      description: 'Interactive graphical visualization of the current dataset.',
+      purpose: 'Switch between Bar, Line, Pie, Area, Scatter, and Doughnut charts with instant PNG image export.'
+    },
+    'Table': {
+      name: 'Data Table View',
+      icon: 'table_view',
+      description: 'Structured spreadsheet table with exact figures and multi-column alignment.',
+      purpose: 'Examine detailed numeric records, currency breakdowns, sticky column layouts, and export to CSV or PDF.'
+    }
+  };
+
+  hoveredTabInfo = signal<ReportTabMeta | null>(null);
+  hoveredSubTabInfo = signal<ReportSubTabMeta | null>(null);
+  tooltipPosition = signal<{ top: string; left: string; arrowLeft: string }>({ top: '0px', left: '0px', arrowLeft: '50%' });
+
+  private hoverTimeout: any = null;
+
+  showTabTooltip(tab: string, event: MouseEvent | FocusEvent) {
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout);
+      this.hoverTimeout = null;
+    }
+    const meta = this.tabMetaMap[tab];
+    if (!meta) return;
+
+    const target = event.currentTarget as HTMLElement;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const tooltipWidth = 360;
+      const margin = 16;
+      let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+      
+      if (left < margin) {
+        left = margin;
+      } else if (left + tooltipWidth > window.innerWidth - margin) {
+        left = window.innerWidth - tooltipWidth - margin;
+      }
+
+      const arrowLeft = Math.max(20, Math.min(tooltipWidth - 20, rect.left + rect.width / 2 - left));
+      let top = rect.bottom + 8;
+      if (top + 260 > window.innerHeight && rect.top > 260) {
+        top = rect.top - 268;
+      }
+
+      this.tooltipPosition.set({
+        top: `${Math.round(top)}px`,
+        left: `${Math.round(left)}px`,
+        arrowLeft: `${Math.round(arrowLeft)}px`
+      });
+      this.hoveredSubTabInfo.set(null);
+      this.hoveredTabInfo.set(meta);
+    }
+  }
+
+  hideTabTooltip() {
+    this.hoverTimeout = setTimeout(() => {
+      this.hoveredTabInfo.set(null);
+      this.hoveredSubTabInfo.set(null);
+    }, 100);
+  }
+
+  showSubTabTooltip(subTab: string, event: MouseEvent | FocusEvent) {
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout);
+      this.hoverTimeout = null;
+    }
+    const meta = this.subTabMetaMap[subTab];
+    if (!meta) return;
+
+    const target = event.currentTarget as HTMLElement;
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const tooltipWidth = 290;
+      const margin = 16;
+      let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+      if (left < margin) left = margin;
+      else if (left + tooltipWidth > window.innerWidth - margin) left = window.innerWidth - tooltipWidth - margin;
+
+      const arrowLeft = Math.max(20, Math.min(tooltipWidth - 20, rect.left + rect.width / 2 - left));
+      let top = rect.bottom + 8;
+
+      this.tooltipPosition.set({
+        top: `${Math.round(top)}px`,
+        left: `${Math.round(left)}px`,
+        arrowLeft: `${Math.round(arrowLeft)}px`
+      });
+      this.hoveredTabInfo.set(null);
+      this.hoveredSubTabInfo.set(meta);
+    }
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    if (this.hoveredTabInfo() || this.hoveredSubTabInfo()) {
+      this.hoveredTabInfo.set(null);
+      this.hoveredSubTabInfo.set(null);
+    }
+  }
+
+  currentTabInfo = computed(() => {
+    return this.tabMetaMap[this.currentTab()] || {
+      name: this.currentTab(),
+      category: 'Analytics',
+      badge: 'Report',
+      icon: 'analytics',
+      shortDescription: 'Detailed analytics and report metrics.',
+      purpose: 'Track and analyze key business metrics according to the selected tab criteria.',
+      metrics: ['Orders', 'Revenue', 'Performance'],
+      businessValue: 'Supports operational insight and management decision making.'
+    };
+  });
 
   // Reset sub-tab when main tab changes
   constructor() {
@@ -495,7 +908,7 @@ export class Reports implements OnInit {
         rows: Object.values(this.groupedByHotel()).map(g => [g.name, g.orders, `₹${g.revenue.toLocaleString()}`, `₹${Math.round(g.revenue / g.orders).toLocaleString()}`]),
         headerColor: 'bg-indigo-50 dark:bg-indigo-900/20'
       };
-    } else if (tab === 'Delivery Man-wise') {
+    } else if (tab === 'Delivery Man-wise' || tab === 'Delivery Person-wise') {
       return {
         headers: ['Delivery Person', 'Orders', 'Earnings', 'Advance'],
         rows: Object.values(this.groupedByDelivery()).map(g => [g.name, g.orders, `₹${g.earnings.toLocaleString()}`, `₹${g.advance.toLocaleString()}`]),
@@ -678,6 +1091,42 @@ export class Reports implements OnInit {
           { label: 'Admin Commission', value: `₹${totalAdminCommission.toLocaleString()}` }
         ]
       };
+    } else if (tab === 'Payment Sheet') {
+      const orders = this.filteredOrders();
+      const totalSubtotal = orders.reduce((sum, o) => sum + (Number(o.subtotal) || 0), 0);
+      const uniqueHotels = new Set(orders.map(o => o.hotel_id)).size;
+      const uniqueDays = new Set(orders.map(o => o.created_at ? new Date(o.created_at).toLocaleDateString() : '')).size;
+      return {
+        type: 'Payment Sheet',
+        items: [
+          { label: 'Total Vendor Settlement', value: `₹${totalSubtotal.toLocaleString()}` },
+          { label: 'Settled Hotel Partners', value: uniqueHotels.toString() },
+          { label: 'Active Billing Days', value: uniqueDays.toString() }
+        ]
+      };
+    } else if (tab === 'Monthly Salary') {
+      const monthlyData = Object.values(this.groupedByMonthlyDelivery());
+      const totalEarned = monthlyData.reduce((sum, m) => sum + m.earnings, 0);
+      const totalAdvance = monthlyData.reduce((sum, m) => sum + m.advance, 0);
+      return {
+        type: 'Monthly Salary',
+        items: [
+          { label: 'Total Rider Earnings', value: `₹${totalEarned.toLocaleString()}` },
+          { label: 'Cash Advance Deductions', value: `₹${totalAdvance.toLocaleString()}` },
+          { label: 'Net Payable Salary', value: `₹${(totalEarned - totalAdvance).toLocaleString()}` }
+        ]
+      };
+    } else if (tab === 'Master Chart View') {
+      const orders = this.filteredOrders();
+      const totalRev = orders.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
+      return {
+        type: 'Master Chart View',
+        items: [
+          { label: 'Analytical Panels', value: '10 Charts' },
+          { label: 'Total Analyzed Orders', value: orders.length.toString() },
+          { label: 'Total Gross Volume', value: `₹${totalRev.toLocaleString()}` }
+        ]
+      };
     } else if (tab === 'Hotel-wise') {
       const grouped: Record<number, { name: string, orders: number, revenue: number }> = {};
       data.forEach(o => {
@@ -693,7 +1142,7 @@ export class Reports implements OnInit {
           value: `Orders: ${g.orders} | Rev: ₹${g.revenue.toLocaleString()} | Avg: ₹${Math.round(g.revenue / g.orders).toLocaleString()}`
         }))
       };
-    } else if (tab === 'Delivery Man-wise') {
+    } else if (tab === 'Delivery Man-wise' || tab === 'Delivery Person-wise') {
       const grouped: Record<number, { name: string, orders: number, earnings: number }> = {};
       data.forEach(o => {
         const dpId = o.delivery_person_id || 0;
@@ -827,6 +1276,14 @@ export class Reports implements OnInit {
       });
       xAxisData = Object.keys(grouped);
       seriesData = Object.values(grouped);
+    } else if (tab === 'Payment Sheet') {
+      const grouped: Record<string, number> = {};
+      data.forEach(o => {
+        const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
+        grouped[date] = (grouped[date] || 0) + (Number(o.subtotal) || 0);
+      });
+      xAxisData = Object.keys(grouped);
+      seriesData = Object.values(grouped);
     } else if (tab === 'Hotel-wise') {
       // Group by hotel
       const grouped: Record<string, number> = {};
@@ -836,7 +1293,7 @@ export class Reports implements OnInit {
       });
       xAxisData = Object.keys(grouped);
       seriesData = Object.values(grouped);
-    } else if (tab === 'Delivery Man-wise') {
+    } else if (tab === 'Delivery Man-wise' || tab === 'Delivery Person-wise') {
       // Group by delivery person
       const grouped: Record<string, number> = {};
       data.forEach(o => {
@@ -848,6 +1305,10 @@ export class Reports implements OnInit {
       });
       xAxisData = Object.keys(grouped);
       seriesData = Object.values(grouped);
+    } else if (tab === 'Monthly Salary') {
+      const monthlyData = Object.values(this.groupedByMonthlyDelivery());
+      xAxisData = monthlyData.map(m => `${m.month} (${m.name})`);
+      seriesData = monthlyData.map(m => m.earnings);
     } else if (tab === 'Menu-wise') {
       const grouped: Record<string, number> = {};
       data.forEach(o => {

@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
+import { backupAuthGuard } from './guards/backup-auth.guard';
 
 export const routes: Routes = [
   {
@@ -109,7 +110,7 @@ export const routes: Routes = [
       {
         path: 'database-backup',
         loadComponent: () => import('./modules/settings/database-backup/database-backup').then(m => m.DatabaseBackupComponent),
-        canActivate: [roleGuard(['admin'])]
+        canActivate: [roleGuard(['admin']), backupAuthGuard]
       },
 
       // Delivery Portal Routes

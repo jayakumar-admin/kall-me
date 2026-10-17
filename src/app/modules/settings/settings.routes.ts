@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { backupAuthGuard } from '../../guards/backup-auth.guard';
 
 export const SETTINGS_ROUTES: Routes = [
   {
@@ -56,7 +57,8 @@ export const SETTINGS_ROUTES: Routes = [
   },
   {
     path: 'database-backup',
-    loadComponent: () => import('./database-backup/database-backup').then(m => m.DatabaseBackupComponent)
+    loadComponent: () => import('./database-backup/database-backup').then(m => m.DatabaseBackupComponent),
+    canActivate: [backupAuthGuard]
   }
 ];
 

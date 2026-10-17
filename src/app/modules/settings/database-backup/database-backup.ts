@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { BackupService } from '../../../services/backup.service';
+import { BackupAuthService } from '../../../services/backup-auth.service';
 import { ToastService } from '../../../services/toast.service';
 import {
   BackupItem,
@@ -21,8 +23,16 @@ import {
 })
 export class DatabaseBackupComponent implements OnInit {
   private backupService = inject(BackupService);
+  private backupAuth = inject(BackupAuthService);
+  private router = inject(Router);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
+
+  lockVault(): void {
+    this.backupAuth.lock();
+    this.toast.info('Database backup vault locked.');
+    this.router.navigate(['/app/settings']);
+  }
 
   // Dashboard Stats & State
   stats: BackupDashboardStats | null = null;

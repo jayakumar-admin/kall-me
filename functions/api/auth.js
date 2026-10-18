@@ -29,20 +29,31 @@ router.post('/login', async (req, res) => {
     let user = null;
     let isMatch = false;
 
+    const rawInput = (email || '').trim();
+    const cleanPassword = (password || '').trim();
+
     // Check if input is email or mobile
-    if (email && email.includes('@')) {
-      const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (rawInput && rawInput.includes('@')) {
+      const cleanEmail = rawInput.toLowerCase();
+      const result = await db.query('SELECT * FROM users WHERE LOWER(email) = $1', [cleanEmail]);
       if (result.rows.length > 0) {
         user = result.rows[0];
-        if (password === 'password123' && email === 'admin@kallme.com') {
+        if (cleanPassword === 'password123' && cleanEmail === 'admin@kallme.com') {
           isMatch = true;
         } else {
-          isMatch = await bcrypt.compare(password, user.password);
+          isMatch = await bcrypt.compare(cleanPassword, user.password);
         }
       }
-    } else {
+    } else if (rawInput) {
       // Treat as mobile number for delivery person
-      const result = await db.query('SELECT * FROM delivery_persons WHERE mobile = $1', [email]);
+      const digitsOnly = rawInput.replace(/\D/g, '');
+      const result = await db.query(
+        `SELECT * FROM delivery_persons 
+         WHERE mobile = $1 
+            OR REPLACE(REPLACE(mobile, ' ', ''), '+91', '') = $2
+            OR mobile LIKE '%' || $2`,
+        [rawInput, digitsOnly.slice(-10) || rawInput]
+      );
       if (result.rows.length > 0) {
         const dp = result.rows[0];
         user = {
@@ -55,23 +66,41 @@ router.post('/login', async (req, res) => {
           license_number: dp.license_number
         };
         
-        if (password === 'password123' && dp.password === '$2b$10$YourHashedPasswordHere') {
+        if (cleanPassword === 'password123' && dp.password === '$2b$10$YourHashedPasswordHere') {
           isMatch = true;
         } else {
-          isMatch = await bcrypt.compare(password, dp.password);
+          isMatch = await bcrypt.compare(cleanPassword, dp.password);
         }
       }
     }
 
-    if (!user || !isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    if (!user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid user or mobile number. Please check your details.' 
+      });
     }
+
+    if (!isMatch) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid password. Please check your credentials.' 
+      });
+    }
+
 
     const accessToken = generateAccessToken(user);
     
     if (user.role !== 'delivery') {
       const refreshToken = await generateRefreshToken(user);
-      res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'none', maxAge: 7 * 24 * 60 * 60 * 1000 });
+      const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https' || (process.env.NODE_ENV === 'production' && !req.headers.host?.includes('localhost'));
+      res.cookie('refreshToken', refreshToken, { 
+        httpOnly: true, 
+        secure: isHttps, 
+        sameSite: isHttps ? 'none' : 'lax', 
+        maxAge: 7 * 24 * 60 * 60 * 1000 
+      });
     }
     
     return res.json({
@@ -119,9 +148,15 @@ router.post('/logout', async (req, res) => {
   if (refreshToken) {
     await db.query('DELETE FROM refresh_tokens WHERE token = $1', [refreshToken]);
   }
-  res.clearCookie('refreshToken', { httpOnly: true, secure: true, sameSite: 'none' });
+  const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https' || (process.env.NODE_ENV === 'production' && !req.headers.host?.includes('localhost'));
+  res.clearCookie('refreshToken', { 
+    httpOnly: true, 
+    secure: isHttps, 
+    sameSite: isHttps ? 'none' : 'lax' 
+  });
   res.json({ message: 'Logged out' });
 });
+
 
 router.post('/register', async (req, res) => {
   const { name, email, mobile, password: providedPassword, role } = req.body;

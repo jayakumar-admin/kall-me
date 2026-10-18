@@ -46,8 +46,9 @@ export class Login implements OnInit {
         },
         error: (err) => {
           console.error('Login failed', err);
-          this.toast.error(err?.error?.message || 'Invalid credentials or server error');
+          this.toast.error(err?.error?.message || 'Invalid user or password. Please try again.');
           this.loading.set(false);
+
         }
       });
     }

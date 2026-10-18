@@ -26,7 +26,7 @@ export class ApiService {
   private http = inject(HttpClient);
   private loader = inject(LoaderService);
   public baseUrl = 'https://api-yoyvsxnlqq-uc.a.run.app/api';
-  // public baseUrl = 'http://localhost:3000/api';
+  // public baseUrl = 'http://localhost:3001/api';
 
   private withLoader<T>(request: Observable<T>, message: string): Observable<T> {
     this.loader.show(message);

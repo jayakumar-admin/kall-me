@@ -11,7 +11,9 @@
     "format": "prettier --write .",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "dev": "nodemon local-server.js"
+    "dev": "nodemon local-server.js",
+    "test:integration": "node test-integration-suite.js",
+    "test": "node test-integration-suite.js"
   },
   "engines": {
     "node": "24"

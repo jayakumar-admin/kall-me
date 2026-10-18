@@ -6,6 +6,7 @@ const functions = require('firebase-functions');
 const cookieParser = require('cookie-parser');
 const db = require('./db');
 const apiRoutes = require('./api/index.js');
+const { taskhubErrorHandler } = require('./utils/taskhubErrorReporter');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
@@ -121,8 +122,13 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// API Routes
+// Non-intrusive traffic telemetry instrumentation
+const { trafficInstrumentationMiddleware } = require('./services/trafficMetricsService');
+app.use(trafficInstrumentationMiddleware);
+
+// API Routes (mount at /api as well as / for direct Cloud Function execution)
 app.use('/api', apiRoutes);
+app.use('/', apiRoutes);
 
 // Serve static files from Angular build (dist/app/browser)
 const browserDistFolder = path.join(__dirname, '../dist/app/browser');
@@ -153,8 +159,12 @@ app.get(/.*/, (req, res) => {
   );
 });
 
+// Centralized error handling and TaskHub reporting middleware
+app.use(taskhubErrorHandler);
+
 // Export as a Cloud Function
 exports.api = functions.https.onRequest(app);
+
 
 // Export the Express app for local development / testing
 exports.app = app;

@@ -16,6 +16,7 @@ const shippingRoutes = require('./shipping.js');
 const commissionRoutes = require('./commission.js');
 const bulkRoutes = require('./bulk.js');
 const backupRoutes = require('./backups.js');
+const integrationRoutes = require('./integration/index.js');
 
 const router = express.Router();
 
@@ -34,7 +35,10 @@ router.use('/settings', settingsRoutes);
 router.use('/shipping', shippingRoutes);
 router.use('/commission', commissionRoutes);
 router.use('/bulk', bulkRoutes);
+router.use('/admin', integrationRoutes);
 router.use('/admin/backups', backupRoutes);
 router.use('/backups', backupRoutes);
+router.use('/integration/v1', integrationRoutes);
 
 module.exports = router;
+

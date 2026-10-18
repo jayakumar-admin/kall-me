@@ -14,9 +14,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     });
   }
 
+  // Do not attempt token refresh for authentication routes or when not logged in
+  const isAuthRoute =
+    req.url.includes('/auth/login') ||
+    req.url.includes('/auth/register') ||
+    req.url.includes('/auth/refresh') ||
+    req.url.includes('/auth/logout') ||
+    req.url.includes('/auth/forgot-password') ||
+    req.url.includes('/auth/reset-password');
+
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && !req.url.includes('/auth/refresh')) {
+      if (error.status === 401 && !isAuthRoute && user?.token) {
         return authService.refreshToken().pipe(
           switchMap(() => {
             const newUser = authService.user();
@@ -34,4 +43,5 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       return throwError(() => error);
     })
   );
+
 };

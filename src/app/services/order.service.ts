@@ -17,11 +17,17 @@ export class OrderService {
     const allOrders = this.orders();
     const getNumber = (value: number | string | undefined) => Math.round(Number(value) || 0);
 
+    const validOrders = allOrders.filter(o => o.status !== 'Cancelled');
+    const cancelledOrders = allOrders.filter(o => o.status === 'Cancelled');
+
     return {
-      total: allOrders.length,
-      revenue: allOrders.reduce((acc, o) => acc + getNumber(o.grand_total), 0),
-      received: allOrders.reduce((acc, o) => acc + getNumber(o.amount_received), 0),
-      pending: allOrders.reduce((acc, o) => acc + getNumber(o.balance_pending), 0)
+      total: validOrders.length,
+      allTotal: allOrders.length,
+      cancelledTotal: cancelledOrders.length,
+      revenue: validOrders.reduce((acc, o) => acc + getNumber(o.grand_total), 0),
+      lostRevenue: cancelledOrders.reduce((acc, o) => acc + getNumber(o.grand_total), 0),
+      received: validOrders.reduce((acc, o) => acc + getNumber(o.amount_received), 0),
+      pending: validOrders.reduce((acc, o) => acc + getNumber(o.balance_pending), 0)
     };
   });
 

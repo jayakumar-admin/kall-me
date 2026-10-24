@@ -13,7 +13,22 @@
         Real-time tracking of food deliveries and payment balances.
       </p>
     </div>
-    <div class="flex gap-3">
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="relative w-full sm:w-64">
+        <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+        <input 
+          type="text" 
+          [ngModel]="searchTerm() || search.searchTerm()" 
+          (ngModelChange)="onSearchChange($event)"
+          placeholder="Search orders..." 
+          class="w-full bg-white dark:bg-[#1E293B] border border-slate-100 dark:border-white/5 rounded-xl pl-9 pr-8 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-[#FFC107]/20 dark:text-white"
+        >
+        @if (effectiveSearchTerm()) {
+          <button (click)="clearSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+            <mat-icon class="text-sm">close</mat-icon>
+          </button>
+        }
+      </div>
       <div class="relative">
         <select
           [(ngModel)]="statusFilter"
@@ -42,16 +57,21 @@
   </div>
 
   <!-- Stats Row -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
     <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
       <p
         class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"
       >
-        Total Orders
+        {{ statusFilter() === 'Cancelled' ? 'Cancelled Orders' : 'Valid Orders' }}
       </p>
-      <p class="text-2xl font-black text-[#1A1A1A] dark:text-white">
-        {{ stats().total }}
-      </p>
+      <div class="flex items-baseline gap-2">
+        <p class="text-2xl font-black text-[#1A1A1A] dark:text-white">
+          {{ stats().total }}
+        </p>
+        @if (statusFilter() !== 'Cancelled' && stats().cancelledTotal > 0) {
+          <span class="text-[10px] font-bold text-slate-400">({{ stats().cancelledTotal }} cancelled)</span>
+        }
+      </div>
     </div>
     <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
       <p
@@ -82,6 +102,19 @@
       <p class="text-2xl font-black text-red-500">
         ₹{{ stats().pending | number:'1.0-0' }}
       </p>
+    </div>
+    <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 bg-red-50/40 dark:bg-red-950/20">
+      <p
+        class="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase tracking-widest mb-1"
+      >
+        Revenue Lost
+      </p>
+      <div class="flex items-baseline gap-2">
+        <p class="text-2xl font-black text-red-600 dark:text-red-400">
+          ₹{{ stats().lostRevenue | number:'1.0-0' }}
+        </p>
+        <span class="text-[10px] font-bold text-red-400">({{ stats().cancelledTotal }} cancelled)</span>
+      </div>
     </div>
   </div>
 
@@ -155,13 +188,23 @@
               </p>
             </td>
             <td class="px-6 py-4 font-bold text-[#1A1A1A] dark:text-white">
-              ₹{{ (1 * (order.grand_total || 0)).toLocaleString() }}
+              @if (order.status === 'Cancelled') {
+                <span class="line-through text-slate-400 dark:text-slate-500">₹{{ (1 * (order.grand_total || 0)).toLocaleString() }}</span>
+                <span class="text-[10px] text-red-500 block font-normal">(Cancelled)</span>
+              } @else {
+                ₹{{ (1 * (order.grand_total || 0)).toLocaleString() }}
+              }
             </td>
             <td class="px-6 py-4 font-bold text-emerald-500">
               ₹{{ (1 * (order.amount_received || 0)).toLocaleString() }}
             </td>
-            <td class="px-6 py-4 font-bold text-red-500">
-              ₹{{ (1 * (order.balance_pending || 0)).toLocaleString() }}
+            <td class="px-6 py-4 font-bold">
+              @if (order.status === 'Cancelled') {
+                <span class="line-through text-slate-400 dark:text-slate-500">₹{{ (1 * (order.balance_pending || 0)).toLocaleString() }}</span>
+                <span class="text-[10px] text-slate-400 block font-normal">₹0 Due</span>
+              } @else {
+                <span class="text-red-500">₹{{ (1 * (order.balance_pending || 0)).toLocaleString() }}</span>
+              }
             </td>
             <td class="px-6 py-4">
               <div class="relative inline-block">

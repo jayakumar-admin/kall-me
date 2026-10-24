@@ -134,8 +134,18 @@
                 [value]="search.searchTerm()"
                 (input)="onSearch($event)"
                 placeholder="Search..." 
-                class="w-full bg-[#F1F3F5] dark:bg-[#1E293B] border-none rounded-lg pl-10 pr-4 py-2.5 text-sm text-[#1A1A1A] dark:text-white focus:ring-2 focus:ring-[#FFC107]/20 outline-none transition-all placeholder:text-slate-400"
+                class="w-full bg-[#F1F3F5] dark:bg-[#1E293B] border-none rounded-lg pl-10 pr-9 py-2.5 text-sm text-[#1A1A1A] dark:text-white focus:ring-2 focus:ring-[#FFC107]/20 outline-none transition-all placeholder:text-slate-400"
               >
+              @if (search.searchTerm()) {
+                <button 
+                  type="button"
+                  (click)="search.clearSearch()" 
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md transition-colors"
+                  title="Clear search"
+                >
+                  <mat-icon class="text-base leading-none block">close</mat-icon>
+                </button>
+              }
             </div>
           </div>
 

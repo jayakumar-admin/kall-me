@@ -10,6 +10,7 @@ import { DeliveryPerson } from '../../models';
 
 import { ImageUploadService } from '../../services/image-upload.service';
 import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.component';
+import { SearchService } from '../../services/search.service';
 
 @Component({
   selector: 'app-delivery-list',
@@ -23,12 +24,26 @@ export class DeliveryList implements OnInit {
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
   private imageUpload = inject(ImageUploadService);
+  search = inject(SearchService);
 
   private router = inject(Router);
 
   drivers = signal<DeliveryPerson[]>([]);
-  filteredDrivers = signal<DeliveryPerson[]>([]);
   searchTerm = signal('');
+
+  effectiveSearchTerm = computed(() => (this.searchTerm() || this.search.searchTerm() || '').toLowerCase().trim());
+
+  filteredDrivers = computed(() => {
+    const term = this.effectiveSearchTerm();
+    const all = this.drivers();
+    if (!term) return all;
+    return all.filter(d => 
+      (d.name && d.name.toLowerCase().includes(term)) || 
+      (d.mobile && d.mobile.includes(term)) ||
+      (d.vehicle_number && d.vehicle_number.toLowerCase().includes(term)) ||
+      (d.id && d.id.toString().includes(term))
+    );
+  });
   
   showModal = signal(false);
   showDeleteConfirm = signal(false);
@@ -93,7 +108,6 @@ export class DeliveryList implements OnInit {
     this.api.getDeliveryTeam().subscribe({
       next: (d) => {
         this.drivers.set(d);
-        this.applyFilter();
         this.updateStats();
       },
       error: () => this.toast.error('Failed to load delivery team')
@@ -108,24 +122,19 @@ export class DeliveryList implements OnInit {
 
   onSearch(event: Event) {
     const term = (event.target as HTMLInputElement).value;
-    this.searchTerm.set(term);
-    this.currentPage.set(1);
-    this.applyFilter();
+    this.onSearchChange(term);
   }
 
-  applyFilter() {
-    const term = this.searchTerm().toLowerCase();
-    if (!term) {
-      this.filteredDrivers.set(this.drivers());
-      return;
-    }
-    this.filteredDrivers.set(
-      this.drivers().filter(d => 
-        d.name.toLowerCase().includes(term) || 
-        d.mobile.includes(term) ||
-        d.id?.toString().includes(term)
-      )
-    );
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.search.setSearchTerm(term);
+    this.currentPage.set(1);
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.search.clearSearch();
+    this.currentPage.set(1);
   }
 
   getStatusClass(status: string): string {

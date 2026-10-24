@@ -10,9 +10,24 @@
     </button>
   </div>
 
+  <!-- Search Bar -->
+  <div class="relative">
+    <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</mat-icon>
+    <input type="text"
+           [ngModel]="searchTerm()"
+           (ngModelChange)="searchTerm.set($event)"
+           placeholder="Search orders, phone, hotel, address..."
+           class="w-full pl-9 pr-9 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+    @if (searchTerm()) {
+      <button (click)="searchTerm.set('')" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full">
+        <mat-icon class="text-sm">close</mat-icon>
+      </button>
+    }
+  </div>
+
   <!-- Orders List -->
   <div class="grid gap-4">
-    @for (order of orders(); track order.id) {
+    @for (order of filteredOrders(); track order.id) {
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden p-4">
         <div class="flex items-start justify-between mb-4">
           <div>
@@ -111,10 +126,17 @@
     } @empty {
       <div class="p-12 text-center bg-white rounded-2xl border border-dashed border-gray-200">
         <div class="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
-          <mat-icon class="!text-3xl">assignment_late</mat-icon>
+          <mat-icon class="!text-3xl">{{ searchTerm() ? 'search_off' : 'assignment_late' }}</mat-icon>
         </div>
-        <h3 class="text-gray-900 font-bold">No orders assigned</h3>
-        <p class="text-gray-500 text-sm">You don't have any assigned orders at the moment.</p>
+        <h3 class="text-gray-900 font-bold">{{ searchTerm() ? 'No matching orders' : 'No orders assigned' }}</h3>
+        <p class="text-gray-500 text-sm mt-1">
+          {{ searchTerm() ? 'No orders match "' + searchTerm() + '"' : "You don't have any assigned orders at the moment." }}
+        </p>
+        @if (searchTerm()) {
+          <button (click)="searchTerm.set('')" class="mt-4 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors">
+            Clear search
+          </button>
+        }
       </div>
     }
   </div>

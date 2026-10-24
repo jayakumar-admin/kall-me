@@ -10,4 +10,8 @@ export class SearchService {
   setSearchTerm(term: string) {
     this.searchTerm.set(term);
   }
+
+  clearSearch() {
+    this.searchTerm.set('');
+  }
 }

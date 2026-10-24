@@ -9,6 +9,7 @@ import { ApiService } from '../../services/api.service';
 import { ToastService } from '../../services/toast.service';
 import { Order, DeliveryPerson } from '../../models';
 import { CatalogService } from '../../services/catalog.service';
+import { SearchService } from '../../services/search.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -149,10 +150,11 @@ export interface ReportSubTabMeta {
             <label for="statusFilter" class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Status</label>
             <select id="statusFilter" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" class="w-full bg-slate-50 dark:bg-[#0F172A] border border-slate-200 dark:border-white/10 rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500 appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em_1em]">
               <option value="all">All Statuses</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="in-progress">In Progress</option>
-              <option value="placed">Placed</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Live">Live</option>
+              <option value="In Transit">In Transit</option>
+              <option value="Order Placed">Order Placed</option>
+              <option value="Cancelled">Cancelled</option>
             </select>
           </div>
           <div class="space-y-1">
@@ -240,6 +242,12 @@ export interface ReportSubTabMeta {
               <h3 class="font-bold text-[#1A1A1A] dark:text-white mb-4">Status-wise Analytics</h3>
               <div echarts [options]="getChartOptions('Status-wise')" class="h-80"></div>
             </div>
+            <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+              <h3 class="font-bold text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
+                <mat-icon class="text-lg">cancel</mat-icon> Cancelled Orders & Lost Revenue
+              </h3>
+              <div echarts [options]="getChartOptions('Cancelled Orders')" class="h-80"></div>
+            </div>
           </div>
         } @else {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -278,7 +286,13 @@ export interface ReportSubTabMeta {
             <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 !p-0 overflow-hidden">
               <div class="p-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-slate-50 dark:bg-white/5">
                 <h3 class="font-bold text-[#1A1A1A] dark:text-white">{{ currentTab() }} Data</h3>
-                <span class="text-xs font-bold text-slate-500 bg-white dark:bg-[#1E293B] px-2 py-1 rounded-md border border-slate-200 dark:border-white/10">{{ filteredOrders().length }} Records</span>
+                <span class="text-xs font-bold text-slate-500 bg-white dark:bg-[#1E293B] px-2 py-1 rounded-md border border-slate-200 dark:border-white/10">
+                  @if (currentTab() === 'Cancelled Orders') {
+                    {{ cancelledFilteredOrders().length }} Cancelled Orders (₹{{ totalLostRevenue().toLocaleString() }} Lost)
+                  } @else {
+                    {{ validFilteredOrders().length }} Completed Orders (Excludes {{ cancelledFilteredOrders().length }} Cancelled)
+                  }
+                </span>
               </div>
               <div class="overflow-x-auto custom-scrollbar">
                 @if (currentTab() === 'Payment Sheet') {
@@ -488,19 +502,20 @@ export class Reports implements OnInit {
   private toast = inject(ToastService);
   private catalog = inject(CatalogService);
   private route = inject(ActivatedRoute);
+  search = inject(SearchService);
   
   orders = signal<Order[]>([]);
   drivers = signal<DeliveryPerson[]>([]);
   loading = signal(true);
-  
-  // Tabs
+   // Tabs
   tabs = [
     'Overview', 
     'Payment Sheet',
+    'Cancelled Orders',
     'Master Chart View',
     'Hotel-wise', 
     'Delivery Person-wise', 
-    'Monthly Salary',
+    'Monthly Salary', 
     'Menu-wise', 
     'Orders', 
     'Commission / Earnings', 
@@ -522,19 +537,29 @@ export class Reports implements OnInit {
       badge: 'Platform Summary',
       icon: 'dashboard',
       shortDescription: 'High-level executive financial summary of platform distributions.',
-      purpose: 'Summarizes gross revenue distribution across merchant hotel payouts, delivery rider salaries, and net platform admin commission.',
-      metrics: ['Hotel Earnings (Subtotal)', 'Delivery Salary (DC - Commission)', 'Admin Commission Retained'],
-      businessValue: 'Provides an instant health check on financial splits and overall platform gross margin.'
+      purpose: 'Summarizes real net revenue distribution across merchant hotel payouts, delivery rider salaries, and net platform admin commission (excluding cancelled orders).',
+      metrics: ['Real Net Revenue', 'Hotel Earnings (Subtotal)', 'Delivery Salary (DC - Commission)', 'Admin Commission Retained', 'Revenue Lost (Cancelled)'],
+      businessValue: 'Provides an instant health check on financial splits, real platform revenue, and cancellation loss.'
     },
     'Payment Sheet': {
       name: 'Payment Sheet',
       category: 'Financial',
       badge: 'Daily Settlement',
       icon: 'table_chart',
-      shortDescription: 'Cross-tabulated date-by-date food sales per hotel partner.',
-      purpose: 'Tracks daily order values generated for each restaurant to calculate vendor billings, payout schedules, and daily merchant settlements.',
+      shortDescription: 'Cross-tabulated date-by-date food sales per hotel partner (excluding cancelled orders).',
+      purpose: 'Tracks daily order values generated for each restaurant to calculate vendor billings, payout schedules, and daily merchant settlements without cancelled orders.',
       metrics: ['Calendar Date', 'Hotel-by-Hotel Daily Subtotal', 'Daily Aggregate Revenue', 'Grand Total Settlement'],
       businessValue: 'Used by accountants and managers for partner reconciliation and vendor invoice processing.'
+    },
+    'Cancelled Orders': {
+      name: 'Cancelled Orders & Revenue Loss',
+      category: 'Financial',
+      badge: 'Revenue Leakage',
+      icon: 'cancel',
+      shortDescription: 'Audit trail of cancelled orders and lost revenue value.',
+      purpose: 'Lists all cancelled orders with restaurant, customer, address, and total amount, quantifying total revenue lost to eliminate operational leakage.',
+      metrics: ['Cancelled Orders Count', 'Total Lost Revenue', 'Average Lost Ticket', 'Cancellation Rate (%)'],
+      businessValue: 'Quantifies revenue leakage to minimize cancellations and optimize fulfillment pipelines.'
     },
     'Master Chart View': {
       name: 'Master Chart View',
@@ -814,7 +839,7 @@ export class Reports implements OnInit {
     }
 
     if (status !== 'all') {
-      result = result.filter(o => o.status === status);
+      result = result.filter(o => o.status?.toLowerCase() === status.toLowerCase());
     }
 
     if (hotelId !== 'all') {
@@ -827,13 +852,40 @@ export class Reports implements OnInit {
       result = result.filter(o => o.delivery_person_id === id);
     }
 
+    const term = this.search.searchTerm().toLowerCase().trim();
+    if (term) {
+      result = result.filter(o => 
+        (o.order_number?.toLowerCase().includes(term) || false) || 
+        (o.hotel_name?.toLowerCase().includes(term) || false) || 
+        (o.customer_name?.toLowerCase().includes(term) || false) || 
+        (o.customer_phone?.toLowerCase().includes(term) || false) || 
+        (o.delivery_person_name?.toLowerCase().includes(term) || false) || 
+        (o.delivery_address?.toLowerCase().includes(term) || false)
+      );
+    }
+
     return result;
+  });
+
+  validFilteredOrders = computed(() => {
+    if (this.statusFilter().toLowerCase() === 'cancelled') {
+      return [];
+    }
+    return this.filteredOrders().filter(o => (o.status || '').toLowerCase() !== 'cancelled');
+  });
+
+  cancelledFilteredOrders = computed(() => {
+    return this.filteredOrders().filter(o => (o.status || '').toLowerCase() === 'cancelled');
+  });
+
+  totalLostRevenue = computed(() => {
+    return this.cancelledFilteredOrders().reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
   });
 
   tableConfig = computed(() => {
     const tab = this.currentTab();
     if (tab === 'Payment Sheet') {
-      const orders = this.filteredOrders();
+      const orders = this.validFilteredOrders();
       // Get all unique hotels from filtered orders or all orders to have consistent columns
       const hotelNames = Array.from(new Set(this.orders().map(o => (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || 'Unknown')))).sort();
       
@@ -902,33 +954,141 @@ export class Reports implements OnInit {
         rows: rows,
         headerColor: 'bg-indigo-50 dark:bg-indigo-900/20'
       };
-    } else if (tab === 'Hotel-wise') {
+    } else if (tab === 'Cancelled Orders') {
+      const cancelled = this.cancelledFilteredOrders();
+      const rows: (string | number)[][] = cancelled.map(o => [
+        o.order_number || '',
+        o.created_at ? new Date(o.created_at).toLocaleString('en-IN') : '',
+        (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || ''),
+        o.customer_name || 'N/A',
+        o.customer_phone || 'N/A',
+        o.delivery_address || 'N/A',
+        `₹${(Number(o.grand_total) || 0).toLocaleString()}`
+      ]);
+
+      if (cancelled.length > 0) {
+        const totalLost = cancelled.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
+        rows.push([
+          '',
+          'GRAND TOTAL',
+          `${cancelled.length} Cancelled Orders`,
+          '',
+          '',
+          'Total Revenue Lost:',
+          `₹${totalLost.toLocaleString()}`
+        ]);
+      }
+
       return {
-        headers: ['Hotel', 'Orders', 'Revenue', 'Avg Order'],
-        rows: Object.values(this.groupedByHotel()).map(g => [g.name, g.orders, `₹${g.revenue.toLocaleString()}`, `₹${Math.round(g.revenue / g.orders).toLocaleString()}`]),
+        headers: ['Order ID', 'Date & Time', 'Hotel', 'Customer', 'Phone', 'Address', 'Lost Revenue (₹)'],
+        rows: rows,
+        headerColor: 'bg-red-50 dark:bg-red-950/20'
+      };
+    } else if (tab === 'Hotel-wise') {
+      const hotels = Object.values(this.groupedByHotel());
+      const rows: (string | number)[][] = hotels.map(g => [
+        g.name,
+        g.orders,
+        `₹${g.revenue.toLocaleString()}`,
+        g.orders > 0 ? `₹${Math.round(g.revenue / g.orders).toLocaleString()}` : '₹0',
+        g.cancelledOrders,
+        `₹${g.lostRevenue.toLocaleString()}`
+      ]);
+
+      if (hotels.length > 0) {
+        const totalCompleted = hotels.reduce((sum, h) => sum + h.orders, 0);
+        const totalRealRev = hotels.reduce((sum, h) => sum + h.revenue, 0);
+        const totalCancelled = hotels.reduce((sum, h) => sum + h.cancelledOrders, 0);
+        const totalLost = hotels.reduce((sum, h) => sum + h.lostRevenue, 0);
+        const avg = totalCompleted > 0 ? Math.round(totalRealRev / totalCompleted) : 0;
+        rows.push([
+          'GRAND TOTAL',
+          totalCompleted,
+          `₹${totalRealRev.toLocaleString()}`,
+          `₹${avg.toLocaleString()}`,
+          totalCancelled,
+          `₹${totalLost.toLocaleString()}`
+        ]);
+      }
+
+      return {
+        headers: ['Hotel', 'Completed Orders', 'Real Revenue', 'Avg Order', 'Cancelled Orders', 'Revenue Lost'],
+        rows: rows,
         headerColor: 'bg-indigo-50 dark:bg-indigo-900/20'
       };
     } else if (tab === 'Delivery Man-wise' || tab === 'Delivery Person-wise') {
+      const drivers = Object.values(this.groupedByDelivery());
+      const rows: (string | number)[][] = drivers.map(g => [
+        g.name,
+        g.orders,
+        `₹${g.earnings.toLocaleString()}`,
+        `₹${g.advance.toLocaleString()}`,
+        g.cancelled
+      ]);
+
+      if (drivers.length > 0) {
+        const totalOrders = drivers.reduce((sum, d) => sum + d.orders, 0);
+        const totalEarnings = drivers.reduce((sum, d) => sum + d.earnings, 0);
+        const totalAdvance = drivers.reduce((sum, d) => sum + d.advance, 0);
+        const totalCancelled = drivers.reduce((sum, d) => sum + d.cancelled, 0);
+        rows.push([
+          'GRAND TOTAL',
+          totalOrders,
+          `₹${totalEarnings.toLocaleString()}`,
+          `₹${totalAdvance.toLocaleString()}`,
+          totalCancelled
+        ]);
+      }
+
       return {
-        headers: ['Delivery Person', 'Orders', 'Earnings', 'Advance'],
-        rows: Object.values(this.groupedByDelivery()).map(g => [g.name, g.orders, `₹${g.earnings.toLocaleString()}`, `₹${g.advance.toLocaleString()}`]),
+        headers: ['Delivery Person', 'Completed Orders', 'Net Earnings', 'Advance Collected', 'Cancelled Trips'],
+        rows: rows,
         headerColor: 'bg-emerald-50 dark:bg-emerald-900/20'
       };
     } else if (tab === 'Monthly Salary') {
+      const monthly = Object.values(this.groupedByMonthlyDelivery());
+      const rows: (string | number)[][] = monthly.map(g => [g.month, g.name, g.orders, `₹${g.earnings.toLocaleString()}`, `₹${g.advance.toLocaleString()}`]);
+
+      if (monthly.length > 0) {
+        const totalOrders = monthly.reduce((sum, m) => sum + m.orders, 0);
+        const totalEarnings = monthly.reduce((sum, m) => sum + m.earnings, 0);
+        const totalAdvance = monthly.reduce((sum, m) => sum + m.advance, 0);
+        rows.push([
+          'GRAND TOTAL',
+          '',
+          totalOrders,
+          `₹${totalEarnings.toLocaleString()}`,
+          `₹${totalAdvance.toLocaleString()}`
+        ]);
+      }
+
       return {
         headers: ['Month', 'Delivery Person', 'Orders', 'Earnings', 'Advance'],
-        rows: Object.values(this.groupedByMonthlyDelivery()).map(g => [g.month, g.name, g.orders, `₹${g.earnings.toLocaleString()}`, `₹${g.advance.toLocaleString()}`]),
+        rows: rows,
         headerColor: 'bg-blue-50 dark:bg-blue-900/20'
       };
     } else if (tab === 'Menu-wise') {
+      const menus = Object.values(this.groupedByMenu());
+      const rows: (string | number)[][] = menus.map(g => [g.name, g.quantity, `₹${g.revenue.toLocaleString()}`]);
+
+      if (menus.length > 0) {
+        const totalQty = menus.reduce((sum, m) => sum + m.quantity, 0);
+        const totalRev = menus.reduce((sum, m) => sum + m.revenue, 0);
+        rows.push([
+          'GRAND TOTAL',
+          totalQty,
+          `₹${totalRev.toLocaleString()}`
+        ]);
+      }
+
       return {
         headers: ['Menu Item', 'Quantity', 'Revenue'],
-        rows: Object.values(this.groupedByMenu()).map(g => [g.name, g.quantity, `₹${g.revenue.toLocaleString()}`]),
+        rows: rows,
         headerColor: 'bg-amber-50 dark:bg-amber-900/20'
       };
     } else if (tab === 'Time-of-Day') {
       const grouped: Record<string, number> = {};
-      this.filteredOrders().forEach(o => {
+      this.validFilteredOrders().forEach(o => {
         if (o.created_at) {
           const hour = new Date(o.created_at).getHours();
           const label = `${hour}:00 - ${hour + 1}:00`;
@@ -942,39 +1102,79 @@ export class Reports implements OnInit {
         headerColor: 'bg-blue-50 dark:bg-blue-900/20'
       };
     } else if (tab === 'Status-wise') {
-      const grouped: Record<string, number> = {};
+      const countGroup: Record<string, number> = {};
+      const revGroup: Record<string, number> = {};
       this.filteredOrders().forEach(o => {
         const status = o.status || 'Unknown';
-        grouped[status] = (grouped[status] || 0) + (Number(o.grand_total) || 0);
+        countGroup[status] = (countGroup[status] || 0) + 1;
+        revGroup[status] = (revGroup[status] || 0) + (Number(o.grand_total) || 0);
       });
       return {
-        headers: ['Order Status', 'Revenue'],
-        rows: Object.entries(grouped).map(g => [g[0], `₹${g[1].toLocaleString()}`]),
+        headers: ['Order Status', 'Order Count', 'Total Amount / Value', 'Classification'],
+        rows: Object.keys(countGroup).map(s => [
+          s,
+          countGroup[s],
+          `₹${revGroup[s].toLocaleString()}`,
+          s.toLowerCase() === 'cancelled' ? 'Revenue Lost' : 'Realized Revenue'
+        ]),
         headerColor: 'bg-purple-50 dark:bg-purple-900/20'
       };
     } else if (tab === 'Commission / Earnings') {
+      const validOrders = this.validFilteredOrders();
+      const rows: (string | number)[][] = validOrders.map(o => [
+        o.order_number || '',
+        (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || ''),
+        `₹${(o.shipping_fee || 0).toLocaleString()}`,
+        `${o.commission_percentage_applied || 0}%`,
+        `₹${(o.admin_commission_amount || 0).toLocaleString()}`
+      ]);
+
+      if (validOrders.length > 0) {
+        const totalDC = validOrders.reduce((sum, o) => sum + (Number(o.shipping_fee) || 0), 0);
+        const totalComm = validOrders.reduce((sum, o) => sum + (Number(o.admin_commission_amount) || 0), 0);
+        rows.push([
+          '',
+          'GRAND TOTAL',
+          `₹${totalDC.toLocaleString()}`,
+          '-',
+          `₹${totalComm.toLocaleString()}`
+        ]);
+      }
+
       return {
         headers: ['Order ID', 'Hotel', 'DC (₹)', 'Comm %', 'Comm Amt (₹)'],
-        rows: this.filteredOrders().map(o => [
-          o.order_number || '',
-          (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || ''),
-          `₹${(o.shipping_fee || 0).toLocaleString()}`,
-          `${o.commission_percentage_applied || 0}%`,
-          `₹${(o.admin_commission_amount || 0).toLocaleString()}`
-        ]),
+        rows: rows,
         headerColor: 'bg-emerald-50 dark:bg-emerald-900/20'
       };
     } else {
+      const orders = this.statusFilter().toLowerCase() === 'cancelled' 
+        ? this.cancelledFilteredOrders() 
+        : this.validFilteredOrders();
+      const totalAmount = orders.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
+      
+      const rows: (string | number)[][] = orders.map(o => [
+        o.order_number || '',
+        o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
+        (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || ''),
+        o.delivery_address || '',
+        o.status || '',
+        `₹${(Number(o.grand_total) || 0).toLocaleString()}`
+      ]);
+
+      if (orders.length > 0) {
+        rows.push([
+          '',
+          'GRAND TOTAL',
+          `${orders.length} Orders`,
+          '',
+          this.statusFilter().toLowerCase() === 'cancelled' ? 'Total Lost' : 'Real Net Total',
+          `₹${totalAmount.toLocaleString()}`
+        ]);
+      }
+
       return {
-        headers: ['Order ID', 'Date', 'Hotel', 'Address', 'Status', 'Amount'],
-        rows: this.filteredOrders().map(o => [
-          o.order_number || '',
-          o.created_at ? new Date(o.created_at).toLocaleDateString() : '',
-          (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || ''),
-          o.delivery_address || '',
-          o.status || '',
-          `₹${(o.grand_total || 0).toLocaleString()}`
-        ]),
+        headers: ['Order ID', 'Date', 'Hotel', 'Address', 'Status', 'Bill Total'],
+        rows: rows,
         headerColor: 'bg-slate-50 dark:bg-slate-900/20'
       };
     }
@@ -984,7 +1184,7 @@ export class Reports implements OnInit {
     const grouped: Record<string, { month: string, name: string, orders: number, earnings: number, advance: number }> = {};
     const drivers = this.drivers();
     
-    this.filteredOrders().forEach(o => {
+    this.validFilteredOrders().forEach(o => {
       if (o.created_at) {
         const date = new Date(o.created_at);
         const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -1019,18 +1219,32 @@ export class Reports implements OnInit {
   });
 
   groupedByHotel = computed(() => {
-    const grouped: Record<number, { name: string, orders: number, revenue: number }> = {};
+    const grouped: Record<number, { name: string, orders: number, revenue: number, cancelledOrders: number, lostRevenue: number }> = {};
     this.filteredOrders().forEach(o => {
       const hId = o.hotel_id === null ? -1 : o.hotel_id;
-      if (!grouped[hId]) grouped[hId] = { name: hId === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), orders: 0, revenue: 0 };
-      grouped[hId].orders++;
-      grouped[hId].revenue += Number(o.grand_total) || 0;
+      if (!grouped[hId]) {
+        grouped[hId] = {
+          name: hId === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'),
+          orders: 0,
+          revenue: 0,
+          cancelledOrders: 0,
+          lostRevenue: 0
+        };
+      }
+      const isCancelled = (o.status || '').toLowerCase() === 'cancelled';
+      if (isCancelled) {
+        grouped[hId].cancelledOrders++;
+        grouped[hId].lostRevenue += Number(o.grand_total) || 0;
+      } else {
+        grouped[hId].orders++;
+        grouped[hId].revenue += Number(o.grand_total) || 0;
+      }
     });
     return grouped;
   });
 
   groupedByDelivery = computed(() => {
-    const grouped: Record<number, { name: string, orders: number, earnings: number, advance: number }> = {};
+    const grouped: Record<number, { name: string, orders: number, earnings: number, advance: number, cancelled: number }> = {};
     const drivers = this.drivers();
     
     this.filteredOrders().forEach(o => {
@@ -1041,20 +1255,25 @@ export class Reports implements OnInit {
           const driver = drivers.find(d => d.id === dpId);
           if (driver) name = driver.name;
         }
-        grouped[dpId] = { name: name || 'Unassigned', orders: 0, earnings: 0, advance: 0 };
+        grouped[dpId] = { name: name || 'Unassigned', orders: 0, earnings: 0, advance: 0, cancelled: 0 };
       }
-      grouped[dpId].orders++;
-      const deliveryFee = Number(o.shipping_fee) || 0;
-      const adminComm = Number(o.admin_commission_amount) || 0;
-      grouped[dpId].earnings += (deliveryFee - adminComm);
-      grouped[dpId].advance += Number(o.amount_received) || 0;
+      const isCancelled = (o.status || '').toLowerCase() === 'cancelled';
+      if (isCancelled) {
+        grouped[dpId].cancelled++;
+      } else {
+        grouped[dpId].orders++;
+        const deliveryFee = Number(o.shipping_fee) || 0;
+        const adminComm = Number(o.admin_commission_amount) || 0;
+        grouped[dpId].earnings += (deliveryFee - adminComm);
+        grouped[dpId].advance += Number(o.amount_received) || 0;
+      }
     });
     return grouped;
   });
 
   groupedByMenu = computed(() => {
     const grouped: Record<number, { name: string, quantity: number, revenue: number }> = {};
-    this.filteredOrders().forEach(o => {
+    this.validFilteredOrders().forEach(o => {
       (o.items || []).forEach(item => {
         if (!grouped[item.menu_id]) grouped[item.menu_id] = { name: item.menu_name || 'Unknown', quantity: 0, revenue: 0 };
         grouped[item.menu_id].quantity += Number(item.quantity) || 0;
@@ -1069,15 +1288,22 @@ export class Reports implements OnInit {
     const tab = this.currentTab();
     
     if (tab === 'Overview') {
+      const valid = this.validFilteredOrders();
+      const cancelled = this.cancelledFilteredOrders();
+      const totalOrdersCount = this.filteredOrders().length;
+      const grossTotal = this.filteredOrders().reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
+      const totalRealRevenue = valid.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
+      const lostRevenue = cancelled.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
+      
       let totalHotelEarnings = 0;
       let totalDeliverySalary = 0;
       let totalAdminCommission = 0;
       
-      data.forEach(o => {
+      valid.forEach(o => {
         const adminComm = Number(o.admin_commission_amount) || 0;
         const deliveryFee = Number(o.shipping_fee) || 0;
-        const hotelEarn = Number(o.subtotal) || 0; // Hotel gets full subtotal
-        const deliveryEarn = deliveryFee - adminComm; // Delivery person gets delivery fee minus admin commission
+        const hotelEarn = Number(o.subtotal) || 0;
+        const deliveryEarn = deliveryFee - adminComm;
         
         totalHotelEarnings += hotelEarn;
         totalDeliverySalary += deliveryEarn;
@@ -1086,20 +1312,37 @@ export class Reports implements OnInit {
       return {
         type: 'Overview',
         items: [
-          { label: 'Hotel Earnings', value: `₹${totalHotelEarnings.toLocaleString()}` },
-          { label: 'Delivery Salary', value: `₹${totalDeliverySalary.toLocaleString()}` },
-          { label: 'Admin Commission', value: `₹${totalAdminCommission.toLocaleString()}` }
+          { label: 'Gross Order Volume', value: `₹${grossTotal.toLocaleString()} (${totalOrdersCount} orders)` },
+          { label: 'Cancelled Deductions', value: `-₹${lostRevenue.toLocaleString()} (${cancelled.length} orders)` },
+          { label: 'Real Net Revenue', value: `₹${totalRealRevenue.toLocaleString()} (${valid.length} completed)` },
+          { label: 'Hotel Settlement (Subtotal)', value: `₹${totalHotelEarnings.toLocaleString()}` },
+          { label: 'Delivery Salary (DC - Comm)', value: `₹${totalDeliverySalary.toLocaleString()}` },
+          { label: 'Admin Commission Retained', value: `₹${totalAdminCommission.toLocaleString()}` }
+        ]
+      };
+    } else if (tab === 'Cancelled Orders') {
+      const cancelled = this.cancelledFilteredOrders();
+      const lostRev = cancelled.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
+      const totalOrdersCount = this.filteredOrders().length;
+      const rate = totalOrdersCount > 0 ? ((cancelled.length / totalOrdersCount) * 100).toFixed(1) : '0';
+      return {
+        type: 'Cancelled Orders',
+        items: [
+          { label: 'Cancelled Orders Count', value: cancelled.length.toString() },
+          { label: 'Total Revenue Lost', value: `₹${lostRev.toLocaleString()}` },
+          { label: 'Avg Lost Per Order', value: cancelled.length > 0 ? `₹${Math.round(lostRev / cancelled.length).toLocaleString()}` : '₹0' },
+          { label: 'Cancellation Rate', value: `${rate}%` }
         ]
       };
     } else if (tab === 'Payment Sheet') {
-      const orders = this.filteredOrders();
+      const orders = this.validFilteredOrders();
       const totalSubtotal = orders.reduce((sum, o) => sum + (Number(o.subtotal) || 0), 0);
       const uniqueHotels = new Set(orders.map(o => o.hotel_id)).size;
       const uniqueDays = new Set(orders.map(o => o.created_at ? new Date(o.created_at).toLocaleDateString() : '')).size;
       return {
         type: 'Payment Sheet',
         items: [
-          { label: 'Total Vendor Settlement', value: `₹${totalSubtotal.toLocaleString()}` },
+          { label: 'Real Vendor Settlement', value: `₹${totalSubtotal.toLocaleString()}` },
           { label: 'Settled Hotel Partners', value: uniqueHotels.toString() },
           { label: 'Active Billing Days', value: uniqueDays.toString() }
         ]
@@ -1117,75 +1360,79 @@ export class Reports implements OnInit {
         ]
       };
     } else if (tab === 'Master Chart View') {
-      const orders = this.filteredOrders();
-      const totalRev = orders.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
+      const valid = this.validFilteredOrders();
+      const cancelled = this.cancelledFilteredOrders();
+      const totalRev = valid.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
+      const lostRev = cancelled.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
       return {
         type: 'Master Chart View',
         items: [
-          { label: 'Analytical Panels', value: '10 Charts' },
-          { label: 'Total Analyzed Orders', value: orders.length.toString() },
-          { label: 'Total Gross Volume', value: `₹${totalRev.toLocaleString()}` }
+          { label: 'Analytical Panels', value: '11 Charts' },
+          { label: 'Completed Orders', value: valid.length.toString() },
+          { label: 'Real Net Revenue', value: `₹${totalRev.toLocaleString()}` },
+          { label: 'Cancelled Orders', value: cancelled.length.toString() },
+          { label: 'Revenue Lost', value: `₹${lostRev.toLocaleString()}` }
         ]
       };
     } else if (tab === 'Hotel-wise') {
-      const grouped: Record<number, { name: string, orders: number, revenue: number }> = {};
-      data.forEach(o => {
-        const hId = o.hotel_id === null ? -1 : o.hotel_id;
-        if (!grouped[hId]) grouped[hId] = { name: hId === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), orders: 0, revenue: 0 };
-        grouped[hId].orders++;
-        grouped[hId].revenue += Number(o.grand_total) || 0;
-      });
+      const hotels = Object.values(this.groupedByHotel());
+      const totalRealRev = hotels.reduce((sum, h) => sum + h.revenue, 0);
+      const totalLostRev = hotels.reduce((sum, h) => sum + h.lostRevenue, 0);
+      const totalCompleted = hotels.reduce((sum, h) => sum + h.orders, 0);
+      const totalCancelled = hotels.reduce((sum, h) => sum + h.cancelledOrders, 0);
       return {
         type: 'Hotel-wise',
-        items: Object.values(grouped).map(g => ({
-          label: g.name,
-          value: `Orders: ${g.orders} | Rev: ₹${g.revenue.toLocaleString()} | Avg: ₹${Math.round(g.revenue / g.orders).toLocaleString()}`
-        }))
+        items: [
+          { label: 'Total Real Revenue', value: `₹${totalRealRev.toLocaleString()}` },
+          { label: 'Completed Orders', value: totalCompleted.toString() },
+          { label: 'Total Revenue Lost', value: `₹${totalLostRev.toLocaleString()}` },
+          { label: 'Cancelled Orders', value: totalCancelled.toString() }
+        ]
       };
     } else if (tab === 'Delivery Man-wise' || tab === 'Delivery Person-wise') {
-      const grouped: Record<number, { name: string, orders: number, earnings: number }> = {};
-      data.forEach(o => {
-        const dpId = o.delivery_person_id || 0;
-        if (!grouped[dpId]) grouped[dpId] = { name: o.delivery_person_name || 'Unassigned', orders: 0, earnings: 0 };
-        grouped[dpId].orders++;
-        const adminComm = Number(o.admin_commission_amount) || 0;
-        const deliveryFee = Number(o.shipping_fee) || 0;
-        grouped[dpId].earnings += (deliveryFee - adminComm);
-      });
+      const list = Object.values(this.groupedByDelivery());
+      const totalEarn = list.reduce((sum, d) => sum + d.earnings, 0);
+      const totalAdv = list.reduce((sum, d) => sum + d.advance, 0);
+      const totalCompleted = list.reduce((sum, d) => sum + d.orders, 0);
       return {
-        type: 'Delivery Man-wise',
-        items: Object.values(grouped).map(g => ({
-          label: g.name,
-          value: `Orders: ${g.orders} | Earnings: ₹${g.earnings.toLocaleString()}`
-        }))
+        type: 'Delivery Person-wise',
+        items: [
+          { label: 'Total Completed Deliveries', value: totalCompleted.toString() },
+          { label: 'Total Net Earnings', value: `₹${totalEarn.toLocaleString()}` },
+          { label: 'Advance Deductions', value: `₹${totalAdv.toLocaleString()}` },
+          { label: 'Net Payable', value: `₹${(totalEarn - totalAdv).toLocaleString()}` }
+        ]
       };
     } else if (tab === 'Menu-wise') {
-      const grouped: Record<number, { name: string, quantity: number, revenue: number }> = {};
-      data.forEach(o => {
-        (o.items || []).forEach(item => {
-          if (!grouped[item.menu_id]) grouped[item.menu_id] = { name: item.menu_name || 'Unknown', quantity: 0, revenue: 0 };
-          grouped[item.menu_id].quantity += Number(item.quantity) || 0;
-          grouped[item.menu_id].revenue += Number(item.total) || 0;
-        });
-      });
+      const list = Object.values(this.groupedByMenu());
+      const totalItems = list.reduce((sum, m) => sum + m.quantity, 0);
+      const totalMenuRev = list.reduce((sum, m) => sum + m.revenue, 0);
       return {
         type: 'Menu-wise',
-        items: Object.values(grouped).map(g => ({
-          label: g.name,
-          value: `Qty: ${g.quantity} | Rev: ₹${g.revenue.toLocaleString()}`
-        }))
+        items: [
+          { label: 'Total Items Sold', value: totalItems.toLocaleString() },
+          { label: 'Real Menu Revenue', value: `₹${totalMenuRev.toLocaleString()}` },
+          { label: 'Unique Menu Items', value: list.length.toString() }
+        ]
       };
     } else if (tab === 'Orders') {
+      const valid = this.validFilteredOrders();
+      const cancelled = this.cancelledFilteredOrders();
+      const realRev = valid.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
+      const lostRev = cancelled.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0);
       return {
         type: 'Orders',
         items: [
-          { label: 'Total Orders', value: data.length.toString() },
-          { label: 'Total Revenue', value: `₹${data.reduce((sum, o) => sum + (Number(o.grand_total) || 0), 0).toLocaleString()}` }
+          { label: 'Completed Orders', value: valid.length.toString() },
+          { label: 'Real Net Revenue', value: `₹${realRev.toLocaleString()}` },
+          { label: 'Cancelled Orders', value: cancelled.length.toString() },
+          { label: 'Revenue Lost', value: `₹${lostRev.toLocaleString()}` }
         ]
       };
     } else if (tab === 'Commission / Earnings') {
-      const totalComm = data.reduce((sum, o) => sum + (Number(o.admin_commission_amount) || 0), 0);
-      const totalDC = data.reduce((sum, o) => sum + (Number(o.shipping_fee) || 0), 0);
+      const valid = this.validFilteredOrders();
+      const totalComm = valid.reduce((sum, o) => sum + (Number(o.admin_commission_amount) || 0), 0);
+      const totalDC = valid.reduce((sum, o) => sum + (Number(o.shipping_fee) || 0), 0);
       return {
         type: 'Commission / Earnings',
         items: [
@@ -1195,37 +1442,26 @@ export class Reports implements OnInit {
         ]
       };
     } else if (tab === 'Top Performing Hotels') {
-      const grouped: Record<number, { name: string, revenue: number }> = {};
-      data.forEach(o => {
-        const hId = o.hotel_id === null ? -1 : o.hotel_id;
-        if (!grouped[hId]) grouped[hId] = { name: hId === -1 ? 'Manual Order' : (o.hotel_name || 'Unknown'), revenue: 0 };
-        grouped[hId].revenue += Number(o.grand_total) || 0;
-      });
+      const grouped = this.groupedByHotel();
       return {
         type: 'Top Performing Hotels',
         items: Object.values(grouped)
           .sort((a, b) => b.revenue - a.revenue)
           .slice(0, 5)
-          .map(g => ({ label: g.name, value: `₹${g.revenue.toLocaleString()}` }))
+          .map(g => ({ label: g.name, value: `₹${g.revenue.toLocaleString()} (${g.orders} orders)` }))
       };
     } else if (tab === 'Top Selling Menus') {
-      const grouped: Record<number, { name: string, quantity: number }> = {};
-      data.forEach(o => {
-        (o.items || []).forEach(item => {
-          if (!grouped[item.menu_id]) grouped[item.menu_id] = { name: item.menu_name || 'Unknown', quantity: 0 };
-          grouped[item.menu_id].quantity += item.quantity;
-        });
-      });
+      const grouped = this.groupedByMenu();
       return {
         type: 'Top Selling Menus',
         items: Object.values(grouped)
           .sort((a, b) => b.quantity - a.quantity)
           .slice(0, 5)
-          .map(g => ({ label: g.name, value: `Qty: ${g.quantity}` }))
+          .map(g => ({ label: g.name, value: `Qty: ${g.quantity} (₹${g.revenue.toLocaleString()})` }))
       };
     } else if (tab === 'Time-of-Day') {
       const grouped: Record<string, number> = {};
-      data.forEach(o => {
+      this.validFilteredOrders().forEach(o => {
         if (o.created_at) {
           const hour = new Date(o.created_at).getHours();
           const label = `${hour}:00 - ${hour + 1}:00`;
@@ -1240,16 +1476,18 @@ export class Reports implements OnInit {
         }))
       };
     } else if (tab === 'Status-wise') {
-      const grouped: Record<string, number> = {};
+      const countGroup: Record<string, number> = {};
+      const revGroup: Record<string, number> = {};
       data.forEach(o => {
         const status = o.status || 'Unknown';
-        grouped[status] = (grouped[status] || 0) + (Number(o.grand_total) || 0);
+        countGroup[status] = (countGroup[status] || 0) + 1;
+        revGroup[status] = (revGroup[status] || 0) + (Number(o.grand_total) || 0);
       });
       return {
         type: 'Status-wise',
-        items: Object.entries(grouped).map(g => ({
-          label: g[0],
-          value: `Rev: ₹${g[1].toLocaleString()}`
+        items: Object.keys(countGroup).map(s => ({
+          label: s,
+          value: `${countGroup[s]} orders | ₹${revGroup[s].toLocaleString()} (${s.toLowerCase() === 'cancelled' ? 'Lost' : 'Realized'})`
         }))
       };
     }
@@ -1268,60 +1506,49 @@ export class Reports implements OnInit {
     let seriesData: number[] = [];
     
     if (tab === 'Overview') {
-      // Group by date
+      // Group by date using valid orders (real revenue)
       const grouped: Record<string, number> = {};
-      data.forEach(o => {
+      this.validFilteredOrders().forEach(o => {
         const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
         grouped[date] = (grouped[date] || 0) + (Number(o.grand_total) || 0);
       });
       xAxisData = Object.keys(grouped);
       seriesData = Object.values(grouped);
+    } else if (tab === 'Cancelled Orders') {
+      const grouped: Record<string, number> = {};
+      this.cancelledFilteredOrders().forEach(o => {
+        const hotel = (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || 'Unknown');
+        grouped[hotel] = (grouped[hotel] || 0) + (Number(o.grand_total) || 0);
+      });
+      xAxisData = Object.keys(grouped);
+      seriesData = Object.values(grouped);
     } else if (tab === 'Payment Sheet') {
       const grouped: Record<string, number> = {};
-      data.forEach(o => {
+      this.validFilteredOrders().forEach(o => {
         const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
         grouped[date] = (grouped[date] || 0) + (Number(o.subtotal) || 0);
       });
       xAxisData = Object.keys(grouped);
       seriesData = Object.values(grouped);
     } else if (tab === 'Hotel-wise') {
-      // Group by hotel
-      const grouped: Record<string, number> = {};
-      data.forEach(o => {
-        const hotel = (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || 'Unknown');
-        grouped[hotel] = (grouped[hotel] || 0) + (Number(o.grand_total) || 0);
-      });
-      xAxisData = Object.keys(grouped);
-      seriesData = Object.values(grouped);
+      const hotelData = this.groupedByHotel();
+      xAxisData = Object.values(hotelData).map(h => h.name);
+      seriesData = Object.values(hotelData).map(h => h.revenue);
     } else if (tab === 'Delivery Man-wise' || tab === 'Delivery Person-wise') {
-      // Group by delivery person
-      const grouped: Record<string, number> = {};
-      data.forEach(o => {
-        const person = o.delivery_person_name || 'Unassigned';
-        const deliveryFee = Number(o.shipping_fee) || 0;
-        const adminComm = Number(o.admin_commission_amount) || 0;
-        const earnings = deliveryFee - adminComm;
-        grouped[person] = (grouped[person] || 0) + earnings;
-      });
-      xAxisData = Object.keys(grouped);
-      seriesData = Object.values(grouped);
+      const deliveryData = this.groupedByDelivery();
+      xAxisData = Object.values(deliveryData).map(d => d.name);
+      seriesData = Object.values(deliveryData).map(d => d.earnings);
     } else if (tab === 'Monthly Salary') {
       const monthlyData = Object.values(this.groupedByMonthlyDelivery());
       xAxisData = monthlyData.map(m => `${m.month} (${m.name})`);
       seriesData = monthlyData.map(m => m.earnings);
     } else if (tab === 'Menu-wise') {
-      const grouped: Record<string, number> = {};
-      data.forEach(o => {
-        (o.items || []).forEach(item => {
-          const name = item.menu_name || 'Unknown';
-          grouped[name] = (grouped[name] || 0) + (Number(item.total) || 0);
-        });
-      });
-      xAxisData = Object.keys(grouped);
-      seriesData = Object.values(grouped);
+      const menuData = this.groupedByMenu();
+      xAxisData = Object.values(menuData).map(m => m.name);
+      seriesData = Object.values(menuData).map(m => m.revenue);
     } else if (tab === 'Orders') {
       const grouped: Record<string, number> = {};
-      data.forEach(o => {
+      this.validFilteredOrders().forEach(o => {
         const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
         grouped[date] = (grouped[date] || 0) + 1;
       });
@@ -1329,7 +1556,7 @@ export class Reports implements OnInit {
       seriesData = Object.values(grouped);
     } else if (tab === 'Commission / Earnings') {
       const grouped: Record<string, number> = {};
-      data.forEach(o => {
+      this.validFilteredOrders().forEach(o => {
         const comm = Number(o.admin_commission_amount) || 0;
         const date = o.created_at ? new Date(o.created_at).toLocaleDateString() : 'Unknown';
         grouped[date] = (grouped[date] || 0) + comm;
@@ -1337,28 +1564,18 @@ export class Reports implements OnInit {
       xAxisData = Object.keys(grouped);
       seriesData = Object.values(grouped);
     } else if (tab === 'Top Performing Hotels') {
-      const grouped: Record<string, number> = {};
-      data.forEach(o => {
-        const hotel = (o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || 'Unknown');
-        grouped[hotel] = (grouped[hotel] || 0) + (Number(o.grand_total) || 0);
-      });
-      const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      xAxisData = sorted.map(e => e[0]);
-      seriesData = sorted.map(e => e[1]);
+      const grouped = this.groupedByHotel();
+      const sorted = Object.values(grouped).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+      xAxisData = sorted.map(e => e.name);
+      seriesData = sorted.map(e => e.revenue);
     } else if (tab === 'Top Selling Menus') {
-      const grouped: Record<string, number> = {};
-      data.forEach(o => {
-        (o.items || []).forEach(item => {
-          const name = item.menu_name || 'Unknown';
-          grouped[name] = (grouped[name] || 0) + item.quantity;
-        });
-      });
-      const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
-      xAxisData = sorted.map(e => e[0]);
-      seriesData = sorted.map(e => e[1]);
+      const grouped = this.groupedByMenu();
+      const sorted = Object.values(grouped).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+      xAxisData = sorted.map(e => e.name);
+      seriesData = sorted.map(e => e.quantity);
     } else if (tab === 'Time-of-Day') {
       const grouped: Record<string, number> = {};
-      data.forEach(o => {
+      this.validFilteredOrders().forEach(o => {
         if (o.created_at) {
           const hour = new Date(o.created_at).getHours();
           const label = `${hour}:00 - ${hour + 1}:00`;
@@ -1471,20 +1688,20 @@ export class Reports implements OnInit {
 
   exportCSV() {
     const config = this.tableConfig();
-    if (config.rows.length === 0) {
+    if (!config || !config.rows || config.rows.length === 0) {
       this.toast.error('No data to export');
       return;
     }
 
-    const headers = config.headers;
-    const rows = config.rows;
+    const headers: string[] = config.headers || [];
+    const rows: (string | number)[][] = config.rows || [];
 
     // Add UTF-8 BOM for proper Excel rendering of rupee symbol
     const csvContent = "\ufeff" + [
-      headers.map(h => `"${h}"`).join(','),
-      ...rows.map(row => row.map(field => {
+      headers.map((h: string) => `"${h}"`).join(','),
+      ...rows.map((row: (string | number)[]) => row.map((field: string | number) => {
         // Ensure symbols are preserved and fields with commas are quoted correctly
-        const value = String(field);
+        const value = String(field ?? '');
         return `"${value}"`;
       }).join(','))
     ].join('\n');
@@ -1504,7 +1721,7 @@ export class Reports implements OnInit {
 
   exportPDF() {
     const config = this.tableConfig();
-    if (config.rows.length === 0) {
+    if (!config || !config.rows || config.rows.length === 0) {
       this.toast.error('No data to export');
       return;
     }
@@ -1536,17 +1753,19 @@ export class Reports implements OnInit {
     doc.setFontSize(10);
     
     let y = 46;
-    m.items.forEach(item => {
-      const sanitizedValue = item.value.replace(/₹/g, 'Rs.');
-      doc.text(`${item.label}: ${sanitizedValue}`, 14, y);
-      y += 6;
-    });
+    if (m && m.items) {
+      m.items.forEach((item: { label: string; value: string }) => {
+        const sanitizedValue = (item.value || '').replace(/₹/g, 'Rs.');
+        doc.text(`${item.label}: ${sanitizedValue}`, 14, y);
+        y += 6;
+      });
+    }
 
     // Table mapping to replace ₹ with Rs. for PDF compatibility
-    const sanitizedRows = config.rows.map(row => 
-      row.map(cell => String(cell).replace(/₹/g, 'Rs.'))
+    const sanitizedRows = config.rows.map((row: (string | number)[]) => 
+      row.map((cell: string | number) => String(cell ?? '').replace(/₹/g, 'Rs.'))
     );
-    const sanitizedHeaders = config.headers.map(h => h.replace(/₹/g, 'Rs.'));
+    const sanitizedHeaders = config.headers.map((h: string) => String(h ?? '').replace(/₹/g, 'Rs.'));
 
     // Table
     autoTable(doc, {
@@ -1565,7 +1784,8 @@ export class Reports implements OnInit {
       }
     });
 
-    doc.save(`kallme_report_${this.currentTab()}_${new Date().toISOString().split('T')[0]}.pdf`);
+    const tabName = this.currentTab() || 'report';
+    doc.save(`kallme_report_${tabName}_${new Date().toISOString().split('T')[0]}.pdf`);
     this.toast.success('PDF exported successfully');
   }
 }

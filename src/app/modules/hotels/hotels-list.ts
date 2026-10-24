@@ -14,6 +14,8 @@ import { MainSkeletonComponent } from '../../components/main-skeleton';
 
 import { sortHotels, HotelSortOption } from '../../utils/hotel-sort';
 
+import { SearchService } from '../../services/search.service';
+
 @Component({
   selector: 'app-hotels-list',
   standalone: true,
@@ -25,6 +27,7 @@ export class HotelsList {
   catalog = inject(CatalogService);
   toast = inject(ToastService);
   imageUpload = inject(ImageUploadService);
+  search = inject(SearchService);
   
   categories = MENU_CATEGORIES;
 
@@ -32,8 +35,10 @@ export class HotelsList {
   searchTerm = signal('');
   sortMode = signal<HotelSortOption>('sequence');
 
+  effectiveSearchTerm = computed(() => (this.searchTerm() || this.search.searchTerm() || '').toLowerCase().trim());
+
   displayedHotels = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
+    const term = this.effectiveSearchTerm();
     const hotels = this.catalog.hotels();
     let filtered = hotels;
     if (term) {
@@ -45,6 +50,16 @@ export class HotelsList {
     }
     return sortHotels(filtered, this.sortMode());
   });
+
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.search.setSearchTerm(term);
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.search.clearSearch();
+  }
 
   // Reorder Sequence Modal State
   showReorderModal = signal(false);
@@ -143,10 +158,23 @@ export class HotelsList {
   showDeleteConfirm = signal(false);
   itemToDelete = signal<{ type: 'hotel' | 'menu', data: Hotel | MenuItem } | null>(null);
   
+  modalMenuSearch = signal('');
+
   currentMenu = computed(() => {
     const hotel = this.selectedHotel();
     if (!hotel) return [];
     return this.catalog.hotelMenus()[hotel.id] || [];
+  });
+
+  filteredModalMenu = computed(() => {
+    const items = this.currentMenu();
+    const term = this.modalMenuSearch().toLowerCase().trim();
+    if (!term) return items;
+    return items.filter(i => 
+      (i.name && i.name.toLowerCase().includes(term)) ||
+      (i.category && i.category.toLowerCase().includes(term)) ||
+      (i.description && i.description.toLowerCase().includes(term))
+    );
   });
 
   menuItemForm = {
@@ -185,6 +213,7 @@ export class HotelsList {
   // Menu Methods
   viewMenu(hotel: Hotel) {
     this.selectedHotel.set(hotel);
+    this.modalMenuSearch.set('');
     this.catalog.loadHotelMenu(hotel.id);
     this.showMenuModal.set(true);
   }

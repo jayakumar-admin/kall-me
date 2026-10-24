@@ -42,11 +42,12 @@ export class Layout implements OnInit, OnDestroy {
       this.fetchNotifications();
     });
 
-    // Close sidebar on navigation
+    // Close sidebar and reset search on navigation
     this.routerSub = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.closeSidebar();
+      this.search.clearSearch();
     });
   }
 

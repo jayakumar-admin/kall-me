@@ -11,6 +11,7 @@ router.get('/daily', async (req, res) => {
         COUNT(*) as total_orders, 
         SUM(grand_total) as total_revenue
       FROM orders
+      WHERE LOWER(COALESCE(status, '')) != 'cancelled'
       GROUP BY DATE(created_at)
       ORDER BY DATE(created_at) DESC
       LIMIT 7
@@ -36,14 +37,14 @@ router.get('/delivery-person', async (req, res) => {
     let query = `
       SELECT 
         d.name,
-        COUNT(o.id) AS total_orders,
-        SUM(o.grand_total) AS total_amount,
-        SUM(o.subtotal) AS item_total,
-        SUM(o.delivery_charge) AS delivery_total,
-        SUM(CASE WHEN o.delivery_charge <= 30 THEN 1 ELSE 0 END) AS below_30_count,
-        SUM(o.admin_commission_amount) AS total_commission,
-        SUM(o.amount_received) AS advance_amount,
-        SUM(o.balance_pending) AS balance_pending
+        COUNT(CASE WHEN LOWER(COALESCE(o.status, '')) != 'cancelled' THEN o.id END) AS total_orders,
+        COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.status, '')) != 'cancelled' THEN o.grand_total ELSE 0 END), 0) AS total_amount,
+        COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.status, '')) != 'cancelled' THEN o.subtotal ELSE 0 END), 0) AS item_total,
+        COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.status, '')) != 'cancelled' THEN o.delivery_charge ELSE 0 END), 0) AS delivery_total,
+        COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.status, '')) != 'cancelled' AND o.delivery_charge <= 30 THEN 1 ELSE 0 END), 0) AS below_30_count,
+        COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.status, '')) != 'cancelled' THEN o.admin_commission_amount ELSE 0 END), 0) AS total_commission,
+        COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.status, '')) != 'cancelled' THEN o.amount_received ELSE 0 END), 0) AS advance_amount,
+        COALESCE(SUM(CASE WHEN LOWER(COALESCE(o.status, '')) != 'cancelled' THEN o.balance_pending ELSE 0 END), 0) AS balance_pending
       FROM orders o
       JOIN delivery_persons d ON o.delivery_person_id = d.id
     `;

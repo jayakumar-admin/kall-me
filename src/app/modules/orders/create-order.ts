@@ -259,11 +259,21 @@ import { sortHotels, HotelSortOption } from "../../utils/hotel-sort";
             >
             <input
               type="text"
-              [ngModel]="menuSearchTerm()"
-              (ngModelChange)="menuSearchTerm.set($event)"
+              [ngModel]="menuSearchTerm() || search.searchTerm()"
+              (ngModelChange)="onMenuSearchChange($event)"
               placeholder="Search menu items..."
-              class="w-full bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
+              class="w-full bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-lg pl-10 pr-9 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
             />
+            @if (menuSearchTerm() || search.searchTerm()) {
+              <button 
+                type="button"
+                (click)="clearMenuSearch()" 
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+                title="Clear search"
+              >
+                <mat-icon class="text-sm leading-none block">close</mat-icon>
+              </button>
+            }
           </div>
         </div>
 
@@ -363,9 +373,14 @@ import { sortHotels, HotelSortOption } from "../../utils/hotel-sort";
             } @empty {
               <div class="py-12 text-center col-span-2 lg:col-span-1">
                 <mat-icon class="text-4xl text-slate-300 mb-2"
-                  >restaurant_menu</mat-icon
+                  >{{ (menuSearchTerm() || search.searchTerm()) ? 'search_off' : 'restaurant_menu' }}</mat-icon
                 >
-                <p class="text-slate-500">No items found for this category.</p>
+                <p class="text-slate-500">
+                  {{ (menuSearchTerm() || search.searchTerm()) ? 'No items match your search.' : 'No items found for this category.' }}
+                </p>
+                @if (menuSearchTerm() || search.searchTerm()) {
+                  <button (click)="clearMenuSearch()" class="mt-2 text-xs text-[#FFC107] font-bold hover:underline">Clear search</button>
+                }
               </div>
             }
           } @else {
@@ -1074,10 +1089,20 @@ export class CreateOrder implements OnInit {
 
   menuSearchTerm = signal("");
 
+  onMenuSearchChange(term: string) {
+    this.menuSearchTerm.set(term);
+    this.search.setSearchTerm(term);
+  }
+
+  clearMenuSearch() {
+    this.menuSearchTerm.set('');
+    this.search.clearSearch();
+  }
+
   filteredMenu = computed(() => {
     const cat = this.activeCategory();
     const hotel = this.selectedHotel();
-    const term = this.menuSearchTerm().toLowerCase();
+    const term = (this.menuSearchTerm() || this.search.searchTerm() || '').toLowerCase().trim();
 
     if (!hotel) return [];
 

@@ -29,7 +29,20 @@ interface ParsedHotelCSV {
           <h1 class="text-3xl font-display font-black text-[#1A1A1A] dark:text-white uppercase tracking-tight">Hotel Management</h1>
           <p class="text-slate-500 dark:text-slate-400">Manage restaurant partners and their details.</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="relative w-full sm:w-64">
+            <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg w-5 h-5 flex items-center justify-center">search</mat-icon>
+            <input type="text"
+                   [ngModel]="localSearch() || search.searchTerm()"
+                   (ngModelChange)="onSearchChange($event)"
+                   placeholder="Search hotels..."
+                   class="w-full pl-9 pr-8 py-2.5 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl text-xs font-medium text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#FFC107]/50">
+            @if (effectiveSearch()) {
+              <button (click)="clearSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-0.5 rounded-full">
+                <mat-icon class="text-sm w-4 h-4 flex items-center justify-center">close</mat-icon>
+              </button>
+            }
+          </div>
           <button (click)="toggleBulkUpload()" class="btn-primary !bg-slate-100 hover:!bg-slate-200 !text-slate-700 dark:!bg-white/10 dark:hover:!bg-white/20 dark:!text-white flex items-center gap-2">
             <mat-icon>{{ showBulkUpload() ? 'expand_less' : 'cloud_upload' }}</mat-icon>
             {{ showBulkUpload() ? 'Hide Bulk Upload' : 'Bulk Upload' }}
@@ -166,10 +179,26 @@ interface ParsedHotelCSV {
               </div>
             </div>
           </div>
+        } @empty {
+          <div class="col-span-full py-16 text-center card bg-white dark:bg-[#1E293B] border-none ring-1 ring-slate-100 dark:ring-white/5">
+            <mat-icon class="text-5xl text-slate-300 dark:text-white/20 mb-3">{{ effectiveSearch() ? 'search_off' : 'storefront' }}</mat-icon>
+            <h3 class="text-base font-bold text-slate-700 dark:text-slate-300">
+              {{ effectiveSearch() ? 'No hotels matching "' + effectiveSearch() + '"' : 'No hotels found' }}
+            </h3>
+            <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+              {{ effectiveSearch() ? 'Try adjusting your search query or clear the filter.' : 'Add your first hotel partner to get started.' }}
+            </p>
+            @if (effectiveSearch()) {
+              <button (click)="clearSearch()" class="mt-4 px-4 py-2 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-200 transition-colors">
+                Clear search
+              </button>
+            }
+          </div>
         }
       </div>
 
       <!-- Pagination -->
+      @if (filteredHotels().length > 0) {
       <div class="card p-4 sm:p-6 border-none ring-1 ring-slate-100 dark:ring-white/5 bg-white dark:bg-[#1E293B] flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in-50 duration-300">
         <div class="flex flex-wrap items-center gap-4">
           <p class="text-xs text-slate-500">
@@ -222,6 +251,7 @@ interface ParsedHotelCSV {
           </button>
         </div>
       </div>
+      }
 
       <!-- Add/Edit Modal -->
       @if (isModalOpen()) {
@@ -317,15 +347,33 @@ export class HotelManagement {
   
   pageSize = signal<number>(6);
   currentPage = signal<number>(1);
+  localSearch = signal<string>('');
+
+  effectiveSearch = computed(() => {
+    return (this.localSearch() || this.search.searchTerm() || '').toLowerCase().trim();
+  });
 
   filteredHotels = computed(() => {
-    const term = this.search.searchTerm().toLowerCase();
+    const term = this.effectiveSearch();
+    if (!term) return this.catalog.hotels();
     return this.catalog.hotels().filter(h => {
       return (h.name?.toLowerCase().includes(term) || false) || 
              (h.category?.toLowerCase().includes(term) || false) ||
              (h.address?.toLowerCase().includes(term) || false);
     });
   });
+
+  onSearchChange(term: string) {
+    this.localSearch.set(term);
+    this.search.setSearchTerm(term);
+    this.currentPage.set(1);
+  }
+
+  clearSearch() {
+    this.localSearch.set('');
+    this.search.clearSearch();
+    this.currentPage.set(1);
+  }
 
   totalPages = computed(() => {
     return Math.ceil(this.filteredHotels().length / this.pageSize()) || 1;

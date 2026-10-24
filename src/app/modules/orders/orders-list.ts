@@ -23,6 +23,7 @@ export class OrdersList implements OnInit {
   orderService = inject(OrderService);
   router = inject(Router);
   statusFilter = signal<string>('all');
+  searchTerm = signal('');
   
   pageSize = signal<number>(10);
   currentPage = signal<number>(1);
@@ -31,18 +32,36 @@ export class OrdersList implements OnInit {
     this.orderService.loadOrders();
   }
 
+  effectiveSearchTerm = computed(() => (this.searchTerm() || this.search.searchTerm() || '').toLowerCase().trim());
+
   filteredOrders = computed(() => {
-    const term = this.search.searchTerm().toLowerCase();
+    const term = this.effectiveSearchTerm();
     const status = this.statusFilter();
     
     return this.orderService.orders().filter(o => {
-      const matchesSearch = (o.order_number?.toLowerCase().includes(term) || false) || 
+      const matchesSearch = !term ||
+                           (o.order_number?.toLowerCase().includes(term) || false) || 
                            (o.customer_phone?.toLowerCase().includes(term) || false) || 
-                           (o.hotel_name?.toLowerCase().includes(term) || false);
+                           (o.customer_name?.toLowerCase().includes(term) || false) ||
+                           (o.hotel_name?.toLowerCase().includes(term) || false) ||
+                           (o.delivery_person_name?.toLowerCase().includes(term) || false) ||
+                           (o.delivery_address?.toLowerCase().includes(term) || false);
       const matchesStatus = status === 'all' || o.status === status;
       return matchesSearch && matchesStatus;
     });
   });
+
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.search.setSearchTerm(term);
+    this.currentPage.set(1);
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.search.clearSearch();
+    this.currentPage.set(1);
+  }
 
   totalPages = computed(() => {
     return Math.ceil(this.filteredOrders().length / this.pageSize()) || 1;
@@ -115,11 +134,18 @@ export class OrdersList implements OnInit {
     const allOrders = this.filteredOrders();
     const getNumber = (value: number | string | undefined) => Math.round(Number(value) || 0);
 
+    const isCancelledFilter = this.statusFilter() === 'Cancelled';
+    const validOrders = isCancelledFilter ? [] : allOrders.filter(o => o.status !== 'Cancelled');
+    const cancelledOrders = isCancelledFilter ? allOrders : allOrders.filter(o => o.status === 'Cancelled');
+
     return {
-      total: allOrders.length,
-      revenue: allOrders.reduce((acc, o) => acc + getNumber(o.grand_total), 0),
-      received: allOrders.reduce((acc, o) => acc + getNumber(o.amount_received), 0),
-      pending: allOrders.reduce((acc, o) => acc + getNumber(o.balance_pending), 0)
+      total: isCancelledFilter ? allOrders.length : validOrders.length,
+      allTotal: allOrders.length,
+      cancelledTotal: cancelledOrders.length,
+      revenue: validOrders.reduce((acc, o) => acc + getNumber(o.grand_total), 0),
+      lostRevenue: cancelledOrders.reduce((acc, o) => acc + getNumber(o.grand_total), 0),
+      received: validOrders.reduce((acc, o) => acc + getNumber(o.amount_received), 0),
+      pending: validOrders.reduce((acc, o) => acc + getNumber(o.balance_pending), 0)
     };
   });
 
@@ -143,6 +169,32 @@ export class OrdersList implements OnInit {
   }
 
   exportOrders() {
+    const orders = this.filteredOrders();
+    if (orders.length === 0) {
+      this.toast.error('No orders to export');
+      return;
+    }
+    const headers = ['Order Number', 'Date', 'Hotel', 'Customer Name', 'Phone', 'Address', 'Status', 'Bill Total', 'Advance Paid', 'Pending Balance'];
+    const rows = orders.map(o => [
+      `"${o.order_number || ''}"`,
+      `"${o.created_at ? new Date(o.created_at).toLocaleString('en-IN') : ''}"`,
+      `"${(o.hotel_id === -1 || o.hotel_id === null) ? 'Manual Order' : (o.hotel_name || '')}"`,
+      `"${o.customer_name || ''}"`,
+      `"${o.customer_phone || ''}"`,
+      `"${(o.delivery_address || '').replace(/"/g, '""')}"`,
+      `"${o.status || ''}"`,
+      o.status === 'Cancelled' ? `0 (Lost: ${o.grand_total || 0})` : (o.grand_total || 0),
+      o.amount_received || 0,
+      o.status === 'Cancelled' ? 0 : (o.balance_pending || 0)
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `orders_report_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     this.toast.success('Orders exported successfully');
   }
 

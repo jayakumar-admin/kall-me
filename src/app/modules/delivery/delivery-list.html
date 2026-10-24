@@ -44,10 +44,16 @@
             <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
             <input 
               type="text" 
-              placeholder="Search driver name or ID..." 
-              class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl pl-10 pr-4 py-2 text-sm outline-none"
-              (input)="onSearch($event)"
+              [ngModel]="searchTerm() || search.searchTerm()"
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Search driver name, phone, or ID..." 
+              class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl pl-10 pr-9 py-2 text-sm outline-none dark:text-white"
             >
+            @if (effectiveSearchTerm()) {
+              <button (click)="clearSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <mat-icon class="text-sm">close</mat-icon>
+              </button>
+            }
           </div>
           <div class="flex gap-3">
             <button class="px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-sm flex items-center gap-2">
@@ -105,6 +111,18 @@
                         <mat-icon class="text-lg">edit</mat-icon>
                       </button>
                     </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                    <mat-icon class="text-4xl mb-2 opacity-40">{{ effectiveSearchTerm() ? 'search_off' : 'delivery_dining' }}</mat-icon>
+                    <p class="text-sm font-medium">
+                      {{ effectiveSearchTerm() ? 'No delivery drivers found matching "' + effectiveSearchTerm() + '"' : 'No delivery drivers available.' }}
+                    </p>
+                    @if (effectiveSearchTerm()) {
+                      <button (click)="clearSearch()" class="mt-2 text-xs text-[#FFC107] font-bold hover:underline">Clear search</button>
+                    }
                   </td>
                 </tr>
               }

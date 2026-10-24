@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ApiService } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
+import { SearchService } from '../../../services/search.service';
 import { User } from '../../../services/auth.service';
 import { ConfirmDialog } from '../../../components/confirm-dialog/confirm-dialog.component';
 
@@ -25,6 +26,27 @@ import { ConfirmDialog } from '../../../components/confirm-dialog/confirm-dialog
       </div>
 
       <div class="card overflow-hidden p-0 border-none ring-1 ring-slate-100 dark:ring-white/5">
+        <div class="p-4 border-b border-slate-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="relative w-full sm:w-80">
+            <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+            <input 
+              type="text" 
+              [ngModel]="searchTerm() || search.searchTerm()" 
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Search user name, email, role..." 
+              class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-9 py-2 text-xs outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white"
+            >
+            @if (effectiveSearchTerm()) {
+              <button (click)="clearSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <mat-icon class="text-sm">close</mat-icon>
+              </button>
+            }
+          </div>
+          <span class="text-xs text-slate-400 font-bold">
+            {{ filteredUsers().length }} / {{ users().length }} users
+          </span>
+        </div>
+
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
@@ -36,7 +58,7 @@ import { ConfirmDialog } from '../../../components/confirm-dialog/confirm-dialog
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-              @for (user of users(); track user.id) {
+              @for (user of filteredUsers(); track user.id) {
                 <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                   <td class="px-4 md:px-6 py-4">
                     <div class="flex items-center gap-3">
@@ -62,6 +84,18 @@ import { ConfirmDialog } from '../../../components/confirm-dialog/confirm-dialog
                     <button (click)="deleteUser(user)" class="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors">
                       <mat-icon>delete</mat-icon>
                     </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                    <mat-icon class="text-4xl mb-2 opacity-40">{{ effectiveSearchTerm() ? 'search_off' : 'people' }}</mat-icon>
+                    <p class="text-sm font-medium">
+                      {{ effectiveSearchTerm() ? 'No users found matching "' + effectiveSearchTerm() + '"' : 'No users registered yet.' }}
+                    </p>
+                    @if (effectiveSearchTerm()) {
+                      <button (click)="clearSearch()" class="mt-2 text-xs text-[#FFC107] font-bold hover:underline">Clear search</button>
+                    }
                   </td>
                 </tr>
               }
@@ -135,8 +169,35 @@ export class UserManagement implements OnInit {
   private api = inject(ApiService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+  search = inject(SearchService);
 
   users = signal<User[]>([]);
+  searchTerm = signal('');
+
+  effectiveSearchTerm = computed(() => (this.searchTerm() || this.search.searchTerm() || '').toLowerCase().trim());
+
+  filteredUsers = computed(() => {
+    const term = this.effectiveSearchTerm();
+    const all = this.users();
+    if (!term) return all;
+    return all.filter(u => 
+      (u.name && u.name.toLowerCase().includes(term)) ||
+      (u.email && u.email.toLowerCase().includes(term)) ||
+      (u.mobile && u.mobile.includes(term)) ||
+      (u.role && u.role.toLowerCase().includes(term))
+    );
+  });
+
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.search.setSearchTerm(term);
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.search.clearSearch();
+  }
+
   showModal = signal(false);
   showDeleteConfirm = signal(false);
   userToDelete = signal<User | null>(null);

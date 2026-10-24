@@ -7,6 +7,7 @@ import { CatalogService, HotelMenuItem } from '../../services/catalog.service';
 import { OrderService } from '../../services/order.service';
 import { ToastService } from '../../services/toast.service';
 import { ImageUploadService } from '../../services/image-upload.service';
+import { SearchService } from '../../services/search.service';
 import { MenuItem } from '../../models';
 import { MENU_CATEGORIES } from '../../data/static-data';
 import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.component';
@@ -26,32 +27,82 @@ import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.co
           </div>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div class="bg-white dark:bg-[#1E293B] p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-white/5">
             <h3 class="text-slate-500 font-bold uppercase text-xs">Total Orders</h3>
-            <p class="text-3xl font-black text-[#1A1A1A] dark:text-white mt-2">{{ hotelOrders().length }}</p>
+            <div class="flex items-baseline gap-2 mt-2">
+              <p class="text-3xl font-black text-[#1A1A1A] dark:text-white">{{ validHotelOrders().length }}</p>
+              @if (cancelledHotelOrders().length > 0) {
+                <span class="text-xs text-slate-400 font-medium">({{ cancelledHotelOrders().length }} cancelled)</span>
+              }
+            </div>
           </div>
           <div class="bg-white dark:bg-[#1E293B] p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-white/5">
             <h3 class="text-slate-500 font-bold uppercase text-xs">Total Revenue</h3>
-            <p class="text-3xl font-black text-[#1A1A1A] dark:text-white mt-2">₹{{ totalRevenue() }}</p>
+            <p class="text-3xl font-black text-[#1A1A1A] dark:text-white mt-2">₹{{ totalRevenue() | number:'1.0-0' }}</p>
+          </div>
+          <div class="bg-white dark:bg-[#1E293B] p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-white/5 bg-red-50/30 dark:bg-red-950/20">
+            <h3 class="text-red-500 dark:text-red-400 font-bold uppercase text-xs">Revenue Lost</h3>
+            <div class="flex items-baseline gap-2 mt-2">
+              <p class="text-3xl font-black text-red-600 dark:text-red-400">₹{{ lostRevenue() | number:'1.0-0' }}</p>
+              <span class="text-xs text-red-400 font-medium">({{ cancelledHotelOrders().length }} orders)</span>
+            </div>
           </div>
           <div class="bg-white dark:bg-[#1E293B] p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-white/5">
             <h3 class="text-slate-500 font-bold uppercase text-xs">Menu Items</h3>
-            <p class="text-3xl font-black text-[#1A1A1A] dark:text-white mt-2">{{ menuItems().length }}</p>
+            <p class="text-3xl font-black text-[#1A1A1A] dark:text-white mt-2">
+              @if (effectiveSearch()) {
+                <span>{{ filteredMenuItems().length }}</span>
+                <span class="text-sm font-normal text-slate-400"> / {{ menuItems().length }}</span>
+              } @else {
+                <span>{{ menuItems().length }}</span>
+              }
+            </p>
           </div>
         </div>
 
         <div class="bg-white dark:bg-[#1E293B] p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-white/5">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold">Menu</h2>
-            <button (click)="openAddMenuItemModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5">
-              <mat-icon class="text-sm">add</mat-icon>
-              Add Item
-            </button>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-3">
+              <h2 class="text-xl font-bold">Menu</h2>
+              <span class="text-xs bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 px-2.5 py-0.5 rounded-full font-bold">
+                {{ filteredMenuItems().length }} items
+              </span>
+            </div>
+
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <!-- Search Menus Input -->
+              <div class="relative flex-1 sm:w-72">
+                <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+                <input 
+                  type="text" 
+                  [ngModel]="search.searchTerm() || localSearch()"
+                  (ngModelChange)="onLocalSearchChange($event)"
+                  placeholder="Search menus..." 
+                  class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
+                  aria-label="Search menus"
+                >
+                @if (effectiveSearch()) {
+                  <button 
+                    type="button"
+                    (click)="clearSearch()" 
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+                    title="Clear search"
+                  >
+                    <mat-icon class="text-base leading-none block">close</mat-icon>
+                  </button>
+                }
+              </div>
+
+              <button (click)="openAddMenuItemModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-colors shadow-sm">
+                <mat-icon class="text-sm">add</mat-icon>
+                Add Item
+              </button>
+            </div>
           </div>
           
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            @for (item of menuItems(); track item.id) {
+            @for (item of filteredMenuItems(); track item.id) {
               <div class="p-4 rounded-xl border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 flex items-center gap-4 group">
                 <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0">
                   <img [src]="item.image_url || 'https://picsum.photos/seed/' + item.name + '/100/100'" [alt]="item.name" class="w-full h-full object-cover">
@@ -85,8 +136,13 @@ import { ConfirmDialog } from '../../components/confirm-dialog/confirm-dialog.co
               </div>
             } @empty {
               <div class="col-span-full py-12 text-center">
-                <mat-icon class="text-4xl text-slate-300 mb-2">restaurant_menu</mat-icon>
-                <p class="text-slate-500">No items in this menu yet.</p>
+                <mat-icon class="text-4xl text-slate-300 mb-2">{{ effectiveSearch() ? 'search_off' : 'restaurant_menu' }}</mat-icon>
+                @if (effectiveSearch()) {
+                  <p class="text-slate-500">No menu items found matching "{{ effectiveSearch() }}".</p>
+                  <button (click)="clearSearch()" class="mt-2 text-xs text-[#FFC107] font-bold hover:underline">Clear search</button>
+                } @else {
+                  <p class="text-slate-500">No items in this menu yet.</p>
+                }
               </div>
             }
           </div>
@@ -202,12 +258,38 @@ export class HotelDetails implements OnInit {
   private orderService = inject(OrderService);
   private toast = inject(ToastService);
   private imageUpload = inject(ImageUploadService);
+  search = inject(SearchService);
 
   hotelId = signal<number>(0);
 
   hotel = computed(() => this.catalog.hotels().find(m => m.id === this.hotelId()));
 
   menuItems = computed(() => this.catalog.hotelMenus()[this.hotelId()] || []);
+
+  localSearch = signal<string>('');
+
+  effectiveSearch = computed(() => (this.localSearch() || this.search.searchTerm() || '').toLowerCase().trim());
+
+  filteredMenuItems = computed(() => {
+    const items = this.menuItems();
+    const term = this.effectiveSearch();
+    if (!term) return items;
+    return items.filter(item => 
+      (item.name && item.name.toLowerCase().includes(term)) ||
+      (item.category && item.category.toLowerCase().includes(term)) ||
+      (item.description && item.description.toLowerCase().includes(term))
+    );
+  });
+
+  onLocalSearchChange(value: string) {
+    this.localSearch.set(value);
+    this.search.setSearchTerm(value);
+  }
+
+  clearSearch() {
+    this.localSearch.set('');
+    this.search.clearSearch();
+  }
 
   filterDate = signal<string>('');
 
@@ -217,7 +299,16 @@ export class HotelDetails implements OnInit {
     return orders.filter(o => o.created_at?.startsWith(this.filterDate()));
   });
 
-  totalRevenue = computed(() => this.hotelOrders().reduce((acc, o) => acc + (Number(o.grand_total) || 0), 0));
+  validHotelOrders = computed(() => {
+    return this.hotelOrders().filter(o => o.status !== 'Cancelled');
+  });
+
+  cancelledHotelOrders = computed(() => {
+    return this.hotelOrders().filter(o => o.status === 'Cancelled');
+  });
+
+  totalRevenue = computed(() => this.validHotelOrders().reduce((acc, o) => acc + (Number(o.grand_total) || 0), 0));
+  lostRevenue = computed(() => this.cancelledHotelOrders().reduce((acc, o) => acc + (Number(o.grand_total) || 0), 0));
 
   editingPrices: Record<number, number> = {};
 

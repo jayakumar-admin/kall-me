@@ -1,17 +1,18 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { CatalogService } from '../../../services/catalog.service';
 import { ApiService } from '../../../services/api.service';
 import { ToastService } from '../../../services/toast.service';
 import { ImageUploadService } from '../../../services/image-upload.service';
+import { SearchService } from '../../../services/search.service';
 import { MenuItem, MENU_CATEGORIES } from '../../../data/static-data';
 
 @Component({
   selector: 'app-menu-editor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatIconModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MatIconModule],
   template: `
     <div class="h-full overflow-y-auto p-6 custom-scrollbar space-y-8">
       <div class="flex items-center justify-between">
@@ -25,7 +26,28 @@ import { MenuItem, MENU_CATEGORIES } from '../../../data/static-data';
         </button>
       </div>
 
-      <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5">
+      <div class="card border-none ring-1 ring-slate-100 dark:ring-white/5 !p-0 overflow-hidden">
+        <div class="p-4 border-b border-slate-100 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="relative w-full sm:w-80">
+            <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+            <input 
+              type="text" 
+              [ngModel]="searchTerm() || search.searchTerm()" 
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Search global menu..." 
+              class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-9 py-2 text-xs outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white"
+            >
+            @if (effectiveSearchTerm()) {
+              <button (click)="clearSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <mat-icon class="text-sm">close</mat-icon>
+              </button>
+            }
+          </div>
+          <span class="text-xs text-slate-400 font-bold">
+            {{ filteredGlobalMenu().length }} / {{ catalog.globalMenu().length }} items
+          </span>
+        </div>
+
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
@@ -38,7 +60,7 @@ import { MenuItem, MENU_CATEGORIES } from '../../../data/static-data';
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-white/5">
-              @for (item of catalog.globalMenu(); track item.id) {
+              @for (item of filteredGlobalMenu(); track item.id) {
                 <tr class="group hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                   <td class="px-4 py-3">
                     <img [src]="item.image_url || 'https://picsum.photos/seed/' + item.name + '/100/100'" 
@@ -65,6 +87,18 @@ import { MenuItem, MENU_CATEGORIES } from '../../../data/static-data';
                     <button (click)="deleteItem(item.id)" class="text-slate-400 hover:text-red-500">
                       <mat-icon class="text-sm">delete</mat-icon>
                     </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                    <mat-icon class="text-4xl mb-2 opacity-40">{{ effectiveSearchTerm() ? 'search_off' : 'restaurant_menu' }}</mat-icon>
+                    <p class="text-sm font-medium">
+                      {{ effectiveSearchTerm() ? 'No items found matching "' + effectiveSearchTerm() + '"' : 'No menu items in catalog yet.' }}
+                    </p>
+                    @if (effectiveSearchTerm()) {
+                      <button (click)="clearSearch()" class="mt-2 text-xs text-[#FFC107] font-bold hover:underline">Clear search</button>
+                    }
                   </td>
                 </tr>
               }
@@ -149,8 +183,33 @@ export class MenuEditor {
   toast = inject(ToastService);
   fb = inject(FormBuilder);
   imageUpload = inject(ImageUploadService);
+  search = inject(SearchService);
 
   categories = MENU_CATEGORIES;
+
+  searchTerm = signal('');
+
+  effectiveSearchTerm = computed(() => (this.searchTerm() || this.search.searchTerm() || '').toLowerCase().trim());
+
+  filteredGlobalMenu = computed(() => {
+    const term = this.effectiveSearchTerm();
+    const all = this.catalog.globalMenu();
+    if (!term) return all;
+    return all.filter(item => 
+      (item.name && item.name.toLowerCase().includes(term)) ||
+      (item.category && item.category.toLowerCase().includes(term))
+    );
+  });
+
+  onSearchChange(term: string) {
+    this.searchTerm.set(term);
+    this.search.setSearchTerm(term);
+  }
+
+  clearSearch() {
+    this.searchTerm.set('');
+    this.search.clearSearch();
+  }
 
   isVegCategory(category: string | undefined | null): boolean {
     if (!category) return false;

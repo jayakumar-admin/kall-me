@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { SearchService } from '../../services/search.service';
 import { DeliveryPerson } from '../../models';
 
 interface ReportData {
@@ -51,10 +52,10 @@ interface ReportData {
         </div>
       </div>
 
-      <!-- Mobile Dropdown Search -->
-      <div class="lg:hidden space-y-3">
+      <!-- Partner Search & Filter -->
+      <div class="space-y-3">
         <div class="relative">
-          <label for="partnerSearch" class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Select Delivery Partner</label>
+          <label for="partnerSearch" class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Select / Search Delivery Partner</label>
           <div class="relative group">
             <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
               <mat-icon class="text-lg">search</mat-icon>
@@ -62,12 +63,23 @@ interface ReportData {
             <input 
               id="partnerSearch"
               type="text" 
-              [(ngModel)]="searchQuery" 
-              placeholder="Search Partner Name..." 
+              [ngModel]="searchQuery() || search.searchTerm()" 
+              (ngModelChange)="onSearchChange($event)"
+              placeholder="Search Partner Name, mobile, or ID..." 
               (focus)="showDropdown.set(true)"
               (keydown.escape)="showDropdown.set(false)"
-              class="w-full bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-bold shadow-sm focus:ring-2 focus:ring-[#FFC107] outline-none transition-all"
+              class="w-full bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-10 text-sm font-bold shadow-sm focus:ring-2 focus:ring-[#FFC107] outline-none transition-all dark:text-white"
             >
+            @if (effectiveSearch() || selectedPartnerId()) {
+              <button 
+                type="button"
+                (click)="clearSearch()" 
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                title="Clear filter"
+              >
+                <mat-icon class="text-base">close</mat-icon>
+              </button>
+            }
             @if (showDropdown() && filteredPartners().length > 0) {
               <div class="absolute z-50 w-full mt-2 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl max-h-60 overflow-y-auto overflow-x-hidden custom-scrollbar divide-y divide-slate-50 dark:divide-white/5 animate-in fade-in slide-in-from-top-2 duration-200">
                 <button 
@@ -162,6 +174,16 @@ interface ReportData {
                 </div>
               </div>
             </div>
+          } @empty {
+            <div class="col-span-full py-12 text-center text-slate-400">
+              <mat-icon class="text-4xl mb-2 opacity-40">{{ effectiveSearch() ? 'search_off' : 'payments' }}</mat-icon>
+              <p class="text-sm font-medium">
+                {{ effectiveSearch() ? 'No delivery partners found matching "' + effectiveSearch() + '"' : 'No delivery reports data available.' }}
+              </p>
+              @if (effectiveSearch() || selectedPartnerId()) {
+                <button (click)="clearSearch()" class="mt-2 text-xs text-[#FFC107] font-bold hover:underline">Clear search filter</button>
+              }
+            </div>
           }
         </div>
       }
@@ -171,6 +193,7 @@ interface ReportData {
 })
 export class DeliveryReports implements OnInit {
   private api = inject(ApiService);
+  search = inject(SearchService);
   deliveryPersons = signal<DeliveryPerson[]>([]);
   reportData = signal<Record<string, ReportData>>({});
   
@@ -201,18 +224,43 @@ export class DeliveryReports implements OnInit {
   selectedPartnerId = signal<number | null>(null);
   showDropdown = signal(false);
 
+  effectiveSearch = computed(() => (this.searchQuery() || this.search.searchTerm() || '').toLowerCase().trim());
+
   filteredPartners = computed(() => {
-    const query = this.searchQuery().toLowerCase();
+    const query = this.effectiveSearch();
     if (!query) return this.deliveryPersons();
-    return this.deliveryPersons().filter(p => p.name.toLowerCase().includes(query));
+    return this.deliveryPersons().filter(p => 
+      (p.name && p.name.toLowerCase().includes(query)) ||
+      (p.mobile && p.mobile.includes(query))
+    );
   });
 
   displayData = computed(() => {
     const all = this.mergedData();
     const selectedId = this.selectedPartnerId();
-    if (selectedId === null) return all;
-    return all.filter(d => d.id === selectedId);
+    let result = selectedId === null ? all : all.filter(d => d.id === selectedId);
+    const search = this.effectiveSearch();
+    if (search) {
+      result = result.filter(d => 
+        (d.name && d.name.toLowerCase().includes(search)) ||
+        (d.mobile && d.mobile.includes(search)) ||
+        (d.id && d.id.toString().includes(search))
+      );
+    }
+    return result;
   });
+
+  onSearchChange(term: string) {
+    this.searchQuery.set(term);
+    this.search.setSearchTerm(term);
+    this.selectedPartnerId.set(null);
+  }
+
+  clearSearch() {
+    this.searchQuery.set('');
+    this.search.clearSearch();
+    this.selectedPartnerId.set(null);
+  }
 
   ngOnInit() {
     this.api.getDeliveryTeam().subscribe(drivers => {
@@ -223,10 +271,58 @@ export class DeliveryReports implements OnInit {
 
   loadReport() {
     this.loading.set(true);
-    this.api.getDeliveryPersonReport(this.startDate(), this.endDate()).subscribe({
-      next: (data) => {
+    this.api.getOrders().subscribe({
+      next: (orders) => {
+        const start = this.startDate() ? new Date(this.startDate()).getTime() : 0;
+        const end = this.endDate() ? new Date(this.endDate()).setHours(23, 59, 59, 999) : Infinity;
+
+        // Exclude cancelled orders completely from delivery earnings and orders
+        const validOrders = orders.filter(o => {
+          if ((o.status || '').toLowerCase() === 'cancelled') return false;
+          if (!o.created_at) return false;
+          const time = new Date(o.created_at).getTime();
+          return time >= start && time <= end;
+        });
+
         const reportMap: Record<string, ReportData> = {};
-        data.forEach(d => reportMap[d.name] = d);
+        
+        validOrders.forEach(o => {
+          const name = o.delivery_person_name || 'Unassigned';
+          if (!reportMap[name]) {
+            reportMap[name] = {
+              total_orders: 0,
+              total_amount: 0,
+              item_total: 0,
+              delivery_total: 0,
+              below_30_count: 0,
+              total_commission: 0,
+              advance_amount: 0,
+              bonus: 0,
+              final_earnings: 0,
+              balance_pending: 0
+            };
+          }
+
+          reportMap[name].total_orders++;
+          reportMap[name].total_amount += Number(o.grand_total) || 0;
+          reportMap[name].item_total += Number(o.subtotal) || 0;
+          const deliveryFee = Number(o.shipping_fee) || 0;
+          reportMap[name].delivery_total += deliveryFee;
+          if (deliveryFee <= 30) {
+            reportMap[name].below_30_count++;
+          }
+          const comm = Number(o.admin_commission_amount) || 0;
+          reportMap[name].total_commission += comm;
+          reportMap[name].advance_amount += Number(o.amount_received) || 0;
+          reportMap[name].balance_pending += Number(o.balance_pending) || 0;
+        });
+
+        // Compute bonus and final earnings
+        Object.values(reportMap).forEach(d => {
+          d.bonus = d.below_30_count * 10;
+          d.final_earnings = d.delivery_total - d.total_commission + d.bonus;
+        });
+
         this.reportData.set(reportMap);
         this.loading.set(false);
       },
@@ -245,9 +341,13 @@ export class DeliveryReports implements OnInit {
     this.selectedPartnerId.set(id);
     if (id) {
       const partner = this.deliveryPersons().find(p => p.id === id);
-      if (partner) this.searchQuery.set(partner.name);
+      if (partner) {
+        this.searchQuery.set(partner.name);
+        this.search.setSearchTerm(partner.name);
+      }
     } else {
       this.searchQuery.set('');
+      this.search.clearSearch();
     }
     this.showDropdown.set(false);
   }

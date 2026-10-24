@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,8 +23,23 @@ export class DeliveryOrders implements OnInit {
 
   orders = signal<Order[]>([]);
   selectedOrder = signal<Order | null>(null);
+  searchTerm = signal<string>('');
   
   statusOptions = ['Live', 'In Transit', 'Delivered'];
+
+  filteredOrders = computed(() => {
+    const term = this.searchTerm().toLowerCase().trim();
+    const list = this.orders();
+    if (!term) return list;
+    return list.filter(o => 
+      (o.order_number && o.order_number.toLowerCase().includes(term)) ||
+      (o.customer_phone && o.customer_phone.toLowerCase().includes(term)) ||
+      (o.hotel_name && o.hotel_name.toLowerCase().includes(term)) ||
+      (o.delivery_address && o.delivery_address.toLowerCase().includes(term)) ||
+      (o.delivery_description && o.delivery_description.toLowerCase().includes(term)) ||
+      (o.items && o.items.some(i => i.menu_name && i.menu_name.toLowerCase().includes(term)))
+    );
+  });
 
   ngOnInit() {
     this.loadOrders();

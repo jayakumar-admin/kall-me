@@ -7,6 +7,8 @@ import { CatalogService, HotelMenuItem } from '../../../services/catalog.service
 import { MenuItem } from '../../../data/static-data';
 import { ToastService } from '../../../services/toast.service';
 
+import { SearchService } from '../../../services/search.service';
+
 @Component({
   selector: 'app-hotel-menu-editor',
   standalone: true,
@@ -49,10 +51,17 @@ import { ToastService } from '../../../services/toast.service';
               <mat-icon class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">search</mat-icon>
               <input 
                 type="text" 
+                [ngModel]="catalogSearchTerm()"
+                (ngModelChange)="catalogSearchTerm.set($event)"
                 placeholder="Search catalog..." 
-                class="bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/5 rounded-lg pl-8 pr-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-[#FFC107] w-48 transition-all"
+                class="bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/5 rounded-lg pl-7 pr-6 py-1.5 text-xs outline-none focus:ring-1 focus:ring-[#FFC107] w-44 transition-all dark:text-white"
                 aria-label="Search catalog"
               >
+              @if (catalogSearchTerm()) {
+                <button (click)="catalogSearchTerm.set('')" class="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                  <mat-icon class="text-xs">close</mat-icon>
+                </button>
+              }
             </div>
           </div>
 
@@ -79,6 +88,11 @@ import { ToastService } from '../../../services/toast.service';
                 </div>
                 <mat-icon class="text-slate-300 dark:text-slate-600">drag_indicator</mat-icon>
               </div>
+            } @empty {
+              <div class="h-40 flex flex-col items-center justify-center text-slate-400 border border-dashed border-slate-200 dark:border-white/5 rounded-xl">
+                <mat-icon class="opacity-40 mb-1">search_off</mat-icon>
+                <p class="text-xs">No catalog items found</p>
+              </div>
             }
           </div>
         </div>
@@ -91,7 +105,25 @@ import { ToastService } from '../../../services/toast.service';
               Hotel Menu
               <span class="bg-[#FFC107]/10 text-xs px-2 py-0.5 rounded-full text-[#FFC107] font-bold">{{ hotelItems().length }}</span>
             </h3>
-            <button (click)="saveChanges()" class="text-xs font-bold text-[#FFC107] hover:underline">Save Changes</button>
+            <div class="flex items-center gap-2">
+              <div class="relative">
+                <mat-icon class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">search</mat-icon>
+                <input 
+                  type="text" 
+                  [ngModel]="hotelMenuSearchTerm()"
+                  (ngModelChange)="hotelMenuSearchTerm.set($event)"
+                  placeholder="Search hotel items..." 
+                  class="bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-white/5 rounded-lg pl-7 pr-6 py-1.5 text-xs outline-none focus:ring-1 focus:ring-[#FFC107] w-40 transition-all dark:text-white"
+                  aria-label="Search hotel items"
+                >
+                @if (hotelMenuSearchTerm()) {
+                  <button (click)="hotelMenuSearchTerm.set('')" class="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <mat-icon class="text-xs">close</mat-icon>
+                  </button>
+                }
+              </div>
+              <button (click)="saveChanges()" class="text-xs font-bold text-[#FFC107] hover:underline whitespace-nowrap">Save Changes</button>
+            </div>
           </div>
 
           <div 
@@ -140,9 +172,12 @@ import { ToastService } from '../../../services/toast.service';
             }
             
             @if (hotelItems().length === 0) {
-              <div class="h-full flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-white/5 rounded-xl">
-                <mat-icon class="scale-150 mb-2 opacity-50">drag_indicator</mat-icon>
-                <p class="text-sm font-medium">Drag items here from the catalog</p>
+              <div class="h-full flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 dark:border-white/5 rounded-xl p-8">
+                <mat-icon class="scale-150 mb-2 opacity-50">{{ hotelMenuSearchTerm() ? 'search_off' : 'drag_indicator' }}</mat-icon>
+                <p class="text-sm font-medium">{{ hotelMenuSearchTerm() ? 'No hotel menu items match your search' : 'Drag items here from the catalog' }}</p>
+                @if (hotelMenuSearchTerm()) {
+                  <button (click)="hotelMenuSearchTerm.set('')" class="mt-2 text-xs text-[#FFC107] font-bold hover:underline">Clear search</button>
+                }
               </div>
             }
           </div>
@@ -155,8 +190,11 @@ import { ToastService } from '../../../services/toast.service';
 export class HotelMenuEditor {
   catalog = inject(CatalogService);
   toast = inject(ToastService);
+  search = inject(SearchService);
   
   selectedHotelId = signal<number | null>(null);
+  catalogSearchTerm = signal('');
+  hotelMenuSearchTerm = signal('');
 
   constructor() {
     // Set initial hotel if available
@@ -166,17 +204,37 @@ export class HotelMenuEditor {
     }
   }
 
-  hotelItems = computed(() => {
+  rawHotelItems = computed(() => {
     const id = this.selectedHotelId();
     if (id === null) return [];
     return this.catalog.hotelMenus()[id] || [];
   });
 
+  hotelItems = computed(() => {
+    const all = this.rawHotelItems();
+    const term = this.hotelMenuSearchTerm().toLowerCase().trim();
+    if (!term) return all;
+    return all.filter((i: HotelMenuItem) => 
+      (i.name && i.name.toLowerCase().includes(term)) ||
+      (i.category && i.category.toLowerCase().includes(term))
+    );
+  });
+
   availableItems = computed(() => {
     const id = this.selectedHotelId();
-    if (id === null) return this.catalog.globalMenu();
-    const hotelItemIds = new Set((this.catalog.hotelMenus()[id] || []).map((i: HotelMenuItem) => i.id));
-    return this.catalog.globalMenu().filter((i: MenuItem) => !hotelItemIds.has(i.id));
+    let baseList: MenuItem[] = [];
+    if (id === null) {
+      baseList = this.catalog.globalMenu();
+    } else {
+      const hotelItemIds = new Set((this.catalog.hotelMenus()[id] || []).map((i: HotelMenuItem) => i.id));
+      baseList = this.catalog.globalMenu().filter((i: MenuItem) => !hotelItemIds.has(i.id));
+    }
+    const term = (this.catalogSearchTerm() || this.search.searchTerm() || '').toLowerCase().trim();
+    if (!term) return baseList;
+    return baseList.filter((i: MenuItem) => 
+      (i.name && i.name.toLowerCase().includes(term)) ||
+      (i.category && i.category.toLowerCase().includes(term))
+    );
   });
 
   drop(event: CdkDragDrop<HotelMenuItem[]>) {
@@ -184,7 +242,7 @@ export class HotelMenuEditor {
     if (id === null) return;
 
     if (event.previousContainer === event.container) {
-      const currentItems = [...this.hotelItems()];
+      const currentItems = [...this.rawHotelItems()];
       moveItemInArray(currentItems, event.previousIndex, event.currentIndex);
       this.catalog.hotelMenus.update((current: Record<string, HotelMenuItem[]>) => ({
         ...current,
@@ -199,7 +257,7 @@ export class HotelMenuEditor {
         isLinked: true
       };
 
-      const currentHotelItems = [...this.hotelItems()];
+      const currentHotelItems = [...this.rawHotelItems()];
       currentHotelItems.splice(event.currentIndex, 0, newItem);
       
       this.catalog.hotelMenus.update((current: Record<string, HotelMenuItem[]>) => ({
@@ -214,7 +272,7 @@ export class HotelMenuEditor {
     const id = this.selectedHotelId();
     if (id === null) return;
 
-    const currentItems = this.hotelItems().filter((i: HotelMenuItem) => i.id !== item.id);
+    const currentItems = this.rawHotelItems().filter((i: HotelMenuItem) => i.id !== item.id);
     this.catalog.hotelMenus.update((current: Record<string, HotelMenuItem[]>) => ({
       ...current,
       [id]: currentItems
@@ -229,7 +287,7 @@ export class HotelMenuEditor {
   saveChanges() {
     const id = this.selectedHotelId();
     if (id === null) return;
-    this.catalog.saveHotelMenu(id, this.hotelItems()).subscribe({
+    this.catalog.saveHotelMenu(id, this.rawHotelItems()).subscribe({
       next: () => this.toast.success('Hotel menu and pricing saved successfully'),
       error: () => this.toast.error('Failed to save hotel menu')
     });

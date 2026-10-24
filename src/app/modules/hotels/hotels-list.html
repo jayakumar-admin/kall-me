@@ -30,11 +30,21 @@
             <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
             <input
               type="text"
-              [ngModel]="searchTerm()"
-              (ngModelChange)="searchTerm.set($event)"
+              [ngModel]="searchTerm() || search.searchTerm()"
+              (ngModelChange)="onSearchChange($event)"
               placeholder="Search hotels..."
-              class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
+              class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-9 py-2 text-sm outline-none focus:ring-2 focus:ring-[#FFC107]/20 transition-all dark:text-white"
             />
+            @if (effectiveSearchTerm()) {
+              <button 
+                type="button"
+                (click)="clearSearch()" 
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+                title="Clear search"
+              >
+                <mat-icon class="text-base leading-none block">close</mat-icon>
+              </button>
+            }
           </div>
 
           <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -124,13 +134,33 @@
     @if (showMenuModal()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
         <div class="bg-white dark:bg-[#1E293B] rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl border border-slate-100 dark:border-white/10 animate-in fade-in zoom-in duration-200">
-          <div class="p-6 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+          <div class="p-6 border-b border-slate-100 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 class="text-xl font-bold text-slate-900 dark:text-white">Menu: {{ selectedHotel()?.name }}</h2>
+              <div class="flex items-center gap-2">
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Menu: {{ selectedHotel()?.name }}</h2>
+                <span class="text-xs bg-slate-100 dark:bg-white/10 text-slate-500 font-bold px-2 py-0.5 rounded-full">
+                  {{ filteredModalMenu().length }} items
+                </span>
+              </div>
               <p class="text-xs text-slate-500">Manage items, prices, and availability.</p>
             </div>
-            <div class="flex items-center gap-4">
-              <button (click)="openAddMenuItemModal()" class="btn-primary !py-2 !px-4 text-xs flex items-center gap-2">
+            <div class="flex items-center gap-3">
+              <div class="relative w-48 sm:w-60">
+                <mat-icon class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">search</mat-icon>
+                <input 
+                  type="text" 
+                  [ngModel]="modalMenuSearch()"
+                  (ngModelChange)="modalMenuSearch.set($event)"
+                  placeholder="Search menu items..." 
+                  class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl pl-8 pr-7 py-1.5 text-xs outline-none focus:ring-1 focus:ring-[#FFC107] dark:text-white"
+                >
+                @if (modalMenuSearch()) {
+                  <button (click)="modalMenuSearch.set('')" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <mat-icon class="text-xs">close</mat-icon>
+                  </button>
+                }
+              </div>
+              <button (click)="openAddMenuItemModal()" class="btn-primary !py-2 !px-3 text-xs flex items-center gap-1.5 shrink-0">
                 <mat-icon class="text-sm">add</mat-icon>
                 Add Item
               </button>
@@ -142,7 +172,7 @@
 
           <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              @for (item of currentMenu(); track item.id) {
+              @for (item of filteredModalMenu(); track item.id) {
                 <div class="p-4 rounded-xl border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/5 flex items-center gap-4 group">
                   <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0">
                     <img [src]="item.image_url || 'https://picsum.photos/seed/' + item.name + '/100/100'" [alt]="item.name" class="w-full h-full object-cover">
@@ -168,8 +198,13 @@
                 </div>
               } @empty {
                 <div class="col-span-full py-12 text-center">
-                  <mat-icon class="text-4xl text-slate-300 mb-2">restaurant_menu</mat-icon>
-                  <p class="text-slate-500">No items in this menu yet.</p>
+                  <mat-icon class="text-4xl text-slate-300 mb-2">{{ modalMenuSearch() ? 'search_off' : 'restaurant_menu' }}</mat-icon>
+                  @if (modalMenuSearch()) {
+                    <p class="text-slate-500">No menu items found matching "{{ modalMenuSearch() }}".</p>
+                    <button (click)="modalMenuSearch.set('')" class="mt-2 text-xs text-[#FFC107] font-bold hover:underline">Clear search</button>
+                  } @else {
+                    <p class="text-slate-500">No items in this menu yet.</p>
+                  }
                 </div>
               }
             </div>
